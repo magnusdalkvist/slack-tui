@@ -167,19 +167,19 @@ func TestSidebarFolding(t *testing.T) {
 		t.Error("open conversation hidden in folded section")
 	}
 	v := dump(t, m)
-	if !strings.Contains(v, "▸ \uf4df CHANNELS 1") {
-		t.Error("folded header should show hidden count")
+	if !strings.Contains(v, ico.Folded+" "+ico.SecChannels+" CHANNELS") {
+		t.Error("folded header missing")
 	}
 }
 
 func TestSectionIcon(t *testing.T) {
 	m := fakeModel(t, 110, 30)
 	m.cfg.Sections[0].Icon = ":rocket:"
-	if v := dump(t, m); !strings.Contains(v, "▾ 🚀 TEAM") {
+	if v := dump(t, m); !strings.Contains(v, ico.Unfolded+" 🚀 TEAM") {
 		t.Error("section icon missing")
 	}
 	m.cfg.Sections[0].Icon = ":partyparrot:" // custom, not loaded: no icon, no :partyparrot: text
-	if v := dump(t, m); !strings.Contains(v, "▾ TEAM") || strings.Contains(v, "partyparrot") {
+	if v := dump(t, m); !strings.Contains(v, ico.Unfolded+" TEAM") || strings.Contains(v, "partyparrot") {
 		t.Error("an unloaded custom icon should leave the plain header")
 	}
 }
@@ -187,10 +187,10 @@ func TestSectionIcon(t *testing.T) {
 func TestBuiltinSectionIcons(t *testing.T) {
 	m := fakeModel(t, 110, 30)
 	v := dump(t, m)
-	if !strings.Contains(v, "▾  CHANNELS") || !strings.Contains(v, "▾  DIRECT MESSAGES") {
+	if !strings.Contains(v, ico.Unfolded+" "+ico.SecChannels+" CHANNELS") || !strings.Contains(v, ico.Unfolded+" "+ico.SecDMs+" DIRECT MESSAGES") {
 		t.Error("built-in section icons missing")
 	}
-	if !strings.Contains(v, unreadsIcon+" Unreads") {
+	if !strings.Contains(v, ico.Unreads+" Unreads") {
 		t.Error("unreads icon missing")
 	}
 }
@@ -247,7 +247,7 @@ func TestDMOrderAndExternal(t *testing.T) {
 			t.Errorf("%s is in %q, want %q", id, got, want)
 		}
 	}
-	if v := dump(t, m); !strings.Contains(v, " EXTERNAL") {
+	if v := dump(t, m); !strings.Contains(v, ico.SecExternal+" EXTERNAL") {
 		t.Error("External header missing")
 	}
 }
@@ -256,7 +256,7 @@ func TestPrivateChannelTitle(t *testing.T) {
 	m := fakeModel(t, 100, 24)
 	m.convs["C3"].LastRead, m.convs["C3"].Latest = "1.0", "2.0"
 	m.open(unreadsID)
-	if v := dump(t, m); !strings.Contains(v, lockIcon+" secret-project") || strings.Contains(v, "⊘") {
+	if v := dump(t, m); !strings.Contains(v, ico.Private+" secret-project") || strings.Contains(v, "⊘") {
 		t.Errorf("Unreads should show the lock icon for private channels")
 	}
 }

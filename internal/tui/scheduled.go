@@ -420,7 +420,7 @@ func (m *Model) renderScheduled(w, h int) string {
 		if c := m.convs[sm.Channel]; c != nil {
 			where = m.convTitle(c)
 		}
-		line := sty.Warn.Render(schedIcon+" "+fmtWhen(sm.PostAt, now, m.cfg.TimeFormat)) + "  " + sty.Normal.Render(where)
+		line := sty.Warn.Render(ico.Scheduled+" "+fmtWhen(sm.PostAt, now, m.cfg.TimeFormat)) + "  " + sty.Normal.Render(where)
 		if m.schedThread[sm.ID] != "" {
 			line += sty.Thread.Render("  in thread")
 		}

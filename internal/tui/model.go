@@ -32,17 +32,8 @@ const (
 // unreadsID is the sidebar entry for the Unreads view.
 const unreadsID = "\x00unreads"
 
-// Nerd Font glyphs for the Unreads entry and for people (DMs).
-const (
-	unreadsIcon = "\U000f0117"
-	userIcon    = "\uf007"
-	groupIcon   = "\uedca"
-	lockIcon    = "\uf456" // private channels
-	dndIcon     = "\uf186" // moon, for Do Not Disturb
-	pinIcon     = "\uf435" // after the time of pinned messages
-	schedIcon   = "\uf017" // clock, for scheduled messages
-	onlineDot   = "●"      // after the names of people who are active
-)
+// onlineDot marks people who are active, in headers and modals.
+const onlineDot = "●"
 
 const pageSize = 50
 
@@ -192,6 +183,7 @@ func New(ctx context.Context, client *backend.Client, cfg config.Config) *Model 
 		lipgloss.SetColorProfile(termenv.ANSI)
 	}
 	useTheme(theme)
+	useIcons(cfg.UI.Icons)
 	ta := textarea.New()
 	ta.ShowLineNumbers = false
 	ta.Prompt = ""

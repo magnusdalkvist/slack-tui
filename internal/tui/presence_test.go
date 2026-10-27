@@ -181,30 +181,26 @@ func TestStatusAndPresenceShown(t *testing.T) {
 			t.Errorf("status bar lacks %q: %q", want, status)
 		}
 	}
-	// Anna is active: a green dot (colour 114) after her name, then her
-	// status. Bob is away: no dot. Icons keep the row's colour.
-	if !strings.Contains(v, "Anna Jensen ● 🏠") {
-		t.Errorf("Anna's dot and status emoji missing from the sidebar")
-	}
-	if strings.Contains(v, "Bob ●") || strings.Contains(v, "🚗") {
-		t.Errorf("Bob is away and his status expired: no dot, no emoji")
+	// Presence is the icon: Anna is active, a solid user icon in ok
+	// (colour 114), then her status emoji. Bob is away: the outline icon
+	// in faint, and his expired status is gone.
+	if strings.Contains(v, "🚗") {
+		t.Errorf("Bob's status expired: no emoji")
 	}
 	rows := 0
 	for _, l := range strings.Split(raw, "\n") {
 		plain := ansi.Strip(l)
 		switch {
-		case strings.Contains(plain, userIcon+" Anna Jensen"):
-			if !strings.Contains(l, "38;5;114m ●") {
-				t.Errorf("Anna's dot not green: %q", l)
+		case strings.Contains(plain, ico.UserActive+" Anna Jensen"):
+			if !strings.Contains(l, "38;5;114m"+ico.UserActive) || !strings.Contains(plain, "🏠") {
+				t.Errorf("Anna's icon not green or her status missing: %q", l)
 			}
 			rows++
-		case strings.Contains(plain, userIcon+" Bob"):
+		case strings.Contains(plain, ico.UserAway+" Bob"):
+			if !strings.Contains(l, "38;5;245m"+ico.UserAway) {
+				t.Errorf("Bob's icon should be faint: %q", l)
+			}
 			rows++
-		default:
-			continue
-		}
-		if strings.Contains(l, "38;5;114m"+userIcon) || strings.Contains(l, "38;5;215m"+userIcon) {
-			t.Errorf("icon still coloured by presence: %q", l)
 		}
 	}
 	if rows != 2 {
@@ -254,7 +250,8 @@ func TestStatusEmojiOnSelectedRow(t *testing.T) {
 	m.open("D1")
 	for _, it := range m.side {
 		if it.id == "D1" {
-			row := selLine(m.sideRow(it, 28), 29, true, false)
+			r := m.sideCells(it, m.sections())
+			row := flagLine(r.flag, r.layout(28, 0), 29, true, false)
 			bg := sty.SelBgOn()
 			i := strings.Index(row, "🏠")
 			if i < 0 || !strings.HasPrefix(row, " "+bg) {

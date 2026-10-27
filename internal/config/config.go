@@ -42,8 +42,16 @@ type Theme struct {
 	Overrides map[string]string `toml:"overrides"`
 }
 
+// UI is the [ui] table.
+type UI struct {
+	// Icons is "nerd" (Nerd Font glyphs, the default) or "unicode" for
+	// terminals without a Nerd Font.
+	Icons string `toml:"icons"`
+}
+
 type Config struct {
 	Theme    Theme            `toml:"theme"`
+	UI       UI               `toml:"ui"`
 	Sections []Section        `toml:"section"`
 	Statuses []StatusTemplate `toml:"status"`
 	// TimeFormat is a Go time layout for message timestamps.

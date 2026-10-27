@@ -189,17 +189,12 @@ func (m *Model) sectionIcon(section string) string {
 			return img
 		}
 	}
-	// The built-in sections get Slack's own icons, as Nerd Font glyphs
-	// (Octicons): a hash for channels, two speech bubbles for DMs.
-	switch section {
-	case "Channels":
-		return sty.Header.Render("\uf4df")
-	case "Direct messages":
-		return sty.Header.Render("\uf442")
-	case "External":
-		return sty.Header.Render("\uf42b")
+	// The built-in sections get an icon (Nerd Font only).
+	icon := map[string]string{"Channels": ico.SecChannels, "Direct messages": ico.SecDMs, "External": ico.SecExternal}[section]
+	if icon == "" {
+		return ""
 	}
-	return ""
+	return sty.Header.Render(icon)
 }
 
 // emojiChip renders a reaction's emoji: the character, the custom image,

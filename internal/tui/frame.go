@@ -89,10 +89,16 @@ func frameTitle(title string, focused bool, context ...string) string {
 // padded to w. A selected row gets the selection background across the
 // whole width, and an accent ▌ when its frame has focus.
 func selLine(row string, w int, selected, focused bool) string {
+	return flagLine(" ", row, w, selected, focused)
+}
+
+// flagLine is selLine for rows that carry an edge flag in the bar column
+// (the sidebar's unread markers). The focused selection's ▌ covers it.
+func flagLine(flag, row string, w int, selected, focused bool) string {
 	if !selected {
-		return " " + padRight(row, w-1)
+		return flag + padRight(row, w-1)
 	}
-	bar, bg := " ", sty.SelBgOn()
+	bar, bg := flag, sty.SelBgOn()
 	if focused {
 		bar, bg = sty.Bar.Render("▌"), sty.SelFocusBgOn()
 	}

@@ -506,11 +506,11 @@ func (m *Model) renderSearch(w, h int) string {
 		icon := "" // channels already read "#name"
 		switch c := m.convs[hit.Channel]; {
 		case c != nil && c.Kind == backend.KindPrivate:
-			icon = lockIcon + " "
+			icon = ico.Private + " "
 		case c != nil && c.Kind == backend.KindGroup, c == nil && hit.IsGroup:
-			icon = groupIcon + " "
+			icon = ico.Group + " "
 		case c != nil && c.Kind == backend.KindDM:
-			icon = userIcon + " "
+			icon = ico.UserActive + " "
 		}
 		where := sty.Unread.Render(icon + m.hitWhere(hit))
 		if hit.ThreadTS != "" && hit.ThreadTS != hit.TS {

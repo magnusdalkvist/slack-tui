@@ -112,9 +112,9 @@ func rule(w int, active bool) string {
 func (m *Model) convTitle(c *backend.Conversation) string {
 	switch c.Kind {
 	case backend.KindChannel:
-		return "# " + c.Name
+		return ico.Channel + " " + c.Name
 	case backend.KindPrivate:
-		return lockIcon + " " + c.Name
+		return ico.Private + " " + c.Name
 	default:
 		return m.convLabel(c)
 	}
@@ -143,7 +143,7 @@ func (m *Model) renderConvPane(w, h int) string {
 	}
 	right := ""
 	if n := m.scheduledIn(c.ID); n > 0 {
-		right = sty.Faint.Render(fmt.Sprintf("%s %d scheduled", schedIcon, n))
+		right = sty.Faint.Render(fmt.Sprintf("%s %d scheduled", ico.Scheduled, n))
 	}
 	isTarget := !(m.focus == fThread && m.thread != nil)
 	input := m.renderInput(w, isTarget, "Message "+m.convTitle(c))

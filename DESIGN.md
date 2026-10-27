@@ -405,3 +405,9 @@ Gaps found while building this spec, and how they were filled.
 - **Frames sit 1 cell apart.** A terminal can't draw half a cell, so the gap is one blank column. A pane and its composer frame have 1 blank row between them.
 - **Focus under `NO_COLOR`.** With no border colour, the focused frame's title is drawn in reverse video. This is the only place where focus shows without colour.
 - **Selection rows** come from `selLine` in `frame.go`: a 1-cell bar column, then the row padded to the frame's width. `paintBg` restores the selection background after every SGR reset inside the row, so chips, links and custom-emoji images keep it.
+- **Folded sections** keep only the open conversation as a row. Everything else is summed up in the header's flag and count. Previously, unread rows stayed visible under a folded header.
+- **Muted channels** (the `faint` row state) aren't drawn, because the client doesn't load Slack's mute preferences. That would be a data-layer change, which is out of scope here.
+- **The open conversation** is drawn in `fg` rather than `muted` when it's read, so it stands out when the cursor is elsewhere. With the cursor on it, it's the selected row.
+- **The sidebar count column** is as wide as the widest count among the visible rows, so names, status emoji and counts line up.
+- **Section header arrows** (▾/▸) sit in the icon column. The section's own icon (Nerd Font, or the custom section's Slack emoji) goes before its name.
+- **People's presence** is drawn with the solid or outline user icon in the sidebar. Headers and modals keep `●` (§3).

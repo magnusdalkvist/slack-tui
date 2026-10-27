@@ -105,11 +105,11 @@ func (m *Model) renderSwitcher(width, height int) string {
 	start := max(0, s.sel-listH+1)
 	for i := start; i < len(s.matches) && i < start+listH; i++ {
 		id := s.matches[i]
-		label := unreadsIcon + " Unreads"
+		label := ico.Unreads + " Unreads"
 		unread := false
 		if uid, ok := strings.CutPrefix(id, personPrefix); ok {
 			u := m.users[uid]
-			label = userIcon + " " + u.Label()
+			label = ico.UserActive + " " + u.Label()
 			if u.RealName != "" && u.RealName != u.Label() {
 				label += sty.Faint.Render("  " + u.RealName)
 			}
@@ -117,11 +117,11 @@ func (m *Model) renderSwitcher(width, height int) string {
 			icon := "#"
 			switch c.Kind {
 			case backend.KindDM:
-				icon = userIcon
+				icon = ico.UserActive
 			case backend.KindGroup:
-				icon = groupIcon
+				icon = ico.Group
 			case backend.KindPrivate:
-				icon = lockIcon
+				icon = ico.Private
 			}
 			label = icon + " " + m.convLabel(c)
 			unread = c.Unread()

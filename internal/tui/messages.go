@@ -161,7 +161,7 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread bo
 		}
 		head := name + "  " + sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat))
 		if msg.Pinned {
-			head += "  " + sty.Warn.Render(pinIcon+" pinned")
+			head += "  " + sty.Warn.Render(ico.Pinned+" pinned")
 		}
 		lines = append(lines, head)
 	}
@@ -170,7 +170,7 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread bo
 		text += " " + sty.Faint.Render("(edited)")
 	}
 	if msg.Pinned && !header {
-		text += " " + sty.Warn.Render(pinIcon+" pinned")
+		text += " " + sty.Warn.Render(ico.Pinned+" pinned")
 	}
 	if strings.TrimSpace(msg.Text) != "" || msg.Edited || (msg.Pinned && !header) {
 		lines = append(lines, wrap(text, width)...)

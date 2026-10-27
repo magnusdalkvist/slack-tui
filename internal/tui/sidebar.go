@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
@@ -144,12 +143,11 @@ func (m *Model) rebuildSidebar() {
 		head := sideItem{header: sec.name}
 		var rows []sideItem
 		for _, id := range sec.ids {
-			// A folded section still shows what needs attention.
-			if m.folded[sec.name] {
-				if c := m.convs[id]; c == nil || (!c.Unread() && id != m.current) {
-					head.hidden++
-					continue
-				}
+			// A folded section keeps only the open conversation; its
+			// header sums up the rest.
+			if m.folded[sec.name] && id != m.current {
+				head.hidden++
+				continue
 			}
 			rows = append(rows, sideItem{id: id})
 		}
@@ -229,9 +227,20 @@ func (m *Model) renderSidebar(w, h int) string {
 	}
 	m.sideTop = max(0, min(m.sideTop, len(m.side)-bodyH))
 
-	var lines []string
+	// The count column is as wide as the widest count, so every name,
+	// status and count lines up.
+	rows := make([]sideCells, 0, bodyH)
+	countW := 0
+	secs := m.sections()
 	for i := m.sideTop; i < len(m.side) && i < m.sideTop+bodyH; i++ {
-		lines = append(lines, selLine(m.sideRow(m.side[i], inner-1), inner, i == m.sideCur, focused))
+		r := m.sideCells(m.side[i], secs)
+		countW = max(countW, ansi.StringWidth(r.count))
+		rows = append(rows, r)
+	}
+	var lines []string
+	for k, r := range rows {
+		i := m.sideTop + k
+		lines = append(lines, flagLine(r.flag, r.layout(inner-1, countW), inner, i == m.sideCur, focused))
 	}
 	handle := ""
 	if u, ok := m.users[m.client.SelfID]; ok && u.Name != "" {
@@ -240,86 +249,176 @@ func (m *Model) renderSidebar(w, h int) string {
 	return RenderFrame(strings.Join(lines, "\n"), w, h, frameTitle(m.client.TeamName, focused), handle, focused)
 }
 
-// sideRow is a sidebar row without its bar column, width cells wide.
-func (m *Model) sideRow(it sideItem, width int) string {
-	if it.spacer {
+// sideCells is a sidebar row cut into its fixed columns (DESIGN.md §6):
+// [flag 1][icon 2][name … flex][status 2][count].
+type sideCells struct {
+	flag, icon     string // flag is one cell, icon one glyph (slot adds the space)
+	name, nick     string // already styled; nick follows the name in faint
+	status         string // a 2-cell emoji, or ""
+	count          string // styled, right-aligned
+	header, spacer bool
+}
+
+// layout lays the cells out in width cells, the count right-aligned in a
+// column countW wide.
+func (r sideCells) layout(width, countW int) string {
+	if r.spacer {
 		return ""
 	}
-	if it.header != "" {
-		arrow := "▾"
-		if m.folded[it.header] {
-			arrow = "▸"
-		}
-		icon := m.sectionIcon(it.header)
-		if icon != "" {
-			icon += " "
-		}
-		room := width - 5 - ansi.StringWidth(icon)
-		row := sty.Header.Render(arrow+" ") + icon + sty.Header.Render(ansi.Truncate(strings.ToUpper(it.header), room, "…"))
-		if it.hidden > 0 {
-			row += sty.Faint.Render(fmt.Sprintf(" %d", it.hidden))
-		}
-		return row
+	right := ""
+	if countW > 0 {
+		right = " " + strings.Repeat(" ", countW-ansi.StringWidth(r.count)) + r.count
 	}
+	status := "  "
+	if r.status != "" {
+		status = r.status
+	}
+	if r.header {
+		status = ""
+	}
+	room := width - 2 - ansi.StringWidth(status) - ansi.StringWidth(right)
+	name := r.name
+	if r.nick != "" {
+		name += " " + r.nick
+	}
+	name = ansi.Truncate(name, max(room, 0), "…")
+	pad := max(0, room-ansi.StringWidth(name))
+	return slot(r.icon) + name + strings.Repeat(" ", pad) + status + right
+}
 
-	var icon, label, status string
-	unread, badge, active := false, 0, false
+// Edge flags: a red ▌ for mentions and DM unreads, a faint ▏ for other
+// unread conversations. NO_COLOR draws the first as "!".
+func flagMention() string {
+	if sty.theme.NoColor {
+		return "!"
+	}
+	return sty.Err.Render("▌")
+}
+
+func flagUnread() string { return sty.Faint.Render("▏") }
+
+func (m *Model) sideCells(it sideItem, secs []section) sideCells {
+	if it.spacer {
+		return sideCells{spacer: true}
+	}
+	if it.header != "" {
+		return m.headerCells(it.header, secs)
+	}
 	if it.id == unreadsID {
 		n := m.unreadCount()
-		icon, label, unread = unreadsIcon, "Unreads", n > 0
+		r := sideCells{flag: " ", icon: sty.Muted.Render(ico.Unreads), name: sty.Muted.Render("Unreads")}
 		if n > 0 {
-			label = fmt.Sprintf("Unreads (%d)", n)
+			r.icon, r.name = sty.Unread.Render(ico.Unreads), sty.Unread.Render("Unreads")
+			r.count = sty.Muted.Render(fmt.Sprint(n))
 		}
-	} else {
-		c := m.convs[it.id]
-		if c == nil {
-			return ""
-		}
-		switch c.Kind {
-		case backend.KindChannel:
-			icon = "#"
-		case backend.KindPrivate:
-			icon = lockIcon
-		case backend.KindDM:
-			icon = userIcon
-		case backend.KindGroup:
-			icon = groupIcon
-		}
-		label = m.convLabel(c)
-		unread, badge = c.Unread(), c.Mentions
-		if c.Kind == backend.KindDM {
-			active = m.presence[c.UserID]
-			if s := m.statusEmoji(c.UserID); s != "" {
-				status = " " + s
+		return r
+	}
+	c := m.convs[it.id]
+	if c == nil {
+		return sideCells{spacer: true}
+	}
+
+	label, nick := m.convLabel(c), ""
+	if c.Kind == backend.KindDM && c.UserID != m.client.SelfID {
+		if u, ok := m.users[c.UserID]; ok && u.RealName != "" {
+			label = u.RealName
+			if u.DisplayName != "" && u.DisplayName != u.RealName {
+				nick = u.DisplayName
 			}
 		}
 	}
-
-	badgeStr := ""
-	if badge > 0 {
-		badgeStr = sty.Badge.Render(fmt.Sprint(badge))
+	self := c.Kind == backend.KindDM && c.UserID == m.client.SelfID
+	if self {
+		label = strings.TrimSuffix(label, " (you)")
+		nick = "(you)"
 	}
-	dot := ""
-	if active {
-		dot = " " + onlineDot
-	}
-	room := width - 3 - lipgloss.Width(badgeStr) - ansi.StringWidth(dot) - ansi.StringWidth(status)
-	label = ansi.Truncate(label, room, "…")
 
 	style := sty.Muted
 	if it.id == m.current {
 		style = sty.Normal
 	}
-	if unread {
-		style = sty.Unread
+	var r sideCells
+	switch {
+	case c.Mentions > 0 || (c.IsDM() && c.Unread()):
+		style, r.flag = sty.Unread, flagMention()
+		if c.Mentions > 0 {
+			r.count = sty.Err.Render(fmt.Sprint(c.Mentions))
+		}
+	case c.Unread():
+		style, r.flag = sty.Unread, flagUnread()
+	default:
+		r.flag = " "
 	}
-	text := style.Render(icon + " " + label)
-	if dot != "" {
-		// A green dot after the name for people who are active.
-		text += style.Foreground(sty.theme.OK).Render(dot)
+	r.name = style.Render(label)
+	if nick != "" {
+		r.nick = sty.Faint.Render(nick)
 	}
-	pad := max(0, width-lipgloss.Width(text)-ansi.StringWidth(status)-lipgloss.Width(badgeStr))
-	// The status emoji is drawn as is: a custom one is an image whose
-	// placeholder cells must keep their own foreground colour.
-	return text + status + strings.Repeat(" ", pad) + badgeStr
+
+	switch c.Kind {
+	case backend.KindChannel:
+		r.icon = style.Render(ico.Channel)
+	case backend.KindPrivate:
+		r.icon = style.Render(ico.Private)
+	case backend.KindGroup:
+		r.icon = style.Render(ico.Group)
+	case backend.KindDM:
+		// Presence is the icon itself: solid in ok when active, outline
+		// in faint when away.
+		if m.presence[c.UserID] && !self {
+			r.icon = sty.OK.Render(ico.UserActive)
+		} else {
+			r.icon = sty.Faint.Render(ico.UserAway)
+		}
+		// The status emoji is drawn as is: a custom one is an image whose
+		// placeholder cells must keep their own foreground colour.
+		r.status = m.statusEmoji(c.UserID)
+	}
+	return r
+}
+
+// headerCells is a section header: ▾/▸, the section's icon, its name in
+// caps and how many conversations it holds. A folded one still says
+// what is inside: mentions with a red flag and count, unreads with a
+// faint flag and "3 new".
+func (m *Model) headerCells(name string, secs []section) sideCells {
+	arrow := ico.Unfolded
+	if m.folded[name] {
+		arrow = ico.Folded
+	}
+	// The arrow sits in the icon column, the section's own icon before
+	// its name.
+	title := sty.Header.Render(strings.ToUpper(name))
+	if icon := m.sectionIcon(name); icon != "" {
+		title = icon + " " + title
+	}
+	r := sideCells{header: true, flag: " ", icon: sty.Header.Render(arrow), name: title}
+	total, mentions, unread := 0, 0, 0
+	for _, sec := range secs {
+		if sec.name != name {
+			continue
+		}
+		for _, id := range sec.ids {
+			c := m.convs[id]
+			if c == nil {
+				continue
+			}
+			total++
+			switch {
+			case c.Mentions > 0 || (c.IsDM() && c.Unread()):
+				mentions += max(c.Mentions, 1)
+			case c.Unread():
+				unread++
+			}
+		}
+	}
+	r.count = sty.Faint.Render(fmt.Sprint(total))
+	if m.folded[name] {
+		switch {
+		case mentions > 0:
+			r.flag, r.count = flagMention(), sty.Err.Render(fmt.Sprint(mentions))
+		case unread > 0:
+			r.flag, r.count = flagUnread(), sty.Muted.Render(fmt.Sprintf("%d new", unread))
+		}
+	}
+	return r
 }

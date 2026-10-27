@@ -535,7 +535,7 @@ func (m *Model) cmdAway(away bool) tea.Cmd {
 func (m *Model) meStatus() []string {
 	var parts []string
 	if until, on := m.dnd.Until(clockNow()); on {
-		parts = append(parts, sty.Warn.Render(dndIcon+" dnd until "+clock(until, m.cfg.TimeFormat)))
+		parts = append(parts, sty.Warn.Render(ico.DND+" dnd until "+clock(until, m.cfg.TimeFormat)))
 	}
 	if m.away {
 		parts = append(parts, sty.Muted.Render("away"))

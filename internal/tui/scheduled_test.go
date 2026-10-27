@@ -110,7 +110,7 @@ func TestLaterFromComposer(t *testing.T) {
 	if !strings.Contains(m.status, "scheduled for today") {
 		t.Errorf("status %q", m.status)
 	}
-	if v := ansi.Strip(m.View()); !strings.Contains(v, schedIcon+" 1 scheduled") {
+	if v := ansi.Strip(m.View()); !strings.Contains(v, ico.Scheduled+" 1 scheduled") {
 		t.Errorf("the header should count scheduled messages:\n%s", v)
 	}
 	// Once due it has been sent; the count goes.

@@ -8,7 +8,7 @@ app-level token (`xapp-`) for live events over Socket Mode. Go + Bubble Tea.
 - Go 1.26 to build it; Linux (it opens files with `xdg-open`).
 - A system keyring for the tokens (GNOME Keyring / KWallet via Secret Service), or `SLACK_USER_TOKEN` and
   `SLACK_APP_TOKEN` in the environment.
-- A [Nerd Font](https://www.nerdfonts.com) in the terminal for the sidebar icons.
+- A [Nerd Font](https://www.nerdfonts.com) in the terminal for the icons (or `[ui] icons = "unicode"`).
 - Optional: ghostty or kitty for inline images (below), `wl-paste` or `xclip` to paste images.
 
 ## Setup
@@ -62,6 +62,9 @@ name = "auto"             # auto (by the terminal background), dark, light, or a
 [theme.overrides]         # any token from DESIGN.md §2, as "#rrggbb" or a 256-colour index
 # accent = "#5fafff"      # overrides below 4.5:1 contrast are reported in the status bar
 # NO_COLOR in the environment drops every colour and keeps bold and reverse.
+
+[ui]
+icons = "nerd"            # Nerd Font glyphs, or "unicode" for terminals without a Nerd Font
 
 # Custom sidebar sections, above the built-in Channels, Direct messages (one-to-one first,
 # then groups, each by recent activity) and External (Slack Connect channels and people).

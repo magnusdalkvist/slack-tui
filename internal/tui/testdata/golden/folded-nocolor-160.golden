@@ -1,0 +1,30 @@
+╭ [1;7mBørsen[0m ──────────────── @mada ╮ ╭ [1m development[0m  Builds, deploys and [1mreviews[0m ────────────────────────────────────────────────────────────────────────────────╮
+│ [1m[0m [1mUnreads[0m                    3│ │                                                                                                                            │
+│                               │ │                                                                                                                            │
+│ [1m[0m [1mTEAM[0m                       3│ │                                                                                                                            │
+│  development                 │ │                                                                                                                            │
+│! [1mSimon Konstantyner[0m      🏡 2│ │[1m                                                         Yesterday[0m                                                          │
+│  Kim Kyhlensø kiky           │ │  [1mkiky[0m  16:02                                                                                                               │
+│                               │ │  anyone up for reviewing the cache change?                                                                                 │
+│![1m[0m [1m[0m [1mCHANNELS[0m                 1│ │  it's small, promise (edited)                                                                                              │
+│                               │ │[1m                                                           Today[0m                                                            │
+│▌[7m[1m[0m[7m [1m[0m[7m [1mDIRECT MESSAGES[0m[7m          2[27;49m│ │────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── new  │
+│                               │ │  [1mSimon Konstantyner[0m  09:12   pinned                                                                                       │
+│                               │ │  deployed [7mpanda-v2[0m to staging 🚀                                                                                           │
+│                               │ │  [7m [0m[1;7m🎉 2[0m[7m [0m [7m [0m[7m👀 1[0m[7m [0m                                                                                                             │
+│                               │ │  [3m→ [0m[1m@Anna Jensen[0m has joined the channel  09:40                                                                              │
+│                               │ │  [1mAnna Jensen[0m  10:02                                                                                                        │
+│                               │ │  [1m@mada[0m can you look at the failing test? see https://example.com/ci/123                                                    │
+│                               │ │  4 replies · last 10:30                                                                                                    │
+│                               │ │  [1mGitHub[0m APP  10:20                                                                                                         │
+│                               │ │  build #812 passed                                                                                                         │
+│                               │ │ [7m [1mSimon Konstantyner[0m[7m  10:40                                                                                                 [27;49m│
+│                               │ │ [7m plan attached                                                                                                             [27;49m│
+│                               │ │ [7m plan.pdf                                                                                                                  [27;49m│
+│                               │ │ [7m diagram.png                                                                                                               [27;49m│
+│                               │ ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+│                               │                                                                                                                               
+│                               │ ╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                               │ │ Message  development                                                                                                      │
+╰───────────────────────────────╯ ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+[7m [0m[1;7mNORMAL[0m[7m [0m  ● live  checking unreads 0/8                                                                              ctrl+k jump · / search · : command · ? help 

@@ -21,7 +21,7 @@ func TestPinToggle(t *testing.T) {
 	if !m.lists["C1"].msgs[1].Pinned {
 		t.Fatal("p should pin the selected message at once")
 	}
-	if v := dump(t, m); !strings.Contains(v, "grouped under first "+pinIcon+" pinned") {
+	if v := dump(t, m); !strings.Contains(v, "grouped under first "+ico.Pinned+" pinned") {
 		t.Errorf("a grouped pinned message should say so after its text")
 	}
 	// The call failed: back to unpinned.
@@ -59,7 +59,7 @@ func TestPinsView(t *testing.T) {
 		},
 	})
 	v := dump(t, m)
-	for _, want := range []string{"Pinned & bookmarks", "# dev", "BOOKMARKS", "Runbook", "example.com/runbook", "PINNED", "Anna Jensen", "in thread", "old news"} {
+	for _, want := range []string{"Pinned & bookmarks", ico.Channel + " dev", "BOOKMARKS", "Runbook", "example.com/runbook", "PINNED", "Anna Jensen", "in thread", "old news"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("view lacks %q", want)
 		}

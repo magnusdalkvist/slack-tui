@@ -110,6 +110,14 @@ func openSceneThread(m *Model) {
 var scenes = []scene{
 	{"main", 30, func(m *Model) {}},
 	{"sidebar", 30, func(m *Model) { m.focus = fSidebar }},
+	{"folded", 30, func(m *Model) {
+		// Channels holds panda-v2's mention; Direct messages nothing new.
+		for _, name := range []string{"Channels", "Direct messages"} {
+			m.sideFindKey("section:" + name)
+			m.toggleFold()
+		}
+		m.focus = fSidebar
+	}},
 	{"thread", 30, openSceneThread},
 	{"switcher", 30, func(m *Model) {
 		m.Update(key("ctrl+k"))
@@ -125,10 +133,12 @@ var goldenThemes = []struct {
 	name    string
 	theme   func() Theme
 	profile termenv.Profile
+	icons   string
 }{
-	{"dark", Dark, termenv.TrueColor},
-	{"light", Light, termenv.TrueColor},
-	{"nocolor", noColor, termenv.ANSI},
+	{"dark", Dark, termenv.TrueColor, "nerd"},
+	{"light", Light, termenv.TrueColor, "nerd"},
+	{"nocolor", noColor, termenv.ANSI, "nerd"},
+	{"unicode", Dark, termenv.TrueColor, "unicode"},
 }
 
 func TestGolden(t *testing.T) {
@@ -138,6 +148,7 @@ func TestGolden(t *testing.T) {
 		lipgloss.SetColorProfile(prof)
 		time.Local, clockNow = local, clock
 		useTheme(Dark())
+		useIcons("nerd")
 	})
 	time.Local = time.UTC
 	clockNow = func() time.Time { return goldenNow }
@@ -150,6 +161,7 @@ func TestGolden(t *testing.T) {
 					lipgloss.SetColorProfile(th.profile)
 					m := sceneModel(t, w, sc.h)
 					useTheme(th.theme())
+					useIcons(th.icons)
 					sc.prep(m)
 					got := m.View()
 					checkSize(t, got, w, sc.h)
