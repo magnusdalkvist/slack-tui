@@ -33,7 +33,6 @@ const (
 // unreadsID is the sidebar entry for the Unreads view.
 const unreadsID = "\x00unreads"
 
-
 const pageSize = 50
 
 // msgList is one scrollable list of messages: a conversation or a thread.

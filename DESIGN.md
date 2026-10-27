@@ -93,6 +93,7 @@ Nerd Fonts stay. Icons come from Nerd Font v3 and live in one `icons.go` map, so
 | Archive / code / audio / video | `U+F1C6` / `U+F1C9` / `U+F1C7` / `U+F1C8` | `▣` |
 | Other file | `U+F15B` nf-fa-file | `▣` |
 | Link | `U+F0C1` nf-fa-link | `↗` |
+| Checkbox off / on | `U+F14FC` / `U+F14FB` (rounded, empty / filled) | `□` / `■` |
 
 These stay plain Unicode in both modes, because they're structure rather than icons:
 

@@ -219,7 +219,7 @@ func (m *Model) renderInput(w int, isTarget, inThread bool, placeholder string) 
 	return frameWith(box, w, lineCount(box)+2, border.Bold(true).Render(strings.Join(labels, " · ")), right, border)
 }
 
-// broadcastLabel is the thread composer's "□ also send to #dev", ■ and in
+// broadcastLabel is the thread composer's "☐ also send to #dev", ticked and in
 // warn while ctrl+o has it on.
 func (m *Model) broadcastLabel() string {
 	if m.thread == nil || m.editing != nil {
@@ -234,9 +234,9 @@ func (m *Model) broadcastLabel() string {
 		where = m.convLabel(c)
 	}
 	if m.broadcast {
-		return sty.Warn.Render("■ also send to " + where)
+		return sty.Warn.Render(ico.CheckOn + " also send to " + where)
 	}
-	return sty.Faint.Render("□ also send to " + where)
+	return sty.Faint.Render(ico.CheckOff + " also send to " + where)
 }
 
 func indent(s, prefix string) string {

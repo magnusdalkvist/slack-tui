@@ -21,7 +21,8 @@ type Icons struct {
 	Image, PDF, Doc, Sheet   string
 	Slides, Archive, Code    string
 	Audio, Video, File       string
-	Unicode                  bool // the fallback set: file kinds become tags
+	CheckOn, CheckOff        string // a checkbox, ticked and not
+	Unicode                  bool   // the fallback set: file kinds become tags
 }
 
 var nerdIcons = Icons{
@@ -38,6 +39,7 @@ var nerdIcons = Icons{
 	DND: "", Offline: "\U000f05aa", Link: "",
 	Image: "", PDF: "", Doc: "", Sheet: "",
 	Slides: "", Archive: "", Code: "",
+	CheckOn: "\U000f14fb", CheckOff: "\U000f14fc", // rounded boxes, filled and empty
 	Audio: "", Video: "", File: "",
 }
 
@@ -51,6 +53,7 @@ var unicodeIcons = Icons{
 	Image: "▣", PDF: "▣", Doc: "▣", Sheet: "▣",
 	Slides: "▣", Archive: "▣", Code: "▣",
 	Audio: "▣", Video: "▣", File: "▣",
+	CheckOn: "■", CheckOff: "□",
 	Unicode: true,
 }
 
