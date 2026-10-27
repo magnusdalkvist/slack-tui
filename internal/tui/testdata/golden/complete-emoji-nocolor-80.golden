@@ -1,4 +1,4 @@
-╭ [1;7m‹ # development[0m  Builds, deploys and [1mreviews[0m ────────── Børsen › development ╮
+╭ [1;7m‹  development[0m  Builds, deploys and [1mreviews[0m ────────── Børsen › development ╮
 │                                                                              │
 │                                                                              │
 │                                                                              │
@@ -24,7 +24,7 @@
 │  ♉ :[1mta[0murus:                                         │[7m                       [27;49m│
 │  🍊 :[1mta[0mngerine:                                      │[7m                       [27;49m│
 ╰──────────────────────────────────────────────────────╯───────────────────────╯
-╭ [1mMessage # development[0m ───────────────────────────────────────────────────────╮
+╭ [1mMessage  development[0m ───────────────────────────────────────────────────────╮
 │ [37m[0mship it :ta[7m [0m                                                                 │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 [7m [0m[1;7mINSERT[0m[7m [0m  ● live                             [1mtab[0m insert   [1m↑↓[0m choose   [1mesc[0m close 

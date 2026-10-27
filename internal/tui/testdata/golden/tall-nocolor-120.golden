@@ -1,19 +1,19 @@
-╭ [1mBørsen[0m ──────────────── @mada ╮ ╭ [1;7m# development[0m  Builds, deploys and [1mreviews[0m ────────────────────────────────────────╮
+╭ [1mBørsen[0m ──────────────── @mada ╮ ╭ [1;7m development[0m  Builds, deploys and [1mreviews[0m ────────────────────────────────────────╮
 │ [1m[0m [1mUnreads[0m                    3│ │▌[7m10:44 [1mkiky[0m[7m kim.kyhlensoe · lines 18–41 of 41                                       [27;49m│
 │                               │ │▌[7m      log line 18                                                                  [27;49m│
 │ [1m[0m [1mTEAM[0m                        │ │▌[7m      log line 19                                                                  [27;49m│
-│ [7m# development                 [27;49m│ │▌[7m      log line 20                                                                  [27;49m│
+│ [7m development                 [27;49m│ │▌[7m      log line 20                                                                  [27;49m│
 │!● [1mSimon Konstantyner[0m      🏡 2│ │▌[7m      log line 21                                                                  [27;49m│
 │ ○ Kim Kyhlensø kiky           │ │▌[7m      log line 22                                                                  [27;49m│
 │                               │ │▌[7m      log line 23                                                                  [27;49m│
-│ [1m[0m [1m#[0m [1mCHANNELS[0m                  │ │▌[7m      log line 24                                                                  [27;49m│
-│ # general                     │ │▌[7m      log line 25                                                                  [27;49m│
+│ [1m[0m [1m[0m [1mCHANNELS[0m                  │ │▌[7m      log line 24                                                                  [27;49m│
+│  general                     │ │▌[7m      log line 25                                                                  [27;49m│
 │![1m[0m [1mpanda-v2[0m                   1│ │▌[7m      log line 26                                                                  [27;49m│
-│▏[1m#[0m [1msjov-og-spass[0m               │ │▌[7m      log line 27                                                                  [27;49m│
+│▏[1m[0m [1msjov-og-spass[0m               │ │▌[7m      log line 27                                                                  [27;49m│
 │                               │ │▌[7m      log line 28                                                                  [27;49m│
-│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m           │ │▌[7m      log line 29                                                                  [27;49m│
+│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m           │ │▌[7m      log line 29                                                                  [27;49m│
 │ ○ mada (you)                  │ │▌[7m      log line 30                                                                  [27;49m│
-│ 󰬸 Simon Konstantyner, An…     │ │▌[7m      log line 31                                                                  [27;49m│
+│ 󰚕 Simon Konstantyner, An…     │ │▌[7m      log line 31                                                                  [27;49m│
 │                               │ │▌[7m      log line 32                                                                  [27;49m│
 │                               │ │▌[7m      log line 33                                                                  [27;49m│
 │                               │ │▌[7m      log line 34                                                                  [27;49m│
@@ -25,6 +25,6 @@
 │                               │ │▌[7m      log line 40                                                                  [27;49m│
 │                               │ ╰────────────────────────────────────────────────────────────────────────────────────╯
 │                               │ ╭────────────────────────────────────────────────────────────────────────────────────╮
-│                               │ │ Message # development                                                              │
+│                               │ │ Message  development                                                              │
 ╰───────────────────────────────╯ ╰────────────────────────────────────────────────────────────────────────────────────╯
 [7m [0m[1;7mNORMAL[0m[7m [0m  ● live                                                   [1mi[0m write   [1menter[0m thread   [1m+[0m react   [1m/[0m search   [1m?[0m help 

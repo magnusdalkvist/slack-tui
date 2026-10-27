@@ -68,14 +68,14 @@ Nerd Fonts stay. Icons come from Nerd Font v3 and live in one `icons.go` map, so
 
 | Use | Nerd Font (codepoint, name) | Unicode fallback |
 |---|---|---|
-| Public channel | `#` (the Nerd Font hashtag fills its cell and runs into the name) | `#` |
+| Public channel | `U+F4DF` nf-oct-hash (thinner than nf-fa-hashtag, which runs into the name) | `#` |
 | Private channel | `U+F023` nf-fa-lock | `◇` |
 | Person, active | `●` in `ok` | `●` |
 | Person, away | `○` in `faint` | `○` |
-| Group DM | `U+F0B38` nf-md-circle_multiple (a group, not a person) | `◎` |
+| Group DM | `U+F0695` nf-md-circle_multiple_outline (a group, not a person) | `◎` |
 | Unreads entry | `U+F01C` nf-fa-inbox | `≡` |
-| CHANNELS section | `#` | none |
-| DIRECT MESSAGES section | `U+F086` nf-fa-comments | none |
+| CHANNELS section | `U+F4DF` nf-oct-hash | none |
+| DIRECT MESSAGES section | `U+EAC7` nf-cod-comment_discussion | none |
 | EXTERNAL section | `U+F1AD` nf-fa-building | none |
 | Custom section | the section's Slack emoji (§3.1) | none |
 | Section folded / open | `U+F0DA` / `U+F0D7` nf-fa-caret_right / caret_down | `▸` / `▾` |
@@ -448,4 +448,4 @@ Gaps found while building this spec, and how they were filled.
 - **`e` on the error screen** opens `config.toml` in `$VISUAL`, `$EDITOR` or `vi`, then asks Slack again. Settings themselves are read at start, so the status bar says to restart for config changes. The error screen's bar shows only the `ERROR` pill and `e`/`q`, since nothing else works there.
 - **Hint keys are words** (`enter`, `alt+enter`, `esc`, `tab`). `⏎` drew badly in some fonts.
 - **The count column** is sized by the conversation rows only. A folded header's `2 new` may run into the status column, so it doesn't shorten every name.
-- **A presence circle**, not a user glyph, marks people everywhere (sidebar, switcher, completion, members). Group DMs get `nf-md-circle_multiple`.
+- **A presence circle**, not a user glyph, marks people everywhere (sidebar, switcher, completion, members). Group DMs get `nf-md-circle_multiple_outline`.
