@@ -211,7 +211,7 @@ func TestStatusAndPresenceShown(t *testing.T) {
 
 	m.open("D1")
 	v = dump(t, m)
-	if !strings.Contains(v, "Anna Jensen "+ico.UserActive+"  🏠 WFH") {
+	if !strings.Contains(v, "Anna Jensen "+ico.UserActive+" 🏠 WFH") {
 		t.Errorf("DM header lacks presence and status")
 	}
 
@@ -349,5 +349,24 @@ func TestSelfPresence(t *testing.T) {
 	m.away = true
 	if r := m.sideCells(sideItem{id: "D3"}, m.sections()); !strings.Contains(r.icon, ico.UserAway) {
 		t.Error(":away should show our own DM as away")
+	}
+}
+
+// TestDMHeaderPresenceAndStatus: "Peter T ○ 🤒 Out sick · until 23:59",
+// one space between each, the circle showing whether they are here.
+func TestDMHeaderPresenceAndStatus(t *testing.T) {
+	m := sceneModel(t, 120, 24)
+	u := m.users["U2"]
+	u.StatusEmoji, u.StatusText, u.StatusExpires = ":face_with_thermometer:", "Out sick", clockNow().Add(13*time.Hour).Unix()
+	m.users["U2"] = u
+	m.open("D2")
+	top := strings.Split(ansi.Strip(m.View()), "\n")[0]
+	if !strings.Contains(top, "kiky "+ico.UserAway+" 🤒 Out sick · until ") {
+		t.Errorf("away DM header: %q", top)
+	}
+	m.presence["U2"] = true
+	top = strings.Split(ansi.Strip(m.View()), "\n")[0]
+	if !strings.Contains(top, "kiky "+ico.UserActive+" 🤒 Out sick") {
+		t.Errorf("active DM header: %q", top)
 	}
 }
