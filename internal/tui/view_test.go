@@ -284,7 +284,7 @@ func TestSenderKeyIgnoresAppBotID(t *testing.T) {
 }
 
 func TestListItemsHang(t *testing.T) {
-	text := render.Mrkdwn("intro line\n• first item that is long enough to wrap\n  ◦ nested *item* that wraps too\n12. numbered item wraps here", fakeModel(t, 100, 30), mdStyles)
+	text := render.Mrkdwn("intro line\n• first item that is long enough to wrap\n  ◦ nested *item* that wraps too\n12. numbered item wraps here", fakeModel(t, 100, 30), sty.Md)
 	got := wrap(text, 20)
 	var plain []string
 	for _, l := range got {

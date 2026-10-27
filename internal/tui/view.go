@@ -19,11 +19,11 @@ func (m *Model) View() string {
 	}
 	if m.bootErr != nil {
 		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
-			sErr.Render("Could not load Slack: "+m.bootErr.Error())+"\n\n"+sDim.Render("ctrl+c to quit"))
+			sty.Err.Render("Could not load Slack: "+m.bootErr.Error())+"\n\n"+sty.Muted.Render("ctrl+c to quit"))
 	}
 	if !m.booted {
 		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
-			sDim.Render("Loading "+m.client.TeamName+"…"))
+			sty.Muted.Render("Loading "+m.client.TeamName+"…"))
 	}
 
 	if m.viewer != nil {
@@ -98,14 +98,14 @@ func fit(s string, w, h int) string {
 }
 
 func vline(h int) string {
-	return sFaint.Render(strings.TrimSuffix(strings.Repeat("│\n", h), "\n"))
+	return sty.Faint.Render(strings.TrimSuffix(strings.Repeat("│\n", h), "\n"))
 }
 
 func rule(w int, active bool) string {
 	if active {
-		return sBar.Render(strings.Repeat("─", w))
+		return sty.Bar.Render(strings.Repeat("─", w))
 	}
-	return sFaint.Render(strings.Repeat("─", w))
+	return sty.Faint.Render(strings.Repeat("─", w))
 }
 
 func (m *Model) convTitle(c *backend.Conversation) string {
@@ -124,23 +124,23 @@ func (m *Model) renderConvPane(w, h int) string {
 	if c == nil {
 		return placeholder("conversation not found", w, h)
 	}
-	title := sTitle.Render(m.convTitle(c))
+	title := sty.Title.Render(m.convTitle(c))
 	if c.Kind == backend.KindDM && c.UserID != m.client.SelfID {
 		if m.presence[c.UserID] {
-			title += " " + sOK.Render(onlineDot)
+			title += " " + sty.OK.Render(onlineDot)
 		}
 		if line := m.statusLine(c.UserID); line != "" {
 			if exp := m.users[c.UserID].StatusExpires; exp > 0 {
-				line += sDim.Render(" until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
+				line += sty.Muted.Render(" until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
 			}
 			title += "  " + line
 		}
 	}
 	if n := m.scheduledIn(c.ID); n > 0 {
-		title += "  " + sWarn.Render(fmt.Sprintf("%s %d scheduled", schedIcon, n))
+		title += "  " + sty.Warn.Render(fmt.Sprintf("%s %d scheduled", schedIcon, n))
 	}
 	if c.Topic != "" {
-		title += "  " + sTopic.Render(strings.ReplaceAll(render.Mrkdwn(c.Topic, m, mdStyles), "\n", " "))
+		title += "  " + sty.Topic.Render(strings.ReplaceAll(render.Mrkdwn(c.Topic, m, sty.Md), "\n", " "))
 	}
 	header := []string{ansi.Truncate(title, w, "…"), rule(w, m.focus == fMessages)}
 
@@ -155,9 +155,9 @@ func (m *Model) renderThreadPane(w, h int) string {
 	t := m.thread
 	where := ""
 	if c := m.convs[t.conv]; c != nil {
-		where = sDim.Render("  in " + m.convTitle(c))
+		where = sty.Muted.Render("  in " + m.convTitle(c))
 	}
-	header := []string{ansi.Truncate(sTitle.Render("Thread")+where, w, "…"), rule(w, m.focus == fThread)}
+	header := []string{ansi.Truncate(sty.Title.Render("Thread")+where, w, "…"), rule(w, m.focus == fThread)}
 	input := m.renderInput(w, m.focus == fThread, "reply in thread")
 	bodyH := max(1, h-len(header)-lineCount(input))
 	list := m.renderList(&t.list, w, bodyH, m.focus == fThread, true)
@@ -168,32 +168,32 @@ func (m *Model) renderThreadPane(w, h int) string {
 // hint under the other one.
 func (m *Model) renderInput(w int, isTarget bool, hint string) string {
 	if !isTarget {
-		return rule(w, false) + "\n" + sFaint.Render(" ")
+		return rule(w, false) + "\n" + sty.Faint.Render(" ")
 	}
 	if !m.insert {
-		return rule(w, false) + "\n" + sFaint.Render("  "+sKey.Render("i")+sFaint.Render(" "+hint))
+		return rule(w, false) + "\n" + sty.Faint.Render("  "+sty.Key.Render("i")+sty.Faint.Render(" "+hint))
 	}
 	m.input.SetWidth(w - 2)
 	m.fitInput() // the width may have changed, and with it the wrapping
 	// Labels go into the rule above the box: "── editing … ── image … ──".
 	var labels []string
 	if m.editing != nil {
-		labels = append(labels, sWarn.Render(" editing · enter save · esc cancel "))
+		labels = append(labels, sty.Warn.Render(" editing · enter save · esc cancel "))
 	}
 	if label := m.broadcastLabel(); label != "" {
 		if m.broadcast {
-			labels = append(labels, sWarn.Render(label))
+			labels = append(labels, sty.Warn.Render(label))
 		} else {
-			labels = append(labels, sFaint.Render(label))
+			labels = append(labels, sty.Faint.Render(label))
 		}
 	}
 	if label := m.attachLabel(); label != "" {
-		labels = append(labels, sWarn.Render(label))
+		labels = append(labels, sty.Warn.Render(label))
 	}
 	top := rule(w, true)
 	if len(labels) > 0 {
-		bar := sBar.Render("──") + strings.Join(labels, sBar.Render("──"))
-		top = ansi.Truncate(bar+sBar.Render(strings.Repeat("─", max(0, w-lipgloss.Width(bar)))), w, "")
+		bar := sty.Bar.Render("──") + strings.Join(labels, sty.Bar.Render("──"))
+		top = ansi.Truncate(bar+sty.Bar.Render(strings.Repeat("─", max(0, w-lipgloss.Width(bar)))), w, "")
 	}
 	if m.complete != nil {
 		top = strings.Join(m.renderCompletion(w), "\n") + "\n" + top
@@ -231,13 +231,13 @@ func lineCount(s string) int { return strings.Count(s, "\n") + 1 }
 
 func (m *Model) renderUnreads(w, h int) string {
 	convs := m.unreadConvs()
-	title := sTitle.Render("Unreads")
+	title := sty.Title.Render("Unreads")
 	if len(convs) > 0 {
-		title += sDim.Render(fmt.Sprintf("  %d %s", len(convs), plural(len(convs), "conversation", "conversations")))
+		title += sty.Muted.Render(fmt.Sprintf("  %d %s", len(convs), plural(len(convs), "conversation", "conversations")))
 	}
 	header := []string{title, rule(w, m.focus == fMessages)}
-	footer := sFaint.Render("  ") + sKey.Render("enter") + sFaint.Render(" open  ") +
-		sKey.Render("r") + sFaint.Render(" mark read  ") + sKey.Render("u") + sFaint.Render(" next unread")
+	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" open  ") +
+		sty.Key.Render("r") + sty.Faint.Render(" mark read  ") + sty.Key.Render("u") + sty.Faint.Render(" next unread")
 	bodyH := h - len(header) - 2
 
 	if len(convs) == 0 {
@@ -254,39 +254,39 @@ func (m *Model) renderUnreads(w, h int) string {
 	for i, c := range convs {
 		bar := "  "
 		if i == sel {
-			bar = sBar.Render("▌") + " "
+			bar = sty.Bar.Render("▌") + " "
 			if m.focus != fMessages {
-				bar = sBarDim.Render("▌") + " "
+				bar = sty.BarDim.Render("▌") + " "
 			}
 			selStart = len(all)
 		}
-		head := sUnread.Render(m.convTitle(c)) + "  " + sTime.Render(relTime(backend.TSTime(c.Latest), m.cfg.TimeFormat))
+		head := sty.Unread.Render(m.convTitle(c)) + "  " + sty.Time.Render(relTime(backend.TSTime(c.Latest), m.cfg.TimeFormat))
 		if c.Mentions > 0 {
-			head += " " + sBadge.Render(fmt.Sprint(c.Mentions))
+			head += " " + sty.Badge.Render(fmt.Sprint(c.Mentions))
 		}
 		block := []string{head}
 		msgs, ok := m.unreadMsgs[c.ID]
 		switch {
 		case !ok:
-			block = append(block, sDim.Render("  loading…"))
+			block = append(block, sty.Muted.Render("  loading…"))
 		case len(msgs) == 0:
-			block = append(block, sDim.Render("  (only thread replies or hidden messages)"))
+			block = append(block, sty.Muted.Render("  (only thread replies or hidden messages)"))
 		default:
 			const show = 5
 			if len(msgs) > show {
-				block = append(block, sDim.Render(fmt.Sprintf("  … %d earlier", len(msgs)-show)))
+				block = append(block, sty.Muted.Render(fmt.Sprintf("  … %d earlier", len(msgs)-show)))
 				msgs = msgs[len(msgs)-show:]
 			}
 			for _, msg := range msgs {
-				name := nameStyle(senderKey(msg)).Render(m.senderName(msg))
-				text := strings.ReplaceAll(render.Mrkdwn(msg.Text, m, mdStyles), "\n", " ")
+				name := sty.Sender(senderKey(msg)).Render(m.senderName(msg))
+				text := strings.ReplaceAll(render.Mrkdwn(msg.Text, m, sty.Md), "\n", " ")
 				if strings.TrimSpace(msg.Text) == "" && len(msg.Files) > 0 {
-					text = sDim.Render(msg.Files[0].Name)
+					text = sty.Muted.Render(msg.Files[0].Name)
 				}
-				line := name + " " + sTime.Render(msg.Time().Format(m.cfg.TimeFormat)) + "  " + text
+				line := name + " " + sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat)) + "  " + text
 				wrapped := wrap(line, w-4)
 				if len(wrapped) > 3 {
-					wrapped = append(wrapped[:3:3], sFaint.Render("…"))
+					wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 				}
 				for _, l := range wrapped {
 					block = append(block, "  "+l)
@@ -318,37 +318,37 @@ func (m *Model) renderUnreads(w, h int) string {
 }
 
 func (m *Model) renderStatus() string {
-	mode := sModeN.Render("NORMAL")
+	mode := sty.ModeNormal.Render("NORMAL")
 	if m.insert {
-		mode = sModeI.Render("INSERT")
+		mode = sty.ModeInsert.Render("INSERT")
 	} else if m.search != nil && m.search.typing {
-		mode = sModeI.Render("SEARCH")
+		mode = sty.ModeInsert.Render("SEARCH")
 	}
 	var conn string
 	switch m.conn {
 	case "connected":
-		conn = sOK.Render("● live")
+		conn = sty.OK.Render("● live")
 	case "error":
-		conn = sErr.Render("✕ offline")
+		conn = sty.Err.Render("✕ offline")
 	default:
-		conn = sWarn.Render("○ connecting")
+		conn = sty.Warn.Render("○ connecting")
 	}
 	parts := append([]string{mode, conn}, m.meStatus()...)
 	if m.confirm != nil {
-		parts = append(parts, sWarn.Render(m.confirm.prompt))
+		parts = append(parts, sty.Warn.Render(m.confirm.prompt))
 	}
 	if m.infoPending > 0 {
-		parts = append(parts, sDim.Render(fmt.Sprintf("checking unreads %d/%d", m.infoTotal-m.infoPending, m.infoTotal)))
+		parts = append(parts, sty.Muted.Render(fmt.Sprintf("checking unreads %d/%d", m.infoTotal-m.infoPending, m.infoTotal)))
 	}
 	if m.status != "" {
 		if m.statusErr {
-			parts = append(parts, sErr.Render(m.status))
+			parts = append(parts, sty.Err.Render(m.status))
 		} else {
-			parts = append(parts, sDim.Render(m.status))
+			parts = append(parts, sty.Muted.Render(m.status))
 		}
 	}
 	left := strings.Join(parts, "  ")
-	right := sDim.Render("ctrl+k jump · / search · : command · ? help ")
+	right := sty.Muted.Render("ctrl+k jump · / search · : command · ? help ")
 	gap := m.width - lipgloss.Width(left) - lipgloss.Width(right)
 	if gap < 1 {
 		return ansi.Truncate(left, m.width, "…")

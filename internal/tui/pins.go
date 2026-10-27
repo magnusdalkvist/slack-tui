@@ -218,17 +218,17 @@ func (m *Model) pinEvent(ev backend.EvPin) tea.Cmd {
 
 func (m *Model) renderPins(w, h int) string {
 	p := m.pins
-	title := sTitle.Render("Pinned & bookmarks")
+	title := sty.Title.Render("Pinned & bookmarks")
 	if c := m.convs[p.conv]; c != nil {
-		title += sDim.Render("  " + m.convTitle(c))
+		title += sty.Muted.Render("  " + m.convTitle(c))
 	}
 	header := []string{title, rule(w, true)}
-	footer := sFaint.Render("  ") + sKey.Render("enter") + sFaint.Render(" go to / open  ") +
-		sKey.Render("o") + sFaint.Render(" open in Slack  ") + sKey.Render("p") + sFaint.Render(" unpin  ") +
-		sKey.Render("a e d") + sFaint.Render(" add / edit / remove bookmark  ") + sKey.Render("esc") + sFaint.Render(" close")
+	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" go to / open  ") +
+		sty.Key.Render("o") + sty.Faint.Render(" open in Slack  ") + sty.Key.Render("p") + sty.Faint.Render(" unpin  ") +
+		sty.Key.Render("a e d") + sty.Faint.Render(" add / edit / remove bookmark  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
 	footer = ansi.Truncate(footer, w, "…")
 	for _, e := range p.errs {
-		header = append(header, "  "+sErr.Render(e))
+		header = append(header, "  "+sty.Err.Render(e))
 	}
 	bodyH := max(1, h-len(header)-2)
 	if p.count() == 0 {
@@ -245,7 +245,7 @@ func (m *Model) renderPins(w, h int) string {
 	add := func(i int, block []string) {
 		bar := "  "
 		if i == sel {
-			bar = sBar.Render("▌") + " "
+			bar = sty.Bar.Render("▌") + " "
 			selStart = len(all)
 		}
 		for _, l := range block {
@@ -257,7 +257,7 @@ func (m *Model) renderPins(w, h int) string {
 		all = append(all, "")
 	}
 	if len(p.bookmarks) > 0 {
-		all = append(all, "  "+sHeader.Render("BOOKMARKS"), "")
+		all = append(all, "  "+sty.Header.Render("BOOKMARKS"), "")
 	}
 	for i, b := range p.bookmarks {
 		label := b.Title
@@ -267,10 +267,10 @@ func (m *Model) renderPins(w, h int) string {
 		if name := strings.Trim(b.Emoji, ":"); name != "" {
 			label = m.emojiChip(name) + " " + label
 		}
-		add(i, []string{sNormal.Render(label), sDim.Render(b.Link)})
+		add(i, []string{sty.Normal.Render(label), sty.Muted.Render(b.Link)})
 	}
 	if len(p.pins) > 0 {
-		all = append(all, "  "+sHeader.Render("PINNED"), "")
+		all = append(all, "  "+sty.Header.Render("PINNED"), "")
 	}
 	for i, pin := range p.pins {
 		var block []string
@@ -280,22 +280,22 @@ func (m *Model) renderPins(w, h int) string {
 				if name == "" {
 					name = f.Name
 				}
-				block = append(block, sNormal.Render(name), sDim.Render("file"))
+				block = append(block, sty.Normal.Render(name), sty.Muted.Render("file"))
 			}
 		} else {
-			name := nameStyle(senderKey(pin.Message)).Render(m.senderName(pin.Message))
-			line := name + " " + sTime.Render(relTime(pin.Time(), m.cfg.TimeFormat))
+			name := sty.Sender(senderKey(pin.Message)).Render(m.senderName(pin.Message))
+			line := name + " " + sty.Time.Render(relTime(pin.Time(), m.cfg.TimeFormat))
 			if pin.IsReply() {
-				line += sThread.Render("  in thread")
+				line += sty.Thread.Render("  in thread")
 			}
 			block = append(block, line)
-			text := strings.ReplaceAll(render.Mrkdwn(pin.Text, m, mdStyles), "\n", " ")
+			text := strings.ReplaceAll(render.Mrkdwn(pin.Text, m, sty.Md), "\n", " ")
 			if strings.TrimSpace(pin.Text) == "" && len(pin.Files) > 0 {
-				text = sDim.Render(pin.Files[0].Name)
+				text = sty.Muted.Render(pin.Files[0].Name)
 			}
 			wrapped := wrap(text, w-4)
 			if len(wrapped) > 3 {
-				wrapped = append(wrapped[:3:3], sFaint.Render("…"))
+				wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 			}
 			block = append(block, wrapped...)
 		}

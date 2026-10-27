@@ -129,16 +129,16 @@ func (m *Model) membersKey(k tea.KeyMsg) tea.Cmd {
 func (m *Model) renderMembers(w, h int) string {
 	s := m.members
 	s.input.Width = max(10, w-6)
-	title := sTitle.Render("Members")
+	title := sty.Title.Render("Members")
 	if c := m.convs[s.conv]; c != nil {
-		title += sDim.Render("  " + m.convRef(c))
+		title += sty.Muted.Render("  " + m.convRef(c))
 	}
 	if s.ids != nil {
-		title += sDim.Render(fmt.Sprintf("  %d %s", len(s.ids), plural(len(s.ids), "person", "people")))
+		title += sty.Muted.Render(fmt.Sprintf("  %d %s", len(s.ids), plural(len(s.ids), "person", "people")))
 	}
 	header := []string{title, rule(w, true), " " + s.input.View(), ""}
-	footer := sFaint.Render("  ") + sKey.Render("enter") + sFaint.Render(" profile  ") +
-		sKey.Render("↑ ↓") + sFaint.Render(" move  ") + sKey.Render("esc") + sFaint.Render(" close")
+	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" profile  ") +
+		sty.Key.Render("↑ ↓") + sty.Faint.Render(" move  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
 	bodyH := max(1, h-len(header)-2)
 	if len(s.matches) == 0 {
 		msg := "nobody matches"
@@ -164,7 +164,7 @@ func (m *Model) renderMembers(w, h int) string {
 			name += " (you)"
 		}
 		if m.presence[id] {
-			name += " " + sOK.Render(onlineDot)
+			name += " " + sty.OK.Render(onlineDot)
 		}
 		var info []string
 		if u.RealName != "" && u.RealName != u.Label() {
@@ -181,15 +181,15 @@ func (m *Model) renderMembers(w, h int) string {
 		}
 		var row string
 		if i == sel {
-			row = sBar.Render("▌") + " " + sActive.Render(ansi.Strip(name))
+			row = sty.Bar.Render("▌") + " " + sty.Active.Render(ansi.Strip(name))
 		} else {
-			row = "  " + sNormal.Render(name)
+			row = "  " + sty.Normal.Render(name)
 		}
 		if line := m.statusLine(id); line != "" {
 			row += " " + line
 		}
 		if len(info) > 0 {
-			row += "  " + sDim.Render(strings.Join(info, " · "))
+			row += "  " + sty.Muted.Render(strings.Join(info, " · "))
 		}
 		rows = append(rows, ansi.Truncate(row, w, "…"))
 	}

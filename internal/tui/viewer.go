@@ -279,17 +279,17 @@ func (m *Model) renderViewer() string {
 	var body string
 	switch st := v.cache[f.ID]; {
 	case st == nil || st.loading:
-		body = sDim.Render("loading " + name + "…")
+		body = sty.Muted.Render("loading " + name + "…")
 	case st.err != "":
-		body = sErr.Render(name + ": " + st.err)
+		body = sty.Err.Render(name + ": " + st.err)
 	case v.shown != f.ID:
-		body = sDim.Render("loading " + name + "…")
+		body = sty.Muted.Render("loading " + name + "…")
 	default:
 		body = strings.Join(kitty.Placeholder(v.shownID(st), st.cols, st.rows), "\n")
 	}
 	pic := lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, body)
-	caption := sDim.Render(fmt.Sprintf("  %s · %d/%d · ", name, v.idx+1, len(v.items))) +
-		sKey.Render("← →") + sDim.Render(" browse · ") + sKey.Render("o") + sDim.Render(" open · ") +
-		sKey.Render("esc") + sDim.Render(" close")
+	caption := sty.Muted.Render(fmt.Sprintf("  %s · %d/%d · ", name, v.idx+1, len(v.items))) +
+		sty.Key.Render("← →") + sty.Muted.Render(" browse · ") + sty.Key.Render("o") + sty.Muted.Render(" open · ") +
+		sty.Key.Render("esc") + sty.Muted.Render(" close")
 	return fit(pic, w, h) + "\n" + fit(caption, w, 1)
 }

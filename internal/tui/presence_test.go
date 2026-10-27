@@ -255,7 +255,7 @@ func TestStatusEmojiOnSelectedRow(t *testing.T) {
 	for _, it := range m.side {
 		if it.id == "D1" {
 			row := m.sideRow(it, false, 29)
-			if !strings.Contains(row, selBgOn+" 🏠"+selBgOff) {
+			if !strings.Contains(row, sty.SelOn()+" 🏠"+SelOff) {
 				t.Errorf("status emoji lacks the selection background: %q", row)
 			}
 			return

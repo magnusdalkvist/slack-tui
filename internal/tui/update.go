@@ -68,7 +68,7 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case animTick:
-		return m, m.stepAnims(time.Now())
+		return m, m.stepAnims(clockNow())
 
 	case emojiImgMsg:
 		if st := m.emojiImgs[msg.name]; st != nil {
@@ -460,7 +460,7 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.setStatus(msg.err.Error(), true)
 		}
 		cmd := m.setDND(msg.dnd)
-		if until, on := msg.dnd.Until(time.Now()); on {
+		if until, on := msg.dnd.Until(clockNow()); on {
 			return m, tea.Batch(cmd, m.setStatus("notifications paused until "+clock(until, m.cfg.TimeFormat), false))
 		}
 		return m, tea.Batch(cmd, m.setStatus("notifications on", false))

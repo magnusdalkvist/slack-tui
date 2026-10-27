@@ -162,7 +162,7 @@ func (m *Model) cmdLater(args string) tea.Cmd {
 	if text == "" {
 		return m.setStatus("write the message first, then :later 9:00 (or ctrl+s while writing)", false)
 	}
-	at, err := parseLater(args, time.Now())
+	at, err := parseLater(args, clockNow())
 	if err != nil {
 		return m.setStatus(err.Error(), true)
 	}
@@ -196,7 +196,7 @@ func (m *Model) loadScheduled() tea.Cmd {
 // upcoming is the scheduled messages not yet due; the ones whose time has
 // come have been sent and show up as ordinary messages.
 func (m *Model) upcoming() []backend.Scheduled {
-	now := time.Now()
+	now := clockNow()
 	var out []backend.Scheduled
 	for _, s := range m.scheduled {
 		if s.PostAt.After(now) {
@@ -235,7 +235,7 @@ func (m *Model) scheduledResult(msg scheduledMsg) tea.Cmd {
 		m.schedThread[msg.s.ID] = msg.threadTS
 	}
 	m.addScheduled(msg.s)
-	return m.setStatus("scheduled for "+fmtWhen(msg.s.PostAt, time.Now(), m.cfg.TimeFormat)+" — :scheduled lists them", false)
+	return m.setStatus("scheduled for "+fmtWhen(msg.s.PostAt, clockNow(), m.cfg.TimeFormat)+" — :scheduled lists them", false)
 }
 
 func (m *Model) openScheduled() tea.Cmd {
@@ -340,7 +340,7 @@ func (m *Model) schedKey(k tea.KeyMsg) tea.Cmd {
 		}
 		sm := *cur
 		m.confirm = &confirmState{
-			prompt: "cancel the message for " + fmtWhen(sm.PostAt, time.Now(), m.cfg.TimeFormat) + "? y/n",
+			prompt: "cancel the message for " + fmtWhen(sm.PostAt, clockNow(), m.cfg.TimeFormat) + "? y/n",
 			yes: func() tea.Cmd {
 				m.dropScheduled(sm.ID)
 				return func() tea.Msg {
@@ -392,13 +392,13 @@ func (m *Model) scheduledIn(conv string) int {
 func (m *Model) renderScheduled(w, h int) string {
 	s := m.sched
 	list := m.upcoming()
-	header := []string{sTitle.Render("Scheduled messages"), rule(w, true)}
+	header := []string{sty.Title.Render("Scheduled messages"), rule(w, true)}
 	if s.err != "" {
-		header = append(header, "  "+sErr.Render(s.err))
+		header = append(header, "  "+sty.Err.Render(s.err))
 	}
-	footer := sFaint.Render("  ") + sKey.Render("enter") + sFaint.Render(" go to  ") +
-		sKey.Render("e") + sFaint.Render(" back to composer  ") + sKey.Render("d") + sFaint.Render(" cancel  ") +
-		sKey.Render("R") + sFaint.Render(" reload  ") + sKey.Render("esc") + sFaint.Render(" close")
+	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" go to  ") +
+		sty.Key.Render("e") + sty.Faint.Render(" back to composer  ") + sty.Key.Render("d") + sty.Faint.Render(" cancel  ") +
+		sty.Key.Render("R") + sty.Faint.Render(" reload  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
 	bodyH := max(1, h-len(header)-2)
 	if len(list) == 0 {
 		msg := "nothing scheduled — write a message, then ctrl+s"
@@ -408,29 +408,29 @@ func (m *Model) renderScheduled(w, h int) string {
 		return strings.Join(append(header, placeholder(msg, w, bodyH), rule(w, false), footer), "\n")
 	}
 
-	now := time.Now()
+	now := clockNow()
 	sel := min(max(s.sel, 0), len(list)-1)
 	var all []string
 	var selStart, selEnd int
 	for i, sm := range list {
 		bar := "  "
 		if i == sel {
-			bar = sBar.Render("▌") + " "
+			bar = sty.Bar.Render("▌") + " "
 			selStart = len(all)
 		}
 		where := sm.Channel
 		if c := m.convs[sm.Channel]; c != nil {
 			where = m.convTitle(c)
 		}
-		line := sWarn.Render(schedIcon+" "+fmtWhen(sm.PostAt, now, m.cfg.TimeFormat)) + "  " + sNormal.Render(where)
+		line := sty.Warn.Render(schedIcon+" "+fmtWhen(sm.PostAt, now, m.cfg.TimeFormat)) + "  " + sty.Normal.Render(where)
 		if m.schedThread[sm.ID] != "" {
-			line += sThread.Render("  in thread")
+			line += sty.Thread.Render("  in thread")
 		}
 		block := []string{line}
-		text := strings.ReplaceAll(render.Mrkdwn(sm.Text, m, mdStyles), "\n", " ")
+		text := strings.ReplaceAll(render.Mrkdwn(sm.Text, m, sty.Md), "\n", " ")
 		wrapped := wrap(text, w-4)
 		if len(wrapped) > 3 {
-			wrapped = append(wrapped[:3:3], sFaint.Render("…"))
+			wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 		}
 		block = append(block, wrapped...)
 		for _, l := range block {

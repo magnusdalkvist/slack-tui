@@ -218,8 +218,8 @@ func (m *Model) unreadCount() int {
 
 func (m *Model) renderSidebar(width, height int) string {
 	lines := []string{
-		sTitle.Render(ansi.Truncate(m.client.TeamName, width-1, "…")),
-		sFaint.Render(strings.Repeat("─", width-1)),
+		sty.Title.Render(ansi.Truncate(m.client.TeamName, width-1, "…")),
+		sty.Faint.Render(strings.Repeat("─", width-1)),
 	}
 	bodyH := height - len(lines)
 
@@ -248,7 +248,7 @@ func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
 	if it.header != "" {
 		marker := " "
 		if cursor && m.focus == fSidebar {
-			marker = sBar.Render("▌")
+			marker = sty.Bar.Render("▌")
 		}
 		arrow := "▾"
 		if m.folded[it.header] {
@@ -259,9 +259,9 @@ func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
 			icon += " "
 		}
 		room := width - 6 - ansi.StringWidth(icon)
-		row := sHeader.Render(arrow+" ") + icon + sHeader.Render(ansi.Truncate(strings.ToUpper(it.header), room, "…"))
+		row := sty.Header.Render(arrow+" ") + icon + sty.Header.Render(ansi.Truncate(strings.ToUpper(it.header), room, "…"))
 		if it.hidden > 0 {
-			row += sFaint.Render(fmt.Sprintf(" %d", it.hidden))
+			row += sty.Faint.Render(fmt.Sprintf(" %d", it.hidden))
 		}
 		return marker + row
 	}
@@ -301,11 +301,11 @@ func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
 
 	marker := " "
 	if cursor && m.focus == fSidebar {
-		marker = sBar.Render("▌")
+		marker = sty.Bar.Render("▌")
 	}
 	badgeStr := ""
 	if badge > 0 {
-		badgeStr = sBadge.Render(fmt.Sprint(badge))
+		badgeStr = sty.Badge.Render(fmt.Sprint(badge))
 	}
 	dot := ""
 	if active {
@@ -314,24 +314,24 @@ func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
 	room := width - 4 - lipgloss.Width(badgeStr) - ansi.StringWidth(dot) - ansi.StringWidth(status)
 	label = ansi.Truncate(label, room, "…")
 
-	style := sDim
+	style := sty.Muted
 	if unread {
-		style = sUnread
+		style = sty.Unread
 	}
 	if it.id == m.current {
-		style = sActive
+		style = sty.Active
 	}
 	text := style.Render(icon + " " + label)
 	if dot != "" {
 		// A green dot after the name for people who are active.
-		text += style.Foreground(cOK).Render(dot)
+		text += style.Foreground(sty.theme.OK).Render(dot)
 	}
 	pad := max(0, width-1-lipgloss.Width(text)-ansi.StringWidth(status)-lipgloss.Width(badgeStr))
 	// The status emoji is drawn as is: a custom one is an image whose
 	// placeholder cells must keep their own foreground colour, so only the
 	// selection background goes around it.
 	if status != "" && it.id == m.current {
-		status = selBgOn + status + selBgOff
+		status = sty.SelOn() + status + SelOff
 	}
 	row := text + status + style.Render(strings.Repeat(" ", pad)) + badgeStr
 	return marker + row

@@ -497,13 +497,13 @@ func slackReason(err error) string {
 func (m *Model) renderChans(w, h int) string {
 	s := m.chans
 	s.input.Width = max(10, w-6)
-	title := sTitle.Render("Channels")
+	title := sty.Title.Render("Channels")
 	if m.public != nil {
-		title += sDim.Render(fmt.Sprintf("  %d public", len(m.public)))
+		title += sty.Muted.Render(fmt.Sprintf("  %d public", len(m.public)))
 	}
 	header := []string{title, rule(w, true), " " + s.input.View(), ""}
-	footer := sFaint.Render("  ") + sKey.Render("enter") + sFaint.Render(" join / open  ") +
-		sKey.Render("↑ ↓") + sFaint.Render(" move  ") + sKey.Render("esc") + sFaint.Render(" close")
+	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" join / open  ") +
+		sty.Key.Render("↑ ↓") + sty.Faint.Render(" move  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
 	bodyH := max(1, h-len(header)-2)
 	if len(s.matches) == 0 {
 		msg := "no channel matches"
@@ -537,13 +537,13 @@ func (m *Model) renderChans(w, h int) string {
 		}
 		var row string
 		if i == sel {
-			row = sBar.Render("▌") + " " + sActive.Render(name)
+			row = sty.Bar.Render("▌") + " " + sty.Active.Render(name)
 		} else if ch.IsMember {
-			row = "  " + sNormal.Render(name)
+			row = "  " + sty.Normal.Render(name)
 		} else {
-			row = "  " + sUnread.Render(name)
+			row = "  " + sty.Unread.Render(name)
 		}
-		rows = append(rows, ansi.Truncate(row+"  "+sDim.Render(info), w, "…"))
+		rows = append(rows, ansi.Truncate(row+"  "+sty.Muted.Render(info), w, "…"))
 	}
 	for len(rows) < bodyH {
 		rows = append(rows, "")

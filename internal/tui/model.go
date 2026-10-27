@@ -12,6 +12,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/cache"
@@ -183,6 +185,13 @@ type Model struct {
 }
 
 func New(ctx context.Context, client *backend.Client, cfg config.Config) *Model {
+	// Before the program starts: auto asks the terminal for its background.
+	theme, warns := LoadTheme(cfg.Theme.Name, cfg.Theme.Overrides)
+	if theme.NoColor {
+		// NO_COLOR makes lipgloss drop bold and reverse too; keep those.
+		lipgloss.SetColorProfile(termenv.ANSI)
+	}
+	useTheme(theme)
 	ta := textarea.New()
 	ta.ShowLineNumbers = false
 	ta.Prompt = ""
@@ -193,7 +202,7 @@ func New(ctx context.Context, client *backend.Client, cfg config.Config) *Model 
 	ta.BlurredStyle = ta.FocusedStyle
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 
-	return &Model{
+	m := &Model{
 		ctx:           ctx,
 		client:        client,
 		cfg:           cfg,
@@ -221,6 +230,10 @@ func New(ctx context.Context, client *backend.Client, cfg config.Config) *Model 
 		input:         ta,
 		conn:          "connecting",
 	}
+	if len(warns) > 0 {
+		m.status, m.statusErr = strings.Join(warns, "; "), true
+	}
+	return m
 }
 
 // --- Bubble Tea messages ---------------------------------------------------

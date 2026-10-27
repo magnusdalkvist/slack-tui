@@ -77,13 +77,13 @@ func (m *Model) renderOpener(width int) string {
 	o := m.opener
 	boxW := min(70, width-4)
 	inner := boxW - 4
-	rows := []string{sTitle.Render("Open"), sFaint.Render(strings.Repeat("─", inner))}
+	rows := []string{sty.Title.Render("Open"), sty.Faint.Render(strings.Repeat("─", inner))}
 	start := max(0, o.sel-openerRows+1)
 	for i := start; i < len(o.items) && i < start+openerRows; i++ {
 		it := o.items[i]
 		num := "  "
 		if i < 9 {
-			num = sKey.Render(fmt.Sprint(i+1)) + " "
+			num = sty.Key.Render(fmt.Sprint(i+1)) + " "
 		}
 		var label string
 		if f := it.file; f != nil {
@@ -95,19 +95,19 @@ func (m *Model) renderOpener(width int) string {
 			if f.IsImage() {
 				kind = "image"
 			}
-			label = name + "  " + sDim.Render(kind)
+			label = name + "  " + sty.Muted.Render(kind)
 		} else if it.link.Label != "" {
-			label = it.link.Label + "  " + sDim.Render(it.link.URL)
+			label = it.link.Label + "  " + sty.Muted.Render(it.link.URL)
 		} else {
 			label = it.link.URL
 		}
 		label = ansi.Truncate(label, inner-4, "…")
 		if i == o.sel {
-			rows = append(rows, sBar.Render("▌")+" "+num+label)
+			rows = append(rows, sty.Bar.Render("▌")+" "+num+label)
 		} else {
 			rows = append(rows, "  "+num+label)
 		}
 	}
-	rows = append(rows, "", sFaint.Render("1-9 or enter open · j k move · esc close"))
-	return sBox.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	rows = append(rows, "", sty.Faint.Render("1-9 or enter open · j k move · esc close"))
+	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }

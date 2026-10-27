@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -96,7 +95,7 @@ func (m *Model) scanEmoji() tea.Cmd {
 	}
 	// Status emoji: the user's own, and those of people in the DM list.
 	wantStatus := func(userID string) {
-		if e, _ := m.users[userID].Status(time.Now()); e != "" {
+		if e, _ := m.users[userID].Status(clockNow()); e != "" {
 			want(strings.Trim(e, ":"))
 		}
 	}
@@ -194,11 +193,11 @@ func (m *Model) sectionIcon(section string) string {
 	// (Octicons): a hash for channels, two speech bubbles for DMs.
 	switch section {
 	case "Channels":
-		return sHeader.Render("\uf4df")
+		return sty.Header.Render("\uf4df")
 	case "Direct messages":
-		return sHeader.Render("\uf442")
+		return sty.Header.Render("\uf442")
 	case "External":
-		return sHeader.Render("\uf42b")
+		return sty.Header.Render("\uf42b")
 	}
 	return ""
 }

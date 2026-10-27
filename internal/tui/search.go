@@ -56,12 +56,6 @@ const (
 	jumpMaxPages = 10 // give up after ~2000 messages
 )
 
-// Matched words: bold amber, then back to the default colour.
-const (
-	hitOn  = "\x1b[1;38;5;221m"
-	hitOff = "\x1b[22;39m"
-)
-
 func (m *Model) openSearch() tea.Cmd {
 	if m.search == nil {
 		ti := textinput.New()
@@ -461,18 +455,18 @@ func (m *Model) hitWhere(h backend.Hit) string {
 
 func (m *Model) renderSearch(w, h int) string {
 	s := m.search
-	title := sTitle.Render("Search")
+	title := sty.Title.Render("Search")
 	switch {
 	case s.query == "":
 	case s.loading && len(s.hits) == 0:
-		title += sDim.Render("  searching…")
+		title += sty.Muted.Render("  searching…")
 	case s.err == "":
-		title += sDim.Render(fmt.Sprintf("  %d %s", s.total, plural(s.total, "result", "results")))
+		title += sty.Muted.Render(fmt.Sprintf("  %d %s", s.total, plural(s.total, "result", "results")))
 	}
 	s.input.Width = max(10, w-4)
 	inputLine := "  " + s.input.View()
 	if !s.typing {
-		inputLine = "  " + sDim.Render("/ "+s.input.Value())
+		inputLine = "  " + sty.Muted.Render("/ "+s.input.Value())
 	}
 	header := []string{title, rule(w, !s.typing), inputLine}
 	if s.typing && s.complete != nil {
@@ -481,17 +475,17 @@ func (m *Model) renderSearch(w, h int) string {
 	header = append(header, rule(w, s.typing))
 	var footer string
 	if s.typing {
-		footer = sFaint.Render("  ") + sKey.Render("enter") + sFaint.Render(" search  ") + sKey.Render("esc") + sFaint.Render(" back")
+		footer = sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" search  ") + sty.Key.Render("esc") + sty.Faint.Render(" back")
 	} else {
-		footer = sFaint.Render("  ") + sKey.Render("enter") + sFaint.Render(" go to message  ") +
-			sKey.Render("o") + sFaint.Render(" open in Slack  ") + sKey.Render("/") + sFaint.Render(" edit query  ") +
-			sKey.Render("esc") + sFaint.Render(" close")
+		footer = sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" go to message  ") +
+			sty.Key.Render("o") + sty.Faint.Render(" open in Slack  ") + sty.Key.Render("/") + sty.Faint.Render(" edit query  ") +
+			sty.Key.Render("esc") + sty.Faint.Render(" close")
 	}
 	bodyH := max(1, h-len(header)-2)
 
 	switch {
 	case s.err != "":
-		return strings.Join(append(header, placeholder(sErr.Render(s.err), w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(sty.Err.Render(s.err), w, bodyH), rule(w, false), footer), "\n")
 	case s.query == "":
 		return strings.Join(append(header, placeholder("type a query and press enter", w, bodyH), rule(w, false), footer), "\n")
 	case len(s.hits) == 0:
@@ -508,9 +502,9 @@ func (m *Model) renderSearch(w, h int) string {
 	for i, hit := range s.hits {
 		bar := "  "
 		if i == sel {
-			bar = sBar.Render("▌") + " "
+			bar = sty.Bar.Render("▌") + " "
 			if s.typing {
-				bar = sBarDim.Render("▌") + " "
+				bar = sty.BarDim.Render("▌") + " "
 			}
 			selStart = len(all)
 		}
@@ -523,24 +517,24 @@ func (m *Model) renderSearch(w, h int) string {
 		case c != nil && c.Kind == backend.KindDM:
 			icon = userIcon + " "
 		}
-		where := sUnread.Render(icon + m.hitWhere(hit))
+		where := sty.Unread.Render(icon + m.hitWhere(hit))
 		if hit.ThreadTS != "" && hit.ThreadTS != hit.TS {
-			where += sThread.Render("  in thread")
+			where += sty.Thread.Render("  in thread")
 		}
-		name := nameStyle(senderKey(hit.Message)).Render(m.senderName(hit.Message))
-		block := []string{where, name + " " + sTime.Render(relTime(hit.Time(), m.cfg.TimeFormat))}
-		text := strings.ReplaceAll(render.Mrkdwn(unmarkEntities(hit.Text), m, mdStyles), "\n", " ")
-		text = strings.NewReplacer(backend.HitStart, hitOn, backend.HitEnd, hitOff).Replace(text)
+		name := sty.Sender(senderKey(hit.Message)).Render(m.senderName(hit.Message))
+		block := []string{where, name + " " + sty.Time.Render(relTime(hit.Time(), m.cfg.TimeFormat))}
+		text := strings.ReplaceAll(render.Mrkdwn(unmarkEntities(hit.Text), m, sty.Md), "\n", " ")
+		text = strings.NewReplacer(backend.HitStart, sty.HitOn(), backend.HitEnd, HitOff).Replace(text)
 		wrapped := wrap(text, w-4)
 		if len(wrapped) > 3 {
-			wrapped = append(wrapped[:3:3], sFaint.Render("…"))
+			wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 		}
 		block = append(block, wrapped...)
 		for _, f := range hit.Files {
 			if pic := m.thumbLines(f); pic != nil {
 				block = append(block, pic...)
 			} else if !f.IsImage() || m.gfx == nil {
-				block = append(block, sDim.Render(fileLabel(f)))
+				block = append(block, sty.Muted.Render(fileLabel(f)))
 			}
 		}
 		for _, l := range block {
@@ -552,7 +546,7 @@ func (m *Model) renderSearch(w, h int) string {
 		all = append(all, "")
 	}
 	if s.page < s.pages {
-		all = append(all, sFaint.Render(center("more below…", w)))
+		all = append(all, sty.Faint.Render(center("more below…", w)))
 	}
 
 	if selStart < s.top {

@@ -197,7 +197,7 @@ func (m *Model) renderHelp(width, height int) string {
 	inner := boxW - 4
 	h.input.Width = inner - 3
 	keyW := 22
-	rows := []string{h.input.View(), sFaint.Render(strings.Repeat("─", inner))}
+	rows := []string{h.input.View(), sty.Faint.Render(strings.Repeat("─", inner))}
 	listH := max(3, height-6)
 
 	var lines []string
@@ -206,20 +206,20 @@ func (m *Model) renderHelp(width, height int) string {
 	for k, i := range h.matches {
 		e := h.entries[i]
 		if !filtering && e.command && (k == 0 || !h.entries[h.matches[k-1]].command) {
-			lines = append(lines, "", sTitle.Render("Commands"))
+			lines = append(lines, "", sty.Title.Render("Commands"))
 		}
 		bar := "  "
 		if k == h.sel {
-			bar = sBar.Render("▌") + " "
+			bar = sty.Bar.Render("▌") + " "
 			selAt = len(lines)
 		}
-		lines = append(lines, bar+sKey.Render(fmt.Sprintf("%-*s", keyW, e.key))+"  "+sNormal.Render(e.desc))
+		lines = append(lines, bar+sty.Key.Render(fmt.Sprintf("%-*s", keyW, e.key))+"  "+sty.Normal.Render(e.desc))
 		if e.args != "" {
-			lines = append(lines, "  "+strings.Repeat(" ", keyW+2)+sDim.Render(e.args))
+			lines = append(lines, "  "+strings.Repeat(" ", keyW+2)+sty.Muted.Render(e.args))
 		}
 	}
 	if len(h.matches) == 0 {
-		lines = append(lines, sDim.Render("  nothing matches"))
+		lines = append(lines, sty.Muted.Render("  nothing matches"))
 	}
 	if selAt < h.top {
 		h.top = selAt
@@ -238,6 +238,6 @@ func (m *Model) renderHelp(width, height int) string {
 	if len(lines) > listH {
 		hint = fmt.Sprintf("%d of %d · ", min(h.sel+1, len(h.matches)), len(h.matches)) + hint
 	}
-	rows = append(rows, "", sDim.Render(ansi.Truncate(hint, inner, "…")))
-	return sBox.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	rows = append(rows, "", sty.Muted.Render(ansi.Truncate(hint, inner, "…")))
+	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }

@@ -13,6 +13,9 @@ import (
 	"github.com/magnusdalkvist/slack-tui/internal/render"
 )
 
+// clockNow is the time views draw against; tests pin it for snapshots.
+var clockNow = time.Now
+
 // systemSubtypes are rendered as dim one-liners rather than chat messages.
 var systemSubtypes = map[string]bool{
 	"channel_join": true, "channel_leave": true, "group_join": true, "group_leave": true,
@@ -50,22 +53,22 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 		if l.loading {
 			hint = "loading older messages…"
 		}
-		all = append(all, sFaint.Render(center(hint, width)))
+		all = append(all, sty.Faint.Render(center(hint, width)))
 	}
-	selBar := sBarDim.Render("▌") + " "
+	selBar := sty.BarDim.Render("▌") + " "
 	if active {
-		selBar = sBar.Render("▌") + " "
+		selBar = sty.Bar.Render("▌") + " "
 	}
 	var prev *backend.Message
 	for i := range l.msgs {
 		msg := &l.msgs[i]
 		var pre []string
 		if prev == nil || !sameDay(prev.Time(), msg.Time()) {
-			pre = append(pre, sDate.Render(center(dayLabel(msg.Time()), width)))
+			pre = append(pre, sty.Date.Render(center(dayLabel(msg.Time()), width)))
 		}
 		isNew := l.newSince != "" && backend.TSLess(l.newSince, msg.TS) && (prev == nil || !backend.TSLess(l.newSince, prev.TS))
 		if isNew {
-			pre = append(pre, sNewLine.Render(strings.Repeat("─", max(0, width-6))+" new"))
+			pre = append(pre, sty.NewLine.Render(strings.Repeat("─", max(0, width-6))+" new"))
 		}
 		grouped := prev != nil && len(pre) == 0 && !(inThread && i == 1) &&
 			senderKey(*prev) == senderKey(*msg) &&
@@ -126,7 +129,7 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 			view[0] = selBar + m.stickyHead(l.msgs[sel], above+1, width-2)
 		}
 		if below := end - (l.top + height); below > 0 && b.start < l.top+height {
-			view[height-1] = selBar + sFaint.Render(fmt.Sprintf("↓ %d more %s", below+1, plural(below+1, "line", "lines")))
+			view[height-1] = selBar + sty.Faint.Render(fmt.Sprintf("↓ %d more %s", below+1, plural(below+1, "line", "lines")))
 		}
 	}
 	pad := make([]string, 0, height)
@@ -139,9 +142,9 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 // stickyHead stands in for the header of a message whose top has
 // scrolled out of view: who wrote it, when, and how much is above.
 func (m *Model) stickyHead(msg backend.Message, above, width int) string {
-	head := nameStyle(senderKey(msg)).Render(m.senderName(msg)) + "  " +
-		sTime.Render(msg.Time().Format(m.cfg.TimeFormat)) + "  " +
-		sFaint.Render(fmt.Sprintf("↑ %d more %s", above, plural(above, "line", "lines")))
+	head := sty.Sender(senderKey(msg)).Render(m.senderName(msg)) + "  " +
+		sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat)) + "  " +
+		sty.Faint.Render(fmt.Sprintf("↑ %d more %s", above, plural(above, "line", "lines")))
 	return ansi.Truncate(head, width, "…")
 }
 
@@ -149,27 +152,27 @@ func (m *Model) stickyHead(msg backend.Message, above, width int) string {
 func (m *Model) messageLines(msg backend.Message, width int, header, inThread bool) []string {
 	var lines []string
 	if systemSubtypes[msg.SubType] {
-		text := render.Mrkdwn(msg.Text, m, mdStyles)
-		t := sTime.Render(msg.Time().Format(m.cfg.TimeFormat))
-		return wrap(sSystem.Render("→ ")+text+"  "+t, width)
+		text := render.Mrkdwn(msg.Text, m, sty.Md)
+		t := sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat))
+		return wrap(sty.System.Render("→ ")+text+"  "+t, width)
 	}
 	if header {
-		name := nameStyle(senderKey(msg)).Render(m.senderName(msg))
+		name := sty.Sender(senderKey(msg)).Render(m.senderName(msg))
 		if msg.User == "" && (msg.BotName != "" || msg.BotID != "") {
-			name += " " + sFaint.Render("APP")
+			name += " " + sty.Faint.Render("APP")
 		}
-		head := name + "  " + sTime.Render(msg.Time().Format(m.cfg.TimeFormat))
+		head := name + "  " + sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat))
 		if msg.Pinned {
-			head += "  " + sWarn.Render(pinIcon+" pinned")
+			head += "  " + sty.Warn.Render(pinIcon+" pinned")
 		}
 		lines = append(lines, head)
 	}
-	text := render.Mrkdwn(msg.Text, m, mdStyles)
+	text := render.Mrkdwn(msg.Text, m, sty.Md)
 	if msg.Edited {
-		text += " " + sFaint.Render("(edited)")
+		text += " " + sty.Faint.Render("(edited)")
 	}
 	if msg.Pinned && !header {
-		text += " " + sWarn.Render(pinIcon+" pinned")
+		text += " " + sty.Warn.Render(pinIcon+" pinned")
 	}
 	if strings.TrimSpace(msg.Text) != "" || msg.Edited || (msg.Pinned && !header) {
 		lines = append(lines, wrap(text, width)...)
@@ -181,10 +184,10 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread bo
 		var chips []string
 		for _, r := range mergeSkinTones(msg.Reactions) {
 			chip := fmt.Sprintf("%s %d", m.emojiChip(r.Name), r.Count)
-			style := sReaction
+			style := sty.Reaction
 			for _, u := range r.Users {
 				if u == m.client.SelfID {
-					style = sReactSelf
+					style = sty.ReactSelf
 				}
 			}
 			chips = append(chips, style.Render(chip))
@@ -194,12 +197,12 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread bo
 	if !inThread && msg.ReplyCount > 0 {
 		s := fmt.Sprintf("%d %s", msg.ReplyCount, plural(msg.ReplyCount, "reply", "replies"))
 		if msg.LatestReply != "" {
-			s += sDim.Render(" · last " + relTime(backend.TSTime(msg.LatestReply), m.cfg.TimeFormat))
+			s += sty.Muted.Render(" · last " + relTime(backend.TSTime(msg.LatestReply), m.cfg.TimeFormat))
 		}
-		lines = append(lines, sThread.Render(s))
+		lines = append(lines, sty.Thread.Render(s))
 	}
 	if len(lines) == 0 {
-		lines = append(lines, sFaint.Render("(empty message)"))
+		lines = append(lines, sty.Faint.Render("(empty message)"))
 	}
 	return lines
 }
@@ -279,7 +282,7 @@ func linksPerLine(lines []string) []string {
 func placeholder(s string, width, height int) string {
 	lines := make([]string, height)
 	if height > 0 {
-		lines[height/2] = sDim.Render(center(s, width))
+		lines[height/2] = sty.Muted.Render(center(s, width))
 	}
 	return strings.Join(lines, "\n")
 }
@@ -299,7 +302,7 @@ func sameDay(a, b time.Time) bool {
 }
 
 func dayLabel(t time.Time) string {
-	now := time.Now()
+	now := clockNow()
 	switch {
 	case sameDay(t, now):
 		return "Today"
@@ -313,7 +316,7 @@ func dayLabel(t time.Time) string {
 }
 
 func relTime(t time.Time, layout string) string {
-	if sameDay(t, time.Now()) {
+	if sameDay(t, clockNow()) {
 		return t.Format(layout)
 	}
 	return t.Format("2 Jan " + layout)

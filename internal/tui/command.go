@@ -65,7 +65,7 @@ type cmdLine struct {
 func (m *Model) openCmd() tea.Cmd {
 	ti := textinput.New()
 	ti.Prompt = ":"
-	ti.PromptStyle = sKey
+	ti.PromptStyle = sty.Key
 	ti.CharLimit = 300
 	m.cmd = &cmdLine{input: ti, histAt: len(m.cmdHist)}
 	return m.cmd.input.Focus()

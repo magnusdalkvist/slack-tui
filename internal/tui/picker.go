@@ -154,23 +154,23 @@ func (m *Model) renderPicker(width, height int) string {
 	boxW := min(50, width-4)
 	inner := boxW - 4
 	p.input.Width = inner - 3
-	rows := []string{p.input.View(), sFaint.Render(strings.Repeat("─", inner))}
+	rows := []string{p.input.View(), sty.Faint.Render(strings.Repeat("─", inner))}
 	start := max(0, p.sel-pickerRows+1)
 	for i := start; i < len(p.matches) && i < start+pickerRows; i++ {
 		name := p.matches[i]
 		label := m.emojiChip(name) + "  :" + name + ":"
 		if m.hasReacted(p.conv, p.msg.TS, name) {
-			label += sOK.Render("  ✓")
+			label += sty.OK.Render("  ✓")
 		}
 		if i == p.sel {
-			rows = append(rows, sBar.Render("▌")+" "+label)
+			rows = append(rows, sty.Bar.Render("▌")+" "+label)
 		} else {
 			rows = append(rows, "  "+label)
 		}
 	}
 	if len(p.matches) == 0 {
-		rows = append(rows, sDim.Render("  no emoji match"))
+		rows = append(rows, sty.Muted.Render("  no emoji match"))
 	}
-	rows = append(rows, "", sFaint.Render("enter react / un-react · esc close"))
-	return sBox.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	rows = append(rows, "", sty.Faint.Render("enter react / un-react · esc close"))
+	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }

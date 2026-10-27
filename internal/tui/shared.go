@@ -336,9 +336,9 @@ func fmtSize(n int) string {
 
 func (m *Model) renderShared(w, h int) string {
 	s := m.shared
-	title := sTitle.Render("Files & links")
+	title := sty.Title.Render("Files & links")
 	if c := m.convs[s.conv]; c != nil {
-		title += sDim.Render("  " + m.convTitle(c))
+		title += sty.Muted.Render("  " + m.convTitle(c))
 	}
 	var tabs []string
 	for i, name := range []string{"Files", "Links"} {
@@ -354,18 +354,18 @@ func (m *Model) renderShared(w, h int) string {
 			}
 		}
 		if i == s.tab {
-			tabs = append(tabs, sActive.Render(" "+label+" "))
+			tabs = append(tabs, sty.Active.Render(" "+label+" "))
 		} else {
-			tabs = append(tabs, sDim.Render(" "+label+" "))
+			tabs = append(tabs, sty.Muted.Render(" "+label+" "))
 		}
 	}
 	header := []string{title, " " + strings.Join(tabs, " "), rule(w, true)}
-	footer := ansi.Truncate(sFaint.Render("  ")+sKey.Render("enter")+sFaint.Render(" go to message  ")+
-		sKey.Render("o")+sFaint.Render(" open  ")+sKey.Render("s")+sFaint.Render(" save  ")+sKey.Render("v")+sFaint.Render(" view images  ")+sKey.Render("c")+sFaint.Render(" copy link  ")+
-		sKey.Render("tab")+sFaint.Render(" files / links  ")+sKey.Render("esc")+sFaint.Render(" close"), w, "…")
+	footer := ansi.Truncate(sty.Faint.Render("  ")+sty.Key.Render("enter")+sty.Faint.Render(" go to message  ")+
+		sty.Key.Render("o")+sty.Faint.Render(" open  ")+sty.Key.Render("s")+sty.Faint.Render(" save  ")+sty.Key.Render("v")+sty.Faint.Render(" view images  ")+sty.Key.Render("c")+sty.Faint.Render(" copy link  ")+
+		sty.Key.Render("tab")+sty.Faint.Render(" files / links  ")+sty.Key.Render("esc")+sty.Faint.Render(" close"), w, "…")
 	t := &s.tabs[s.tab]
 	if t.err != "" {
-		header = append(header, "  "+sErr.Render(t.err))
+		header = append(header, "  "+sty.Err.Render(t.err))
 	}
 	bodyH := max(1, h-len(header)-2)
 	n := s.count()
@@ -398,13 +398,13 @@ func (m *Model) renderShared(w, h int) string {
 			if f.Size > 0 {
 				info = append(info, fmtSize(f.Size))
 			}
-			line := sNormal.Render(name)
+			line := sty.Normal.Render(name)
 			if len(info) > 0 {
-				line += sDim.Render("  " + strings.Join(info, " · "))
+				line += sty.Muted.Render("  " + strings.Join(info, " · "))
 			}
 			by := backend.Message{User: f.User}
 			block = append([]string{line}, m.thumbLines(f.File)...)
-			block = append(block, nameStyle(senderKey(by)).Render(m.senderName(by))+" "+sTime.Render(relTime(f.Created, m.cfg.TimeFormat)))
+			block = append(block, sty.Sender(senderKey(by)).Render(m.senderName(by))+" "+sty.Time.Render(relTime(f.Created, m.cfg.TimeFormat)))
 		} else {
 			r := s.links[i]
 			label := r.link.Label
@@ -412,19 +412,19 @@ func (m *Model) renderShared(w, h int) string {
 				label = r.link.URL
 			}
 			msg := r.hit.Message
-			sub := nameStyle(senderKey(msg)).Render(m.senderName(msg)) + " " + sTime.Render(relTime(msg.Time(), m.cfg.TimeFormat))
+			sub := sty.Sender(senderKey(msg)).Render(m.senderName(msg)) + " " + sty.Time.Render(relTime(msg.Time(), m.cfg.TimeFormat))
 			if msg.IsReply() {
-				sub += sThread.Render("  in thread")
+				sub += sty.Thread.Render("  in thread")
 			}
-			block = []string{sNormal.Render(label)}
+			block = []string{sty.Normal.Render(label)}
 			if label != r.link.URL {
-				block = append(block, sDim.Render(r.link.URL))
+				block = append(block, sty.Muted.Render(r.link.URL))
 			}
 			block = append(block, sub)
 		}
 		bar := "  "
 		if i == sel {
-			bar = sBar.Render("▌") + " "
+			bar = sty.Bar.Render("▌") + " "
 			selStart = len(all)
 		}
 		for _, l := range block {
@@ -436,7 +436,7 @@ func (m *Model) renderShared(w, h int) string {
 		all = append(all, "")
 	}
 	if t.loading {
-		all = append(all, "  "+sFaint.Render("loading more…"))
+		all = append(all, "  "+sty.Faint.Render("loading more…"))
 	}
 
 	if selStart < t.top {

@@ -119,9 +119,9 @@ func (m *Model) renderProfile(width int) string {
 	if name == "" {
 		name = p.id
 	}
-	head := sTitle.Render(name)
+	head := sty.Title.Render(name)
 	if active, ok := m.presence[p.id]; ok && active {
-		head += " " + sOK.Render(onlineDot)
+		head += " " + sty.OK.Render(onlineDot)
 	}
 	rows := []string{head}
 	var sub []string
@@ -135,38 +135,38 @@ func (m *Model) renderProfile(width int) string {
 		sub = append(sub, u.Pronouns)
 	}
 	if len(sub) > 0 {
-		rows = append(rows, sDim.Render(strings.Join(sub, " · ")))
+		rows = append(rows, sty.Muted.Render(strings.Join(sub, " · ")))
 	}
 	if u.Title != "" {
 		rows = append(rows, u.Title)
 	}
-	rows = append(rows, sFaint.Render(strings.Repeat("─", inner)))
+	rows = append(rows, sty.Faint.Render(strings.Repeat("─", inner)))
 
 	field := func(label, value string) {
 		if value != "" {
-			rows = append(rows, sDim.Render(fmt.Sprintf("%-11s", label))+value)
+			rows = append(rows, sty.Muted.Render(fmt.Sprintf("%-11s", label))+value)
 		}
 	}
 	if line := m.statusLine(p.id); line != "" {
 		if exp := u.StatusExpires; exp > 0 {
-			line += sDim.Render(" until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
+			line += sty.Muted.Render(" until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
 		}
 		field("Status", line)
 	}
 	if active, ok := m.presence[p.id]; ok && p.id != m.client.SelfID {
-		field("Presence", map[bool]string{true: sOK.Render("active"), false: "away"}[active])
+		field("Presence", map[bool]string{true: sty.OK.Render("active"), false: "away"}[active])
 	}
-	field("Local time", localTime(u, time.Now(), m.cfg.TimeFormat))
+	field("Local time", localTime(u, clockNow(), m.cfg.TimeFormat))
 	field("Email", u.Email)
 	field("Phone", u.Phone)
 	if m.extUsers[p.id] {
 		field("Workspace", "another organisation (Slack Connect)")
 	}
 	if u.Deleted {
-		field("Account", sErr.Render("deactivated"))
+		field("Account", sty.Err.Render("deactivated"))
 	}
 	if p.loading {
-		rows = append(rows, sFaint.Render("loading…"))
+		rows = append(rows, sty.Faint.Render("loading…"))
 	}
 	for i, r := range rows {
 		rows[i] = ansi.Truncate(r, inner, "…")
@@ -175,8 +175,8 @@ func (m *Model) renderProfile(width int) string {
 	if u.Email != "" {
 		foot = "enter message · c copy email · esc close"
 	}
-	rows = append(rows, "", sFaint.Render(foot))
-	return sBox.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	rows = append(rows, "", sty.Faint.Render(foot))
+	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }
 
 // localTime is the person's clock now, and how far it is from ours:
@@ -192,7 +192,7 @@ func localTime(u backend.User, now time.Time, layout string) string {
 	there := now.In(loc)
 	s := there.Format(layout)
 	if u.TZLabel != "" {
-		s += "  " + sDim.Render(u.TZLabel)
+		s += "  " + sty.Muted.Render(u.TZLabel)
 	}
 	_, ours := now.Zone()
 	_, theirs := there.Zone()
@@ -208,7 +208,7 @@ func localTime(u backend.User, now time.Time, layout string) string {
 				gap = fmt.Sprintf("%d min", m)
 			}
 		}
-		s += sDim.Render(" · " + gap + " " + way)
+		s += sty.Muted.Render(" · " + gap + " " + way)
 	}
 	return s
 }

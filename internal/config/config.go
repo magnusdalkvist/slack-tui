@@ -33,7 +33,17 @@ type StatusTemplate struct {
 	Expires string `toml:"expires"`
 }
 
+// Theme is the [theme] table: a palette by name and single tokens changed.
+type Theme struct {
+	// Name is auto (by the terminal background), dark, light or ansi (the
+	// terminal's own palette).
+	Name string `toml:"name"`
+	// Overrides sets tokens (accent, mention, …) to "#rrggbb" or a 256-colour index.
+	Overrides map[string]string `toml:"overrides"`
+}
+
 type Config struct {
+	Theme    Theme            `toml:"theme"`
 	Sections []Section        `toml:"section"`
 	Statuses []StatusTemplate `toml:"status"`
 	// TimeFormat is a Go time layout for message timestamps.

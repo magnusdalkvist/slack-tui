@@ -100,7 +100,7 @@ func (m *Model) renderSwitcher(width, height int) string {
 	boxW := min(60, width-4)
 	inner := boxW - 4
 	s.input.Width = inner - 3
-	rows := []string{s.input.View(), sFaint.Render(strings.Repeat("─", inner))}
+	rows := []string{s.input.View(), sty.Faint.Render(strings.Repeat("─", inner))}
 	listH := max(3, min(15, height-8))
 	start := max(0, s.sel-listH+1)
 	for i := start; i < len(s.matches) && i < start+listH; i++ {
@@ -111,7 +111,7 @@ func (m *Model) renderSwitcher(width, height int) string {
 			u := m.users[uid]
 			label = userIcon + " " + u.Label()
 			if u.RealName != "" && u.RealName != u.Label() {
-				label += sFaint.Render("  " + u.RealName)
+				label += sty.Faint.Render("  " + u.RealName)
 			}
 		} else if c := m.convs[id]; c != nil {
 			icon := "#"
@@ -129,18 +129,18 @@ func (m *Model) renderSwitcher(width, height int) string {
 			unread = m.unreadCount() > 0
 		}
 		label = ansi.Truncate(label, inner-2, "…")
-		style := sDim
+		style := sty.Muted
 		if unread {
-			style = sUnread
+			style = sty.Unread
 		}
 		if i == s.sel {
-			rows = append(rows, sBar.Render("▌")+sActive.Render(" "+ansi.Strip(label)+strings.Repeat(" ", max(0, inner-2-ansi.StringWidth(label)))))
+			rows = append(rows, sty.Bar.Render("▌")+sty.Active.Render(" "+ansi.Strip(label)+strings.Repeat(" ", max(0, inner-2-ansi.StringWidth(label)))))
 		} else {
 			rows = append(rows, "  "+style.Render(label))
 		}
 	}
 	if len(s.matches) == 0 {
-		rows = append(rows, sDim.Render("  no matches"))
+		rows = append(rows, sty.Muted.Render("  no matches"))
 	}
-	return sBox.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }

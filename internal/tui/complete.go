@@ -278,23 +278,23 @@ func (m *Model) renderCompItems(c *completion) []string {
 		if it.emoji != "" && it.label != "" {
 			row = m.emojiChip(it.emoji) + "  " + it.label
 			if it.detail != "" {
-				row += "  " + sDim.Render(it.detail)
+				row += "  " + sty.Muted.Render(it.detail)
 			}
 		} else if it.emoji != "" {
 			row = m.emojiChip(it.emoji) + "  " + it.insert
 		} else {
 			row = it.label
 			if it.detail != "" {
-				row += "  " + sDim.Render(it.detail)
+				row += "  " + sty.Muted.Render(it.detail)
 			}
 		}
 		if i == c.sel {
-			lines = append(lines, sBar.Render("▌")+" "+row)
+			lines = append(lines, sty.Bar.Render("▌")+" "+row)
 		} else {
 			lines = append(lines, "  "+row)
 		}
 	}
-	lines = append(lines, sFaint.Render("  tab insert · ↑↓ choose · esc close"))
+	lines = append(lines, sty.Faint.Render("  tab insert · ↑↓ choose · esc close"))
 	return lines
 }
 

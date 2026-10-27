@@ -80,7 +80,7 @@ func (m *Model) reloadDND() tea.Cmd {
 func (m *Model) setDND(d backend.DND) tea.Cmd {
 	m.dnd = d
 	m.dndSeq++
-	next := d.Next(time.Now())
+	next := d.Next(clockNow())
 	if next.IsZero() {
 		return nil
 	}
@@ -185,7 +185,7 @@ func (m *Model) presenceFor(convID string) tea.Cmd {
 // statusEmoji is a person's status emoji as it can be drawn: the
 // character, the custom image once loaded, else "".
 func (m *Model) statusEmoji(userID string) string {
-	emoji, _ := m.users[userID].Status(time.Now())
+	emoji, _ := m.users[userID].Status(clockNow())
 	name := strings.Trim(emoji, ":")
 	if name == "" {
 		return ""
@@ -201,16 +201,16 @@ func (m *Model) statusEmoji(userID string) string {
 
 // statusLine is "<emoji> text" for a person's status, "" without one.
 func (m *Model) statusLine(userID string) string {
-	emoji, text := m.users[userID].Status(time.Now())
+	emoji, text := m.users[userID].Status(clockNow())
 	if emoji == "" && text == "" {
 		return ""
 	}
 	var parts []string
 	if name := strings.Trim(emoji, ":"); name != "" {
-		parts = append(parts, render.Emoji(name, m, mdStyles))
+		parts = append(parts, render.Emoji(name, m, sty.Md))
 	}
 	if text != "" {
-		parts = append(parts, render.Mrkdwn(text, m, mdStyles))
+		parts = append(parts, render.Mrkdwn(text, m, sty.Md))
 	}
 	return strings.Join(parts, " ")
 }
@@ -218,7 +218,7 @@ func (m *Model) statusLine(userID string) string {
 // clock formats a time for "until …": the time today, else with the weekday,
 // else with the date.
 func clock(t time.Time, layout string) string {
-	now := time.Now()
+	now := clockNow()
 	y1, m1, d1 := now.Date()
 	y2, m2, d2 := t.Date()
 	switch {
@@ -376,9 +376,9 @@ func (m *Model) cmdStatus(args string) tea.Cmd {
 	case "clear", "off", "none":
 		return m.sendStatus("", "", time.Time{})
 	}
-	emoji, text, expires, err := m.statusFromTemplate(args, time.Now())
+	emoji, text, expires, err := m.statusFromTemplate(args, clockNow())
 	if errors.Is(err, errNoTemplate) {
-		emoji, text, expires, err = parseStatus(args, time.Now())
+		emoji, text, expires, err = parseStatus(args, clockNow())
 	}
 	if err != nil {
 		return m.setStatus(err.Error(), true)
@@ -482,7 +482,7 @@ func (m *Model) statusSet(msg statusSetMsg) tea.Cmd {
 
 func (m *Model) cmdDND(args string) tea.Cmd {
 	args = strings.TrimSpace(args)
-	now := time.Now()
+	now := clockNow()
 	switch strings.ToLower(args) {
 	case "":
 		if until, on := m.dnd.Until(now); on {
@@ -534,14 +534,14 @@ func (m *Model) cmdAway(away bool) tea.Cmd {
 // their custom status.
 func (m *Model) meStatus() []string {
 	var parts []string
-	if until, on := m.dnd.Until(time.Now()); on {
-		parts = append(parts, sWarn.Render(dndIcon+" dnd until "+clock(until, m.cfg.TimeFormat)))
+	if until, on := m.dnd.Until(clockNow()); on {
+		parts = append(parts, sty.Warn.Render(dndIcon+" dnd until "+clock(until, m.cfg.TimeFormat)))
 	}
 	if m.away {
-		parts = append(parts, sDim.Render("away"))
+		parts = append(parts, sty.Muted.Render("away"))
 	}
 	if line := m.statusLine(m.client.SelfID); line != "" {
-		parts = append(parts, sDim.Render(ansi.Truncate(line, 32, "…")))
+		parts = append(parts, sty.Muted.Render(ansi.Truncate(line, 32, "…")))
 	}
 	return parts
 }

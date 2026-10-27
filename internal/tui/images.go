@@ -285,16 +285,16 @@ func (m *Model) imageLines(f backend.File, width int) []string {
 	}
 	st := m.images[f.ID]
 	if m.gfx == nil || !f.IsImage() || st == nil {
-		return wrap(sDim.Render(name), width)
+		return wrap(sty.Muted.Render(name), width)
 	}
 	switch st.status {
 	case imgLoading:
-		return wrap(sDim.Render(name+" · loading…"), width)
+		return wrap(sty.Muted.Render(name+" · loading…"), width)
 	case imgFailed:
-		return wrap(sDim.Render(name+" · ")+sErr.Render(st.err), width)
+		return wrap(sty.Muted.Render(name+" · ")+sty.Err.Render(st.err), width)
 	}
 	st.seen = m.viewSeq
-	lines := []string{sDim.Render(name)}
+	lines := []string{sty.Muted.Render(name)}
 	return append(lines, kitty.Placeholder(st.shownID(), st.cols, st.rows)...)
 }
 

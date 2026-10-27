@@ -57,6 +57,12 @@ image_max_rows = 12
 image_viewer = "loupe"    # opens images with `o` (default: loupe if installed); other files use xdg-open
 download_dir = "~/Downloads"  # where `s` saves files (default: the desktop's Downloads folder)
 
+[theme]
+name = "auto"             # auto (by the terminal background), dark, light, or ansi (the terminal's own palette)
+[theme.overrides]         # any token from DESIGN.md §2, as "#rrggbb" or a 256-colour index
+# accent = "#5fafff"      # overrides below 4.5:1 contrast are reported in the status bar
+# NO_COLOR in the environment drops every colour and keeps bold and reverse.
+
 # Custom sidebar sections, above the built-in Channels, Direct messages (one-to-one first,
 # then groups, each by recent activity) and External (Slack Connect channels and people).
 # Slack's own sections are not in the public API.
