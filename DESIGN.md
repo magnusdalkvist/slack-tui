@@ -402,3 +402,6 @@ Gaps found while building this spec, and how they were filled.
 - **`bg` hex values** (dark #121315, light #ffffff) are what the contrast check assumes for the terminal background. They are never painted.
 - **`NO_COLOR`** forces lipgloss's ANSI profile with every token unset. lipgloss's own NO_COLOR handling would drop bold and reverse as well.
 - **Theme warnings** (an unknown token, an unparsable value, or contrast below 4.5:1) show in the status bar at start.
+- **Frames sit 1 cell apart.** A terminal can't draw half a cell, so the gap is one blank column. A pane and its composer frame have 1 blank row between them.
+- **Focus under `NO_COLOR`.** With no border colour, the focused frame's title is drawn in reverse video. This is the only place where focus shows without colour.
+- **Selection rows** come from `selLine` in `frame.go`: a 1-cell bar column, then the row padded to the frame's width. `paintBg` restores the selection background after every SGR reset inside the row, so chips, links and custom-emoji images keep it.

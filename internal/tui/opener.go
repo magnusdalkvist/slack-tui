@@ -102,11 +102,7 @@ func (m *Model) renderOpener(width int) string {
 			label = it.link.URL
 		}
 		label = ansi.Truncate(label, inner-4, "…")
-		if i == o.sel {
-			rows = append(rows, sty.Bar.Render("▌")+" "+num+label)
-		} else {
-			rows = append(rows, "  "+num+label)
-		}
+		rows = append(rows, selLine(" "+num+label, inner, i == o.sel, true))
 	}
 	rows = append(rows, "", sty.Faint.Render("1-9 or enter open · j k move · esc close"))
 	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))

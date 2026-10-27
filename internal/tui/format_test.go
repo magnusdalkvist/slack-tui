@@ -81,7 +81,7 @@ func TestInputGrowsWithWrapping(t *testing.T) {
 	}
 	m.Update(key(strings.Repeat("more ", 400)))
 	dump(t, m)
-	if h, limit := m.input.Height(), min(8, m.height/3); h != limit {
+	if h, limit := m.input.Height(), min(6, m.height/3); h != limit {
 		t.Errorf("input is %d rows, want the %d-row limit", h, limit)
 	}
 }

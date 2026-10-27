@@ -216,12 +216,9 @@ func (m *Model) unreadCount() int {
 	return n
 }
 
-func (m *Model) renderSidebar(width, height int) string {
-	lines := []string{
-		sty.Title.Render(ansi.Truncate(m.client.TeamName, width-1, "…")),
-		sty.Faint.Render(strings.Repeat("─", width-1)),
-	}
-	bodyH := height - len(lines)
+func (m *Model) renderSidebar(w, h int) string {
+	inner, bodyH := w-2, h-2
+	focused := m.focus == fSidebar
 
 	// Keep the cursor in view.
 	if m.sideCur < m.sideTop {
@@ -232,24 +229,23 @@ func (m *Model) renderSidebar(width, height int) string {
 	}
 	m.sideTop = max(0, min(m.sideTop, len(m.side)-bodyH))
 
+	var lines []string
 	for i := m.sideTop; i < len(m.side) && i < m.sideTop+bodyH; i++ {
-		lines = append(lines, m.sideRow(m.side[i], i == m.sideCur, width-1))
+		lines = append(lines, selLine(m.sideRow(m.side[i], inner-1), inner, i == m.sideCur, focused))
 	}
-	for len(lines) < height {
-		lines = append(lines, "")
+	handle := ""
+	if u, ok := m.users[m.client.SelfID]; ok && u.Name != "" {
+		handle = sty.Faint.Render("@" + u.Name)
 	}
-	return strings.Join(lines, "\n")
+	return RenderFrame(strings.Join(lines, "\n"), w, h, frameTitle(m.client.TeamName, focused), handle, focused)
 }
 
-func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
+// sideRow is a sidebar row without its bar column, width cells wide.
+func (m *Model) sideRow(it sideItem, width int) string {
 	if it.spacer {
 		return ""
 	}
 	if it.header != "" {
-		marker := " "
-		if cursor && m.focus == fSidebar {
-			marker = sty.Bar.Render("▌")
-		}
 		arrow := "▾"
 		if m.folded[it.header] {
 			arrow = "▸"
@@ -258,12 +254,12 @@ func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
 		if icon != "" {
 			icon += " "
 		}
-		room := width - 6 - ansi.StringWidth(icon)
+		room := width - 5 - ansi.StringWidth(icon)
 		row := sty.Header.Render(arrow+" ") + icon + sty.Header.Render(ansi.Truncate(strings.ToUpper(it.header), room, "…"))
 		if it.hidden > 0 {
 			row += sty.Faint.Render(fmt.Sprintf(" %d", it.hidden))
 		}
-		return marker + row
+		return row
 	}
 
 	var icon, label, status string
@@ -299,10 +295,6 @@ func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
 		}
 	}
 
-	marker := " "
-	if cursor && m.focus == fSidebar {
-		marker = sty.Bar.Render("▌")
-	}
 	badgeStr := ""
 	if badge > 0 {
 		badgeStr = sty.Badge.Render(fmt.Sprint(badge))
@@ -311,28 +303,23 @@ func (m *Model) sideRow(it sideItem, cursor bool, width int) string {
 	if active {
 		dot = " " + onlineDot
 	}
-	room := width - 4 - lipgloss.Width(badgeStr) - ansi.StringWidth(dot) - ansi.StringWidth(status)
+	room := width - 3 - lipgloss.Width(badgeStr) - ansi.StringWidth(dot) - ansi.StringWidth(status)
 	label = ansi.Truncate(label, room, "…")
 
 	style := sty.Muted
+	if it.id == m.current {
+		style = sty.Normal
+	}
 	if unread {
 		style = sty.Unread
-	}
-	if it.id == m.current {
-		style = sty.Active
 	}
 	text := style.Render(icon + " " + label)
 	if dot != "" {
 		// A green dot after the name for people who are active.
 		text += style.Foreground(sty.theme.OK).Render(dot)
 	}
-	pad := max(0, width-1-lipgloss.Width(text)-ansi.StringWidth(status)-lipgloss.Width(badgeStr))
+	pad := max(0, width-lipgloss.Width(text)-ansi.StringWidth(status)-lipgloss.Width(badgeStr))
 	// The status emoji is drawn as is: a custom one is an image whose
-	// placeholder cells must keep their own foreground colour, so only the
-	// selection background goes around it.
-	if status != "" && it.id == m.current {
-		status = sty.SelOn() + status + SelOff
-	}
-	row := text + status + style.Render(strings.Repeat(" ", pad)) + badgeStr
-	return marker + row
+	// placeholder cells must keep their own foreground colour.
+	return text + status + strings.Repeat(" ", pad) + badgeStr
 }

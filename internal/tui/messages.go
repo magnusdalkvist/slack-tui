@@ -55,10 +55,6 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 		}
 		all = append(all, sty.Faint.Render(center(hint, width)))
 	}
-	selBar := sty.BarDim.Render("▌") + " "
-	if active {
-		selBar = sty.Bar.Render("▌") + " "
-	}
 	var prev *backend.Message
 	for i := range l.msgs {
 		msg := &l.msgs[i]
@@ -76,15 +72,9 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 			msg.Time().Sub(prev.Time()) < 5*time.Minute
 		body := m.messageLines(*msg, width-2, !grouped, inThread)
 
-		bar := "  "
-		if i == sel {
-			bar = selBar
-		}
 		all = append(all, pre...)
 		blocks[i].start = len(all)
-		for _, b := range body {
-			all = append(all, bar+b)
-		}
+		all = append(all, selLines(prefixAll(body, " "), width, i == sel, active)...)
 		blocks[i].lines = body
 		prev = msg
 	}
@@ -126,10 +116,10 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 	// the top row, and the bottom row counts the lines still below.
 	if height >= 4 && len(view) == height {
 		if above := l.top - b.start; above > 0 && end > l.top {
-			view[0] = selBar + m.stickyHead(l.msgs[sel], above+1, width-2)
+			view[0] = selLine(" "+m.stickyHead(l.msgs[sel], above+1, width-2), width, true, active)
 		}
 		if below := end - (l.top + height); below > 0 && b.start < l.top+height {
-			view[height-1] = selBar + sty.Faint.Render(fmt.Sprintf("↓ %d more %s", below+1, plural(below+1, "line", "lines")))
+			view[height-1] = selLine(" "+sty.Faint.Render(fmt.Sprintf("↓ %d more %s", below+1, plural(below+1, "line", "lines"))), width, true, active)
 		}
 	}
 	pad := make([]string, 0, height)
@@ -137,6 +127,14 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 		pad = append(pad, "")
 	}
 	return strings.Join(append(pad, view...), "\n")
+}
+
+func prefixAll(lines []string, p string) []string {
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = p + l
+	}
+	return out
 }
 
 // stickyHead stands in for the header of a message whose top has

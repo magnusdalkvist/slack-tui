@@ -470,7 +470,7 @@ func (m *Model) renderSearch(w, h int) string {
 	}
 	header := []string{title, rule(w, !s.typing), inputLine}
 	if s.typing && s.complete != nil {
-		header = append(header, m.renderCompItems(s.complete)...)
+		header = append(header, m.renderCompItems(s.complete, w)...)
 	}
 	header = append(header, rule(w, s.typing))
 	var footer string
@@ -500,12 +500,7 @@ func (m *Model) renderSearch(w, h int) string {
 	var all []string
 	var selStart, selEnd int
 	for i, hit := range s.hits {
-		bar := "  "
 		if i == sel {
-			bar = sty.Bar.Render("▌") + " "
-			if s.typing {
-				bar = sty.BarDim.Render("▌") + " "
-			}
 			selStart = len(all)
 		}
 		icon := "" // channels already read "#name"
@@ -537,9 +532,7 @@ func (m *Model) renderSearch(w, h int) string {
 				block = append(block, sty.Muted.Render(fileLabel(f)))
 			}
 		}
-		for _, l := range block {
-			all = append(all, bar+l)
-		}
+		all = append(all, selLines(prefixAll(block, " "), w, i == sel, !s.typing)...)
 		if i == sel {
 			selEnd = len(all)
 		}

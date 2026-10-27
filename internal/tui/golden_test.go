@@ -90,8 +90,31 @@ type scene struct {
 	prep func(m *Model)
 }
 
+// openSceneThread opens the thread under Anna's question.
+func openSceneThread(m *Model) {
+	l := m.lists["C1"]
+	for i, msg := range l.msgs {
+		if msg.ReplyCount > 0 {
+			l.sel = i
+			m.openThread(msg)
+			m.Update(repliesMsg{id: "C1", ts: msg.TS, msgs: []backend.Message{
+				msg,
+				{TS: ts(22, 10, 5), ThreadTS: msg.TS, User: "U1", Text: "on it, looks like a flaky timeout"},
+				{TS: ts(22, 10, 30), ThreadTS: msg.TS, User: "ME", Text: "bumped it to 30s :+1:"},
+			}})
+			return
+		}
+	}
+}
+
 var scenes = []scene{
 	{"main", 30, func(m *Model) {}},
+	{"sidebar", 30, func(m *Model) { m.focus = fSidebar }},
+	{"thread", 30, openSceneThread},
+	{"switcher", 30, func(m *Model) {
+		m.Update(key("ctrl+k"))
+		typeText(m, "si")
+	}},
 	{"insert", 30, func(m *Model) {
 		m.Update(key("i"))
 		typeText(m, "on it")
@@ -172,5 +195,31 @@ func compareGolden(t *testing.T, path, got string) {
 	if string(want) != got {
 		t.Errorf("view differs from %s (run with -update after checking):\n--- got\n%s\n--- want\n%s",
 			path, ansi.Strip(got), ansi.Strip(string(want)))
+	}
+}
+
+// TestOneFocusedFrame: the focused frame is the only one with an accent
+// border, whichever frame has focus.
+func TestOneFocusedFrame(t *testing.T) {
+	prof := lipgloss.ColorProfile()
+	t.Cleanup(func() { lipgloss.SetColorProfile(prof); useTheme(Dark()) })
+	lipgloss.SetColorProfile(termenv.TrueColor)
+	for _, sc := range []struct {
+		name string
+		prep func(m *Model)
+	}{
+		{"chat", func(m *Model) {}},
+		{"sidebar", func(m *Model) { m.focus = fSidebar }},
+		{"thread", openSceneThread},
+		{"thread, chat focused", func(m *Model) { openSceneThread(m); m.focus = fMessages }},
+		{"insert", func(m *Model) { m.Update(key("i")) }},
+	} {
+		m := sceneModel(t, 160, 30)
+		useTheme(Dark())
+		sc.prep(m)
+		corner := sgrPrefix(sty.Bar) + "╭"
+		if n := strings.Count(m.View(), corner); n != 1 {
+			t.Errorf("%s: %d accent frames, want 1", sc.name, n)
+		}
 	}
 }

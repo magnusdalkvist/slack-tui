@@ -413,9 +413,7 @@ func (m *Model) renderScheduled(w, h int) string {
 	var all []string
 	var selStart, selEnd int
 	for i, sm := range list {
-		bar := "  "
 		if i == sel {
-			bar = sty.Bar.Render("▌") + " "
 			selStart = len(all)
 		}
 		where := sm.Channel
@@ -433,9 +431,7 @@ func (m *Model) renderScheduled(w, h int) string {
 			wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 		}
 		block = append(block, wrapped...)
-		for _, l := range block {
-			all = append(all, bar+l)
-		}
+		all = append(all, selLines(prefixAll(block, " "), w, i == sel, true)...)
 		if i == sel {
 			selEnd = len(all)
 		}

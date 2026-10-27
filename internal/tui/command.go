@@ -243,7 +243,7 @@ func (m *Model) overlayCmdCompletion(body string) string {
 	if m.cmd == nil || m.cmd.complete == nil {
 		return body
 	}
-	rows := append([]string{rule(m.width, true)}, m.renderCompItems(m.cmd.complete)...)
+	rows := append([]string{rule(m.width, true)}, m.renderCompItems(m.cmd.complete, m.width)...)
 	lines := strings.Split(body, "\n")
 	if len(rows) >= len(lines) {
 		return body

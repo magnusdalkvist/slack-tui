@@ -7,7 +7,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/ansi"
 )
 
 // `:members`: who is in the open conversation, filtered as you type;
@@ -179,19 +178,14 @@ func (m *Model) renderMembers(w, h int) string {
 		if u.IsBot {
 			info = append(info, "app")
 		}
-		var row string
-		if i == sel {
-			row = sty.Bar.Render("▌") + " " + sty.Active.Render(ansi.Strip(name))
-		} else {
-			row = "  " + sty.Normal.Render(name)
-		}
+		row := " " + sty.Normal.Render(name)
 		if line := m.statusLine(id); line != "" {
 			row += " " + line
 		}
 		if len(info) > 0 {
 			row += "  " + sty.Muted.Render(strings.Join(info, " · "))
 		}
-		rows = append(rows, ansi.Truncate(row, w, "…"))
+		rows = append(rows, selLine(row, w, i == sel, true))
 	}
 	for len(rows) < bodyH {
 		rows = append(rows, "")

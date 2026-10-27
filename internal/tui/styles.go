@@ -17,9 +17,9 @@ type Styles struct {
 
 	Muted, Faint, Normal lipgloss.Style
 	Unread, Header       lipgloss.Style
-	Active, Badge        lipgloss.Style
+	Badge                lipgloss.Style
 	Title, Topic         lipgloss.Style
-	Bar, BarDim, Rule    lipgloss.Style
+	Bar, Rule            lipgloss.Style
 	Time, System         lipgloss.Style
 	NewLine, Date        lipgloss.Style
 	Thread               lipgloss.Style
@@ -28,6 +28,9 @@ type Styles struct {
 	ModeInsert           lipgloss.Style
 	OK, Warn, Err        lipgloss.Style
 	Box, Key             lipgloss.Style
+	FrameTitle           lipgloss.Style // an idle frame's title
+	FrameTitleFocus      lipgloss.Style
+	sel, selFocus        lipgloss.Style // selection backgrounds
 	Md                   render.Styles
 
 	senders []lipgloss.Style
@@ -60,12 +63,10 @@ func NewStyles(t Theme) Styles {
 		Normal:     fg(t.Fg),
 		Unread:     fg(t.Fg).Bold(true),
 		Header:     fg(t.Faint).Bold(true),
-		Active:     on(t.Fg, t.Sel),
 		Badge:      pill(t.Mention),
 		Title:      fg(t.Fg).Bold(true),
 		Topic:      fg(t.Muted),
 		Bar:        fg(t.Accent),
-		BarDim:     fg(t.Rule),
 		Rule:       fg(t.Rule),
 		Time:       fg(t.Faint),
 		System:     fg(t.Faint).Italic(true),
@@ -81,6 +82,11 @@ func NewStyles(t Theme) Styles {
 		Err:        fg(t.Mention),
 		Box:        lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(t.Accent).Padding(0, 1),
 		Key:        fg(t.Fg).Bold(true),
+
+		FrameTitle:      fg(t.Muted).Bold(true),
+		FrameTitleFocus: fg(t.Accent).Bold(true).Reverse(t.NoColor), // no border colour to show focus
+		sel:             on(t.Fg, t.Sel),
+		selFocus:        on(t.Fg, t.SelFocus),
 	}
 	s.Md = render.Styles{
 		Bold:         lipgloss.NewStyle().Bold(true),
@@ -109,10 +115,21 @@ func (s Styles) Sender(key string) lipgloss.Style {
 	return s.senders[h.Sum32()%uint32(len(s.senders))]
 }
 
-// SelOn and SelOff wrap content that sets its own foreground (custom emoji
-// images) in the selection background, as raw SGR.
-func (s Styles) SelOn() string { return sgrPrefix(s.Active) }
+// SelBgOn and SelFocusBgOn open the selection background of an unfocused
+// and a focused frame.
+func (s Styles) SelBgOn() string      { return bgPrefix(s.sel) }
+func (s Styles) SelFocusBgOn() string { return bgPrefix(s.selFocus) }
 
+// bgPrefix is the escape that opens st's background only (or reverse
+// video without colours), so the row's own colours show through.
+func bgPrefix(st lipgloss.Style) string {
+	if st.GetReverse() {
+		return sgrPrefix(lipgloss.NewStyle().Reverse(true))
+	}
+	return sgrPrefix(lipgloss.NewStyle().Background(st.GetBackground()))
+}
+
+// SelOff closes a selection background (or reverse video).
 const SelOff = "\x1b[27;49m"
 
 // HitOn and HitOff mark search matches inside already styled text.

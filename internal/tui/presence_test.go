@@ -213,7 +213,7 @@ func TestStatusAndPresenceShown(t *testing.T) {
 
 	m.open("D1")
 	v = dump(t, m)
-	if !strings.Contains(v, "Anna Jensen ●  🏠 WFH") {
+	if !strings.Contains(v, "Anna Jensen  ●  🏠 WFH") {
 		t.Errorf("DM header lacks presence and status")
 	}
 
@@ -254,9 +254,17 @@ func TestStatusEmojiOnSelectedRow(t *testing.T) {
 	m.open("D1")
 	for _, it := range m.side {
 		if it.id == "D1" {
-			row := m.sideRow(it, false, 29)
-			if !strings.Contains(row, sty.SelOn()+" 🏠"+SelOff) {
-				t.Errorf("status emoji lacks the selection background: %q", row)
+			row := selLine(m.sideRow(it, 28), 29, true, false)
+			bg := sty.SelBgOn()
+			i := strings.Index(row, "🏠")
+			if i < 0 || !strings.HasPrefix(row, " "+bg) {
+				t.Fatalf("selected row lacks the emoji or the background: %q", row)
+			}
+			// Every reset before the emoji puts the background back.
+			for _, loc := range sgr.FindAllStringSubmatchIndex(row[:i], -1) {
+				if clearsBg(row[loc[2]:loc[3]]) && !strings.HasPrefix(row[loc[1]:], bg) {
+					t.Errorf("background dropped before the status emoji: %q", row)
+				}
 			}
 			return
 		}

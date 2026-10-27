@@ -208,14 +208,12 @@ func (m *Model) renderHelp(width, height int) string {
 		if !filtering && e.command && (k == 0 || !h.entries[h.matches[k-1]].command) {
 			lines = append(lines, "", sty.Title.Render("Commands"))
 		}
-		bar := "  "
 		if k == h.sel {
-			bar = sty.Bar.Render("▌") + " "
 			selAt = len(lines)
 		}
-		lines = append(lines, bar+sty.Key.Render(fmt.Sprintf("%-*s", keyW, e.key))+"  "+sty.Normal.Render(e.desc))
+		lines = append(lines, selLine(" "+sty.Key.Render(fmt.Sprintf("%-*s", keyW, e.key))+"  "+sty.Normal.Render(e.desc), width, k == h.sel, true))
 		if e.args != "" {
-			lines = append(lines, "  "+strings.Repeat(" ", keyW+2)+sty.Muted.Render(e.args))
+			lines = append(lines, selLine(" "+strings.Repeat(" ", keyW+2)+sty.Muted.Render(e.args), width, k == h.sel, true))
 		}
 	}
 	if len(h.matches) == 0 {

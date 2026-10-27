@@ -162,11 +162,7 @@ func (m *Model) renderPicker(width, height int) string {
 		if m.hasReacted(p.conv, p.msg.TS, name) {
 			label += sty.OK.Render("  ✓")
 		}
-		if i == p.sel {
-			rows = append(rows, sty.Bar.Render("▌")+" "+label)
-		} else {
-			rows = append(rows, "  "+label)
-		}
+		rows = append(rows, selLine(" "+label, inner, i == p.sel, true))
 	}
 	if len(p.matches) == 0 {
 		rows = append(rows, sty.Muted.Render("  no emoji match"))

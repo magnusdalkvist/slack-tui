@@ -133,11 +133,7 @@ func (m *Model) renderSwitcher(width, height int) string {
 		if unread {
 			style = sty.Unread
 		}
-		if i == s.sel {
-			rows = append(rows, sty.Bar.Render("▌")+sty.Active.Render(" "+ansi.Strip(label)+strings.Repeat(" ", max(0, inner-2-ansi.StringWidth(label)))))
-		} else {
-			rows = append(rows, "  "+style.Render(label))
-		}
+		rows = append(rows, selLine(" "+style.Render(label), inner, i == s.sel, true))
 	}
 	if len(s.matches) == 0 {
 		rows = append(rows, sty.Muted.Render("  no matches"))

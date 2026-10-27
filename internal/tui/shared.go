@@ -354,7 +354,7 @@ func (m *Model) renderShared(w, h int) string {
 			}
 		}
 		if i == s.tab {
-			tabs = append(tabs, sty.Active.Render(" "+label+" "))
+			tabs = append(tabs, paintBg(sty.FrameTitleFocus.Render(" "+label+" "), ansi.StringWidth(label)+2, sty.SelFocusBgOn()))
 		} else {
 			tabs = append(tabs, sty.Muted.Render(" "+label+" "))
 		}
@@ -422,14 +422,10 @@ func (m *Model) renderShared(w, h int) string {
 			}
 			block = append(block, sub)
 		}
-		bar := "  "
 		if i == sel {
-			bar = sty.Bar.Render("▌") + " "
 			selStart = len(all)
 		}
-		for _, l := range block {
-			all = append(all, bar+l)
-		}
+		all = append(all, selLines(prefixAll(block, " "), w, i == sel, true)...)
 		if i == sel {
 			selEnd = len(all)
 		}

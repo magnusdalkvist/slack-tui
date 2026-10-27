@@ -243,14 +243,10 @@ func (m *Model) renderPins(w, h int) string {
 	var all []string
 	var selStart, selEnd int
 	add := func(i int, block []string) {
-		bar := "  "
 		if i == sel {
-			bar = sty.Bar.Render("▌") + " "
 			selStart = len(all)
 		}
-		for _, l := range block {
-			all = append(all, bar+l)
-		}
+		all = append(all, selLines(prefixAll(block, " "), w, i == sel, true)...)
 		if i == sel {
 			selEnd = len(all)
 		}

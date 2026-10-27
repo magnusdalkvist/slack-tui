@@ -64,14 +64,14 @@ func (m *Model) View() string {
 		tw := mainW * 45 / 100
 		cw := mainW - tw - 1
 		main = lipgloss.JoinHorizontal(lipgloss.Top,
-			fit(m.renderConvPane(cw, h), cw, h), vline(h), fit(m.renderThreadPane(tw, h), tw, h))
+			fit(m.renderConvPane(cw, h), cw, h), gapCol(h), fit(m.renderThreadPane(tw, h), tw, h))
 	case m.thread != nil:
 		main = m.renderThreadPane(mainW, h)
 	default:
 		main = m.renderConvPane(mainW, h)
 	}
 
-	body := lipgloss.JoinHorizontal(lipgloss.Top, fit(m.renderSidebar(sw, h), sw, h), vline(h), fit(main, mainW, h))
+	body := lipgloss.JoinHorizontal(lipgloss.Top, m.renderSidebar(sw, h), gapCol(h), fit(main, mainW, h))
 	if m.cmd != nil {
 		return m.overlayCmdCompletion(body) + "\n" + m.renderCmdLine()
 	}
@@ -97,15 +97,16 @@ func fit(s string, w, h int) string {
 	return strings.Join(lines, "\n")
 }
 
-func vline(h int) string {
-	return sty.Faint.Render(strings.TrimSuffix(strings.Repeat("│\n", h), "\n"))
+// gapCol is the blank column between frames.
+func gapCol(h int) string {
+	return strings.TrimSuffix(strings.Repeat(" \n", h), "\n")
 }
 
 func rule(w int, active bool) string {
 	if active {
 		return sty.Bar.Render(strings.Repeat("─", w))
 	}
-	return sty.Faint.Render(strings.Repeat("─", w))
+	return sty.Rule.Render(strings.Repeat("─", w))
 }
 
 func (m *Model) convTitle(c *backend.Conversation) string {
@@ -124,61 +125,61 @@ func (m *Model) renderConvPane(w, h int) string {
 	if c == nil {
 		return placeholder("conversation not found", w, h)
 	}
-	title := sty.Title.Render(m.convTitle(c))
+	focused := m.focus == fMessages
+	var ctx []string
 	if c.Kind == backend.KindDM && c.UserID != m.client.SelfID {
 		if m.presence[c.UserID] {
-			title += " " + sty.OK.Render(onlineDot)
+			ctx = append(ctx, sty.OK.Render(onlineDot))
 		}
 		if line := m.statusLine(c.UserID); line != "" {
 			if exp := m.users[c.UserID].StatusExpires; exp > 0 {
-				line += sty.Muted.Render(" until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
+				line += sty.Faint.Render(" · until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
 			}
-			title += "  " + line
+			ctx = append(ctx, line)
 		}
 	}
-	if n := m.scheduledIn(c.ID); n > 0 {
-		title += "  " + sty.Warn.Render(fmt.Sprintf("%s %d scheduled", schedIcon, n))
-	}
 	if c.Topic != "" {
-		title += "  " + sty.Topic.Render(strings.ReplaceAll(render.Mrkdwn(c.Topic, m, sty.Md), "\n", " "))
+		ctx = append(ctx, sty.Topic.Render(strings.ReplaceAll(render.Mrkdwn(c.Topic, m, sty.Md), "\n", " ")))
 	}
-	header := []string{ansi.Truncate(title, w, "…"), rule(w, m.focus == fMessages)}
-
+	right := ""
+	if n := m.scheduledIn(c.ID); n > 0 {
+		right = sty.Faint.Render(fmt.Sprintf("%s %d scheduled", schedIcon, n))
+	}
 	isTarget := !(m.focus == fThread && m.thread != nil)
-	input := m.renderInput(w, isTarget, "message "+m.convTitle(c))
-	bodyH := max(1, h-len(header)-lineCount(input))
-	list := m.renderList(m.lists[m.current], w, bodyH, m.focus == fMessages, false)
-	return strings.Join(append(header, list, input), "\n")
+	input := m.renderInput(w, isTarget, "Message "+m.convTitle(c))
+	paneH := max(3, h-lineCount(input)-1)
+	list := m.renderList(m.lists[m.current], w-2, paneH-2, focused, false)
+	pane := RenderFrame(list, w, paneH, frameTitle(m.convTitle(c), focused, ctx...), right, focused)
+	return pane + "\n\n" + input
 }
 
 func (m *Model) renderThreadPane(w, h int) string {
 	t := m.thread
+	focused := m.focus == fThread
 	where := ""
 	if c := m.convs[t.conv]; c != nil {
-		where = sty.Muted.Render("  in " + m.convTitle(c))
+		where = sty.Muted.Render("in " + m.convTitle(c))
 	}
-	header := []string{ansi.Truncate(sty.Title.Render("Thread")+where, w, "…"), rule(w, m.focus == fThread)}
-	input := m.renderInput(w, m.focus == fThread, "reply in thread")
-	bodyH := max(1, h-len(header)-lineCount(input))
-	list := m.renderList(&t.list, w, bodyH, m.focus == fThread, true)
-	return strings.Join(append(header, list, input), "\n")
+	input := m.renderInput(w, focused, "Reply in thread")
+	paneH := max(3, h-lineCount(input)-1)
+	list := m.renderList(&t.list, w-2, paneH-2, focused, true)
+	pane := RenderFrame(list, w, paneH, frameTitle("Thread", focused, where), "", focused)
+	return pane + "\n\n" + input
 }
 
-// renderInput shows the text box under the pane it will send to, and a
-// hint under the other one.
-func (m *Model) renderInput(w int, isTarget bool, hint string) string {
-	if !isTarget {
-		return rule(w, false) + "\n" + sty.Faint.Render(" ")
+// renderInput is the composer: a small frame under the pane it sends to,
+// its border following the mode. The other pane's composer shows only its
+// placeholder.
+func (m *Model) renderInput(w int, isTarget bool, placeholder string) string {
+	if !isTarget || !m.insert {
+		return frameWith(" "+sty.Faint.Render(placeholder), w, 3, "", "", sty.Rule)
 	}
-	if !m.insert {
-		return rule(w, false) + "\n" + sty.Faint.Render("  "+sty.Key.Render("i")+sty.Faint.Render(" "+hint))
-	}
-	m.input.SetWidth(w - 2)
+	m.input.SetWidth(w - 4)
 	m.fitInput() // the width may have changed, and with it the wrapping
-	// Labels go into the rule above the box: "── editing … ── image … ──".
+	// Labels go into the top border: "╭ editing ─ image … ──╮".
 	var labels []string
 	if m.editing != nil {
-		labels = append(labels, sty.Warn.Render(" editing · enter save · esc cancel "))
+		labels = append(labels, sty.OK.Bold(true).Render("editing"))
 	}
 	if label := m.broadcastLabel(); label != "" {
 		if m.broadcast {
@@ -190,15 +191,14 @@ func (m *Model) renderInput(w int, isTarget bool, hint string) string {
 	if label := m.attachLabel(); label != "" {
 		labels = append(labels, sty.Warn.Render(label))
 	}
-	top := rule(w, true)
-	if len(labels) > 0 {
-		bar := sty.Bar.Render("──") + strings.Join(labels, sty.Bar.Render("──"))
-		top = ansi.Truncate(bar+sty.Bar.Render(strings.Repeat("─", max(0, w-lipgloss.Width(bar)))), w, "")
-	}
+	border := sty.OK
+	box := m.input.View()
+	frame := frameWith(indent(box, " "), w, lineCount(box)+2,
+		strings.Join(labels, border.Render(" ─ ")), "", border)
 	if m.complete != nil {
-		top = strings.Join(m.renderCompletion(w), "\n") + "\n" + top
+		frame = strings.Join(m.renderCompletion(w), "\n") + "\n" + frame
 	}
-	return top + "\n" + indent(m.input.View(), "  ")
+	return frame
 }
 
 // broadcastLabel is the bar above a thread reply being written: whether it
@@ -252,12 +252,7 @@ func (m *Model) renderUnreads(w, h int) string {
 	var all []string
 	var selStart, selEnd int
 	for i, c := range convs {
-		bar := "  "
 		if i == sel {
-			bar = sty.Bar.Render("▌") + " "
-			if m.focus != fMessages {
-				bar = sty.BarDim.Render("▌") + " "
-			}
 			selStart = len(all)
 		}
 		head := sty.Unread.Render(m.convTitle(c)) + "  " + sty.Time.Render(relTime(backend.TSTime(c.Latest), m.cfg.TimeFormat))
@@ -293,9 +288,7 @@ func (m *Model) renderUnreads(w, h int) string {
 				}
 			}
 		}
-		for _, l := range block {
-			all = append(all, bar+l)
-		}
+		all = append(all, selLines(prefixAll(block, " "), w, i == sel, m.focus == fMessages)...)
 		if i == sel {
 			selEnd = len(all)
 		}

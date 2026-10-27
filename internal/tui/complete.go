@@ -266,10 +266,10 @@ func (m *Model) acceptCompletion() {
 
 // renderCompletion draws the list that sits above the input box.
 func (m *Model) renderCompletion(w int) []string {
-	return m.renderCompItems(m.complete)
+	return m.renderCompItems(m.complete, w)
 }
 
-func (m *Model) renderCompItems(c *completion) []string {
+func (m *Model) renderCompItems(c *completion, w int) []string {
 	start := max(0, c.sel-completeRows+1)
 	var lines []string
 	for i := start; i < len(c.items) && i < start+completeRows; i++ {
@@ -288,11 +288,7 @@ func (m *Model) renderCompItems(c *completion) []string {
 				row += "  " + sty.Muted.Render(it.detail)
 			}
 		}
-		if i == c.sel {
-			lines = append(lines, sty.Bar.Render("▌")+" "+row)
-		} else {
-			lines = append(lines, "  "+row)
-		}
+		lines = append(lines, selLine(" "+row, w, i == c.sel, true))
 	}
 	lines = append(lines, sty.Faint.Render("  tab insert · ↑↓ choose · esc close"))
 	return lines

@@ -6,7 +6,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 )
@@ -535,15 +534,11 @@ func (m *Model) renderChans(w, h int) string {
 		if p := strings.Join(strings.Fields(ch.Purpose), " "); p != "" {
 			info += " · " + p
 		}
-		var row string
-		if i == sel {
-			row = sty.Bar.Render("▌") + " " + sty.Active.Render(name)
-		} else if ch.IsMember {
-			row = "  " + sty.Normal.Render(name)
-		} else {
-			row = "  " + sty.Unread.Render(name)
+		row := sty.Unread.Render(name)
+		if ch.IsMember {
+			row = sty.Normal.Render(name)
 		}
-		rows = append(rows, ansi.Truncate(row+"  "+sty.Muted.Render(info), w, "…"))
+		rows = append(rows, selLine(" "+row+"  "+sty.Muted.Render(info), w, i == sel, true))
 	}
 	for len(rows) < bodyH {
 		rows = append(rows, "")

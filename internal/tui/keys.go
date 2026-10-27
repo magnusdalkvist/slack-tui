@@ -570,7 +570,7 @@ func (m *Model) fitInput() {
 
 // inputLimit is the most rows the input box grows to.
 func (m *Model) inputLimit() int {
-	return max(1, min(8, m.height/3))
+	return max(1, min(6, m.height/3))
 }
 
 // listConv is the conversation a message list belongs to.
