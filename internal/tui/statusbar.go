@@ -235,7 +235,7 @@ func (m *Model) bar(left string, hints []Hint, withHelp bool) string {
 func (m *Model) renderCmdLine() string {
 	m.cmd.input.Width = max(10, m.width/2)
 	return m.bar(sty.PillCmd.Render(":")+" "+m.cmd.input.View(), []Hint{
-		{"tab", "complete"}, {"↑↓", "history"}, {"⏎", "run"}, {"esc", "cancel"},
+		{"tab", "complete"}, {"↑↓", "history"}, {"enter", "run"}, {"esc", "cancel"},
 	}, false)
 }
 
@@ -247,7 +247,7 @@ func (m *Model) hints() []Hint {
 	}
 	switch {
 	case m.cmd != nil:
-		return []Hint{{"⏎", "save"}, {"esc", "cancel"}}
+		return []Hint{{"enter", "save"}, {"esc", "cancel"}}
 	case m.confirm != nil:
 		return []Hint{{"y", m.confirm.yesLabel}, {"n", m.confirm.noLabel}}
 	case m.bootErr != nil:
@@ -281,9 +281,9 @@ func (m *Model) hints() []Hint {
 	}
 	switch {
 	case m.focus == fSidebar:
-		hs = append(hs, Hint{"⏎", "open"}, Hint{"z", "fold"}, Hint{"u", "next unread"}, Hint{"ctrl+k", "jump"})
+		hs = append(hs, Hint{"enter", "open"}, Hint{"z", "fold"}, Hint{"u", "next unread"}, Hint{"ctrl+k", "jump"})
 	case m.current == unreadsID:
-		hs = append(hs, Hint{"⏎", "open"}, Hint{"r", "mark read"}, Hint{"u", "next unread"})
+		hs = append(hs, Hint{"enter", "open"}, Hint{"r", "mark read"}, Hint{"u", "next unread"})
 		if m.stacked() {
 			hs = append(hs, Hint{"h", "back"})
 		}
@@ -301,7 +301,7 @@ func (m *Model) hints() []Hint {
 		if len(m.failedImages()) > 0 {
 			hs = append(hs, Hint{"r", "retry"})
 		}
-		hs = append(hs, Hint{"i", "write"}, Hint{"⏎", "thread"}, Hint{"+", "react"}, Hint{"/", "search"})
+		hs = append(hs, Hint{"i", "write"}, Hint{"enter", "thread"}, Hint{"+", "react"}, Hint{"/", "search"})
 	}
 	return hs
 }
@@ -311,9 +311,9 @@ func (m *Model) insertHints() []Hint {
 	case m.complete != nil:
 		return []Hint{{"tab", "insert"}, {"↑↓", "choose"}, {"esc", "close"}}
 	case m.editing != nil:
-		return []Hint{{"⏎", "save"}, {"esc", "cancel"}}
+		return []Hint{{"enter", "save"}, {"esc", "cancel"}}
 	}
-	hs := []Hint{{"⏎", "send"}, {"alt+⏎", "new line"}}
+	hs := []Hint{{"enter", "send"}, {"alt+enter", "new line"}}
 	if len(m.attach) > 0 {
 		hs = append(hs, Hint{"ctrl+←→", "pick"}, Hint{"ctrl+x", "drop"})
 	} else if _, thread := m.inputTarget(); thread != "" {
@@ -325,15 +325,15 @@ func (m *Model) insertHints() []Hint {
 }
 
 func (*switcher) Hints() []Hint {
-	return []Hint{{"⏎", "open"}, {"↑↓", "move"}, {"esc", "close"}}
+	return []Hint{{"enter", "open"}, {"↑↓", "move"}, {"esc", "close"}}
 }
 
 func (*picker) Hints() []Hint {
-	return []Hint{{"⏎", "react / un-react"}, {"↑↓", "move"}, {"esc", "close"}}
+	return []Hint{{"enter", "react / un-react"}, {"↑↓", "move"}, {"esc", "close"}}
 }
 
 func (p *profileState) Hints(m *Model) []Hint {
-	hs := []Hint{{"⏎", "message"}}
+	hs := []Hint{{"enter", "message"}}
 	if m.users[p.id].Email != "" {
 		hs = append(hs, Hint{"c", "copy email"})
 	}
@@ -341,38 +341,38 @@ func (p *profileState) Hints(m *Model) []Hint {
 }
 
 func (*opener) Hints() []Hint {
-	return []Hint{{"1-9", "open"}, {"⏎", "open"}, {"esc", "close"}}
+	return []Hint{{"1-9", "open"}, {"enter", "open"}, {"esc", "close"}}
 }
 
 func (*helpState) Hints() []Hint {
-	return []Hint{{"⏎", "run command"}, {"↑↓", "move"}, {"esc", "close"}}
+	return []Hint{{"enter", "run command"}, {"↑↓", "move"}, {"esc", "close"}}
 }
 
 func (s *searchState) Hints() []Hint {
 	if s.typing {
-		return []Hint{{"⏎", "search"}, {"esc", "back"}}
+		return []Hint{{"enter", "search"}, {"esc", "back"}}
 	}
-	return []Hint{{"⏎", "go to message"}, {"o", "open in Slack"}, {"n N", "next / prev"}, {"/", "edit query"}, {"esc", "close"}}
+	return []Hint{{"enter", "go to message"}, {"o", "open in Slack"}, {"n N", "next / prev"}, {"/", "edit query"}, {"esc", "close"}}
 }
 
 func (*pinsState) Hints() []Hint {
-	return []Hint{{"⏎", "go to / open"}, {"o", "in Slack"}, {"p", "unpin"}, {"a", "add bookmark"}, {"esc", "close"}}
+	return []Hint{{"enter", "go to / open"}, {"o", "in Slack"}, {"p", "unpin"}, {"a", "add bookmark"}, {"esc", "close"}}
 }
 
 func (*schedState) Hints() []Hint {
-	return []Hint{{"⏎", "go to"}, {"e", "edit"}, {"d", "cancel it"}, {"R", "reload"}, {"esc", "close"}}
+	return []Hint{{"enter", "go to"}, {"e", "edit"}, {"d", "cancel it"}, {"R", "reload"}, {"esc", "close"}}
 }
 
 func (*chansState) Hints() []Hint {
-	return []Hint{{"⏎", "join / open"}, {"↑↓", "move"}, {"esc", "close"}}
+	return []Hint{{"enter", "join / open"}, {"↑↓", "move"}, {"esc", "close"}}
 }
 
 func (*membersState) Hints() []Hint {
-	return []Hint{{"⏎", "profile"}, {"↑↓", "move"}, {"esc", "close"}}
+	return []Hint{{"enter", "profile"}, {"↑↓", "move"}, {"esc", "close"}}
 }
 
 func (*sharedState) Hints() []Hint {
-	return []Hint{{"⏎", "go to message"}, {"o", "open"}, {"s", "save"}, {"v", "view"}, {"tab", "files / links"}}
+	return []Hint{{"enter", "go to message"}, {"o", "open"}, {"s", "save"}, {"v", "view"}, {"tab", "files / links"}}
 }
 
 func (*viewer) Hints() []Hint {

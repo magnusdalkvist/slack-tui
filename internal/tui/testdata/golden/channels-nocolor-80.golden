@@ -1,7 +1,8 @@
 ╭ [1;7mChannels[0m ───────────────────────────────────────────────────── 3 of 3 public ╮
-│▌[7m development  Builds, deploys and reviews              joined · 24 members  [27;49m│
-│  [1mdesign[0m  Mockups and reviews                                     9 members  │
-│  [1mrandom[0m                                                        120 members  │
+│▌[7m# development  Builds, deploys and reviews              joined · 24 members  [27;49m│
+│ # [1mdesign[0m  Mockups and reviews                                     9 members  │
+│ # [1mrandom[0m                                                        120 members  │
+│                                                                              │
 │                                                                              │
 │                                                                              │
 │                                                                              │
@@ -23,8 +24,7 @@
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
-                                                                                
 ╭──────────────────────────────────────────────────────────────────────────────╮
 │ › [7mf[0m[90milter channels[0m                                                            │
 ╰──────────────────────────────────────────────────────────────────────────────╯
-[7m [0m[1;7mNORMAL[0m[7m [0m  ● live                            [1m⏎[0m join / open   [1m↑↓[0m move   [1mesc[0m close 
+[7m [0m[1;7mNORMAL[0m[7m [0m  ● live                        [1menter[0m join / open   [1m↑↓[0m move   [1mesc[0m close 

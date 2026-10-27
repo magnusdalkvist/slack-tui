@@ -1,16 +1,16 @@
 ╭ [1;7mBørsen[0m ─────────────────────────────────────────────────────────────── @mada ╮
 │ [1m[0m [1mUnreads[0m                                                                   3│
 │                                                                              │
-│ [1m[0m [1mTEAM[0m                                                                      3│
-│  development                                                                │
-│! [1mSimon Konstantyner[0m                                                     🏡 2│
-│  Kim Kyhlensø kiky                                                          │
+│ [1m[0m [1mTEAM[0m                                                                       │
+│ # development                                                                │
+│!● [1mSimon Konstantyner[0m                                                     🏡 2│
+│ ○ Kim Kyhlensø kiky                                                          │
 │                                                                              │
-│![1m[0m [1m[0m [1mCHANNELS[0m                                                                1│
+│![1m[0m [1m#[0m [1mCHANNELS[0m                                                                1│
 │![1m[0m [1mpanda-v2[0m                                                                  1│
-│▏[1m[0m [1msjov-og-spass[0m                                                              │
+│▏[1m#[0m [1msjov-og-spass[0m                                                              │
 │                                                                              │
-│▌[7m[1m[0m[7m [1m[0m[7m [1mDIRECT MESSAGES[0m[7m                                                         2[27;49m│
+│▌[7m[1m[0m[7m [1m[0m[7m [1mDIRECT MESSAGES[0m[7m                                                          [27;49m│
 │                                                                              │
 │                                                                              │
 │                                                                              │
@@ -27,4 +27,4 @@
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
-[7m [0m[1;7mNORMAL[0m[7m [0m  ● live         [1m⏎[0m open   [1mz[0m fold   [1mu[0m next unread   [1mctrl+k[0m jump   [1m?[0m help 
+[7m [0m[1;7mNORMAL[0m[7m [0m  ● live     [1menter[0m open   [1mz[0m fold   [1mu[0m next unread   [1mctrl+k[0m jump   [1m?[0m help 

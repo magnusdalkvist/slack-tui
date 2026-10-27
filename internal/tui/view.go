@@ -145,10 +145,10 @@ func (m *Model) renderConvPane(w, h int) string {
 	}
 	isTarget := !(m.focus == fThread && m.thread != nil)
 	input := m.renderInput(w, isTarget, false, "Message "+m.convTitle(c))
-	paneH := max(3, h-lineCount(input)-1)
+	paneH := max(3, h-lineCount(input))
 	list := m.renderList(m.lists[m.current], w-2, paneH-2, focused, false)
 	pane := RenderFrame(list, w, paneH, frameTitle(title, focused, ctx...), right, focused)
-	return m.withCompletion(pane+"\n", input, w, isTarget)
+	return m.withCompletion(pane, input, w, isTarget)
 }
 
 func (m *Model) renderThreadPane(w, h int) string {
@@ -159,19 +159,19 @@ func (m *Model) renderThreadPane(w, h int) string {
 		where = sty.Muted.Render("in " + m.convTitle(c))
 	}
 	input := m.renderInput(w, focused, true, "Reply in thread")
-	paneH := max(3, h-lineCount(input)-1)
+	paneH := max(3, h-lineCount(input))
 	list := m.renderList(&t.list, w-2, paneH-2, focused, true)
 	title, right := "Thread", ""
 	if c := m.convs[t.conv]; c != nil && m.layout() != layoutWide {
 		title, right = "‹ Thread", sty.Faint.Render(m.convLabel(c)+" › Thread")
 	}
 	pane := RenderFrame(list, w, paneH, frameTitle(title, focused, where), right, focused)
-	return m.withCompletion(pane+"\n", input, w, focused)
+	return m.withCompletion(pane, input, w, focused)
 }
 
-// withCompletion stacks above the composer: the pane, then the gap row,
-// with the completion popup laid over their bottom rows so it sits flush
-// on the composer's top edge, aligned to its left.
+// withCompletion stacks the pane on the composer, with the completion
+// popup laid over the pane's bottom rows so it sits flush on the
+// composer's top edge, aligned to its left.
 func (m *Model) withCompletion(above, input string, w int, isTarget bool) string {
 	if m.complete == nil || !isTarget || !m.insert {
 		return above + "\n" + input

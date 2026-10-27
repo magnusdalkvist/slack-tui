@@ -236,7 +236,9 @@ func (m *Model) renderSidebar(w, h int) string {
 	secs := m.sections()
 	for i := m.sideTop; i < len(m.side) && i < m.sideTop+bodyH; i++ {
 		r := m.sideCells(m.side[i], secs)
-		countW = max(countW, ansi.StringWidth(r.count))
+		if !r.header { // a folded header's "2 new" may run into the status column
+			countW = max(countW, ansi.StringWidth(r.count))
+		}
 		rows = append(rows, r)
 	}
 	var lines []string
@@ -268,12 +270,15 @@ func (r sideCells) layout(width, countW int) string {
 		return ""
 	}
 	right := ""
-	if countW > 0 {
-		right = " " + strings.Repeat(" ", countW-ansi.StringWidth(r.count)) + r.count
+	if cw := max(countW, ansi.StringWidth(r.count)); r.header && r.count != "" {
+		right = " " + r.count
+	} else if cw > 0 {
+		right = " " + strings.Repeat(" ", cw-ansi.StringWidth(r.count)) + r.count
 	}
-	status := "  "
+	// The status emoji keeps a cell between itself and the name.
+	status := "   "
 	if r.status != "" {
-		status = r.status
+		status = " " + r.status
 	}
 	if r.header {
 		status = ""
@@ -378,10 +383,9 @@ func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 	return r
 }
 
-// headerCells is a section header: ▾/▸, the section's icon, its name in
-// caps and how many conversations it holds. A folded one still says
-// what is inside: mentions with a red flag and count, unreads with a
-// faint flag and "3 new".
+// headerCells is a section header: ▾/▸, the section's icon and its name
+// in caps. A folded one still says what is inside: mentions with a red
+// flag and count, unreads with a faint flag and "3 new".
 func (m *Model) headerCells(name string, secs []section) sideCells {
 	arrow := ico.Unfolded
 	if m.folded[name] {
@@ -394,7 +398,7 @@ func (m *Model) headerCells(name string, secs []section) sideCells {
 		title = icon + " " + title
 	}
 	r := sideCells{header: true, flag: " ", icon: sty.Header.Render(arrow), name: title}
-	total, mentions, unread := 0, 0, 0
+	mentions, unread := 0, 0
 	for _, sec := range secs {
 		if sec.name != name {
 			continue
@@ -404,7 +408,6 @@ func (m *Model) headerCells(name string, secs []section) sideCells {
 			if c == nil {
 				continue
 			}
-			total++
 			switch {
 			case c.Mentions > 0 || (c.IsDM() && c.Unread()):
 				mentions += max(c.Mentions, 1)
@@ -413,7 +416,6 @@ func (m *Model) headerCells(name string, secs []section) sideCells {
 			}
 		}
 	}
-	r.count = sty.Faint.Render(fmt.Sprint(total))
 	if m.folded[name] {
 		switch {
 		case mentions > 0:

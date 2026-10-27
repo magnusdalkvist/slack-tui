@@ -1,4 +1,5 @@
-╭ [1;7m‹ Thread[0m  in  development ──────────────────────────── development › Thread ╮
+╭ [1;7m‹ Thread[0m  in # development ──────────────────────────── development › Thread ╮
+│                                                                              │
 │                                                                              │
 │                                                                              │
 │                                                                              │
@@ -23,7 +24,6 @@
 │▌[7m      bumped it to 30s 👍                                                    [27;49m│
 │▌[7m      [7m ctx, cancel := context.WithTimeout(ctx, 30*time.Second) [0m[7m              [27;49m│
 ╰──────────────────────────────────────────────────────────────────────────────╯
-                                                                                
 ╭───────────────────────────────────────────────── □ also send to #development ╮
 │ Reply in thread                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯

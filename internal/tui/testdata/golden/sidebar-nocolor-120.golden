@@ -1,19 +1,20 @@
-╭ [1;7mBørsen[0m ──────────────── @mada ╮ ╭ [1m development[0m  Builds, deploys and [1mreviews[0m ────────────────────────────────────────╮
+╭ [1;7mBørsen[0m ──────────────── @mada ╮ ╭ [1m# development[0m  Builds, deploys and [1mreviews[0m ────────────────────────────────────────╮
 │ [1m[0m [1mUnreads[0m                    3│ │                                                                                    │
 │                               │ │                                                                                    │
-│ [1m[0m [1mTEAM[0m                       3│ │                                                                                    │
-│▌[7m development                 [27;49m│ │                                                                                    │
-│! [1mSimon Konstantyner[0m      🏡 2│ │       ─────────────────────────────────[1m Yesterday [0m─────────────────────────────────│
-│  Kim Kyhlensø kiky           │ │ 16:02 [1mkiky[0m kim.kyhlensoe                                                           │
-│                               │ │       anyone up for reviewing the cache change?                                    │
-│ [1m[0m [1m[0m [1mCHANNELS[0m                 3│ │ 16:03 it's small, promise (edited)                                                 │
-│  general                     │ │       ───────────────────────────────────[1m Today [0m───────────────────────────────────│
-│![1m[0m [1mpanda-v2[0m                   1│ │       ────────────────────────────────────[1m new [0m────────────────────────────────────│
-│▏[1m[0m [1msjov-og-spass[0m               │ │▌09:12 [1mSimon Konstantyner[0m siko   pinned                                            │
-│                               │ │▌      deployed [7mpanda-v2[0m to staging 🚀                                              │
-│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m          2│ │▌      [7m [0m[1;7m🎉 2[0m[7m [0m [7m [0m[7m👀 1[0m[7m [0m                                                                │
-│  mada (you)                  │ │ 09:40 [3m→ [0m[3m@Anna Jensen has joined the channel[0m                                        │
-│  Simon Konstantyner, Ann…    │ │▌10:02 [1mAnna Jensen[0m anna                                                             │
+│ [1m[0m [1mTEAM[0m                        │ │                                                                                    │
+│▌[7m# development                 [27;49m│ │                                                                                    │
+│!● [1mSimon Konstantyner[0m      🏡 2│ │                                                                                    │
+│ ○ Kim Kyhlensø kiky           │ │       ─────────────────────────────────[1m Yesterday [0m─────────────────────────────────│
+│                               │ │ 16:02 [1mkiky[0m kim.kyhlensoe                                                           │
+│ [1m[0m [1m#[0m [1mCHANNELS[0m                  │ │       anyone up for reviewing the cache change?                                    │
+│ # general                     │ │ 16:03 it's small, promise (edited)                                                 │
+│![1m[0m [1mpanda-v2[0m                   1│ │       ───────────────────────────────────[1m Today [0m───────────────────────────────────│
+│▏[1m#[0m [1msjov-og-spass[0m               │ │       ────────────────────────────────────[1m new [0m────────────────────────────────────│
+│                               │ │▌09:12 [1mSimon Konstantyner[0m siko   pinned                                            │
+│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m           │ │▌      deployed [7mpanda-v2[0m to staging 🚀                                              │
+│ ○ mada (you)                  │ │▌      [7m [0m[1;7m🎉 2[0m[7m [0m [7m [0m[7m👀 1[0m[7m [0m                                                                │
+│ 󰬸 Simon Konstantyner, An…     │ │ 09:40 [3m→ [0m[3m@Anna Jensen has joined the channel[0m                                        │
+│                               │ │▌10:02 [1mAnna Jensen[0m anna                                                             │
 │                               │ │▌      [1m@mada[0m can you look at the failing test? see https://example.com/ci/123       │
 │                               │ │▌       4 replies · last 14m ago                                                   │
 │                               │ │ 10:20 [1mGitHub[0m 󰚩 [7m [0m[7mAPP[0m[7m [0m                                                               │
@@ -23,8 +24,7 @@
 │                               │ │ [7m       plan.pdf  PDF                                                              [27;49m│
 │                               │ │ [7m       diagram.png  PNG                                                           [27;49m│
 │                               │ ╰────────────────────────────────────────────────────────────────────────────────────╯
-│                               │                                                                                       
 │                               │ ╭────────────────────────────────────────────────────────────────────────────────────╮
-│                               │ │ Message  development                                                              │
+│                               │ │ Message # development                                                              │
 ╰───────────────────────────────╯ ╰────────────────────────────────────────────────────────────────────────────────────╯
-[7m [0m[1;7mNORMAL[0m[7m [0m  ● live                                                 [1m⏎[0m open   [1mz[0m fold   [1mu[0m next unread   [1mctrl+k[0m jump   [1m?[0m help 
+[7m [0m[1;7mNORMAL[0m[7m [0m  ● live                                             [1menter[0m open   [1mz[0m fold   [1mu[0m next unread   [1mctrl+k[0m jump   [1m?[0m help 

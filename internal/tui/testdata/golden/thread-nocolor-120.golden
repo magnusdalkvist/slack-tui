@@ -1,19 +1,20 @@
-╭ [1mBørsen[0m ──────────────── @mada ╮ ╭ [1;7m‹ Thread[0m  in  development ────────────────────────────────── development › Thread ╮
+╭ [1mBørsen[0m ──────────────── @mada ╮ ╭ [1;7m‹ Thread[0m  in # development ────────────────────────────────── development › Thread ╮
 │ [1m[0m [1mUnreads[0m                    3│ │                                                                                    │
 │                               │ │                                                                                    │
-│ [1m[0m [1mTEAM[0m                       3│ │                                                                                    │
-│ [7m development                 [27;49m│ │                                                                                    │
-│! [1mSimon Konstantyner[0m      🏡 2│ │                                                                                    │
-│  Kim Kyhlensø kiky           │ │                                                                                    │
+│ [1m[0m [1mTEAM[0m                        │ │                                                                                    │
+│ [7m# development                 [27;49m│ │                                                                                    │
+│!● [1mSimon Konstantyner[0m      🏡 2│ │                                                                                    │
+│ ○ Kim Kyhlensø kiky           │ │                                                                                    │
 │                               │ │                                                                                    │
-│ [1m[0m [1m[0m [1mCHANNELS[0m                 3│ │                                                                                    │
-│  general                     │ │                                                                                    │
+│ [1m[0m [1m#[0m [1mCHANNELS[0m                  │ │                                                                                    │
+│ # general                     │ │                                                                                    │
 │![1m[0m [1mpanda-v2[0m                   1│ │                                                                                    │
-│▏[1m[0m [1msjov-og-spass[0m               │ │                                                                                    │
+│▏[1m#[0m [1msjov-og-spass[0m               │ │                                                                                    │
 │                               │ │                                                                                    │
-│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m          2│ │                                                                                    │
-│  mada (you)                  │ │                                                                                    │
-│  Simon Konstantyner, Ann…    │ │                                                                                    │
+│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m           │ │                                                                                    │
+│ ○ mada (you)                  │ │                                                                                    │
+│ 󰬸 Simon Konstantyner, An…     │ │                                                                                    │
+│                               │ │                                                                                    │
 │                               │ │       ───────────────────────────────────[1m Today [0m───────────────────────────────────│
 │                               │ │▌10:02 [1mAnna Jensen[0m anna                                                             │
 │                               │ │▌      [1m@mada[0m can you look at the failing test? see https://example.com/ci/123       │
@@ -23,7 +24,6 @@
 │                               │ │▌[7m      bumped it to 30s 👍                                                          [27;49m│
 │                               │ │▌[7m      [7m ctx, cancel := context.WithTimeout(ctx, 30*time.Second) [0m[7m                    [27;49m│
 │                               │ ╰────────────────────────────────────────────────────────────────────────────────────╯
-│                               │                                                                                       
 │                               │ ╭─────────────────────────────────────────────────────── □ also send to #development ╮
 │                               │ │ Reply in thread                                                                    │
 ╰───────────────────────────────╯ ╰────────────────────────────────────────────────────────────────────────────────────╯

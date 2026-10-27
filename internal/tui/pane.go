@@ -59,7 +59,7 @@ func (m *Model) renderPane(p paneSpec, w, h int) string {
 	listH := h
 	if p.input != "" {
 		composer = frameWith(p.input, cw, lineCount(p.input)+2, p.inputLabel, "", p.inputBorder)
-		listH = max(3, h-lineCount(composer)-1)
+		listH = max(3, h-lineCount(composer))
 	}
 	bodyH := listH - 2
 	inner := cw - 2
@@ -91,7 +91,7 @@ func (m *Model) renderPane(p paneSpec, w, h int) string {
 	truncateRows(view, inner)
 	col := RenderFrame(strings.Join(view, "\n"), cw, listH, p.title, p.right, true)
 	if composer != "" {
-		above := col + "\n"
+		above := col
 		if len(p.popup) > 0 {
 			lines := strings.Split(above, "\n")
 			at := max(0, len(lines)-len(p.popup))

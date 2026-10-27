@@ -1,19 +1,20 @@
-╭ Børsen ──────────────── @mada ╮ ╭  development  Builds, deploys and reviews ────────────────────────────────────────╮
+╭ Børsen ──────────────── @mada ╮ ╭ # development  Builds, deploys and reviews ────────────────────────────────────────╮
 │  Unreads                    3│ │                                                                                    │
 │                               │ │                                                                                    │
-│  TEAM                       3│ │                                                                                    │
-│  development                 │ │                                                                                    │
-│! Simon Konstantyner╭ [1;7mJump to[0m ──────────────────────────────────────────────────────── 2 of 10 ╮─────────────────────│
-│  Kim Kyhlensø kiky │ › si[7m [0m                                                                    │                     │
+│  TEAM                        │ │                                                                                    │
+│ # development                 │ │                                                                                    │
+│!● Simon Konstantyner╭ [1;7mJump to[0m ──────────────────────────────────────────────────────── 2 of 10 ╮                     │
+│ ○ Kim Kyhlensø kiky │ › si[7m [0m                                                                    │─────────────────────│
 │                     │──────────────────────────────────────────────────────────────────────────│                     │
-│   CHANNELS        │▌[7m  [1mSi[0m[7m[1mmon Konstantyner[0m[7m                           2 mentions · DM · active [27;49m│                     │
-│  general           │   [1mSi[0mmon Konstantyner, Anna Jensen                              group DM │─────────────────────│
+│  # CHANNELS        │▌[7m ● [1mSi[0m[7m[1mmon Konstantyner[0m[7m                           2 mentions · DM · active [27;49m│                     │
+│ # general           │  󰬸 [1mSi[0mmon Konstantyner, Anna Jensen                              group DM │                     │
 │! panda-v2          ╰──────────────────────────────────────────────────────────────────────────╯─────────────────────│
-│▏ sjov-og-spass               │ │▌09:12 Simon Konstantyner siko   pinned                                            │
-│                               │ │▌      deployed panda-v2 to staging 🚀                                              │
-│   DIRECT MESSAGES          2│ │▌       🎉 2   👀 1                                                                 │
-│  mada (you)                  │ │ 09:40 → @Anna Jensen has joined the channel                                        │
-│  Simon Konstantyner, Ann…    │ │▌10:02 Anna Jensen anna                                                             │
+│▏# sjov-og-spass               │ │       ──────────────────────────────────── new ────────────────────────────────────│
+│                               │ │▌09:12 Simon Konstantyner siko   pinned                                            │
+│   DIRECT MESSAGES           │ │▌      deployed panda-v2 to staging 🚀                                              │
+│ ○ mada (you)                  │ │▌       🎉 2   👀 1                                                                 │
+│ 󰬸 Simon Konstantyner, An…     │ │ 09:40 → @Anna Jensen has joined the channel                                        │
+│                               │ │▌10:02 Anna Jensen anna                                                             │
 │                               │ │▌      @mada can you look at the failing test? see https://example.com/ci/123       │
 │                               │ │▌       4 replies · last 14m ago                                                   │
 │                               │ │ 10:20 GitHub 󰚩  APP                                                                │
@@ -23,8 +24,7 @@
 │                               │ │▌       plan.pdf  PDF                                                              │
 │                               │ │▌       diagram.png  PNG                                                           │
 │                               │ ╰────────────────────────────────────────────────────────────────────────────────────╯
-│                               │                                                                                       
 │                               │ ╭────────────────────────────────────────────────────────────────────────────────────╮
-│                               │ │ Message  development                                                              │
+│                               │ │ Message # development                                                              │
 ╰───────────────────────────────╯ ╰────────────────────────────────────────────────────────────────────────────────────╯
-[7m [0m[1;7mJUMP[0m[7m [0m  ● live                                                                             [1m⏎[0m open   [1m↑↓[0m move   [1mesc[0m close 
+[7m [0m[1;7mJUMP[0m[7m [0m  ● live                                                                         [1menter[0m open   [1m↑↓[0m move   [1mesc[0m close 

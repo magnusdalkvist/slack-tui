@@ -25,10 +25,12 @@ type Icons struct {
 }
 
 var nerdIcons = Icons{
-	Channel: "", Private: "",
-	UserActive: "", UserAway: "",
-	Group: "", Unreads: "",
-	SecChannels: "", SecDMs: "", SecExternal: "",
+	// Plain # and circles: the Nerd Font hashtag and user glyphs fill the
+	// whole cell and run into the name after them.
+	Channel: "#", Private: "",
+	UserActive: "●", UserAway: "○",
+	Group: "\U000f0b38", Unreads: "", // nf-md-circle_multiple: a group, not a person
+	SecChannels: "#", SecDMs: "", SecExternal: "",
 	Folded: "", Unfolded: "",
 	Thread: "", Pinned: "", Bookmark: "",
 	Scheduled: "", Bot: "\U000f06a9", Search: "",

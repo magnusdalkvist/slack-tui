@@ -68,13 +68,13 @@ Nerd Fonts stay. Icons come from Nerd Font v3 and live in one `icons.go` map, so
 
 | Use | Nerd Font (codepoint, name) | Unicode fallback |
 |---|---|---|
-| Public channel | `U+F292` nf-fa-hashtag | `#` |
+| Public channel | `#` (the Nerd Font hashtag fills its cell and runs into the name) | `#` |
 | Private channel | `U+F023` nf-fa-lock | `◇` |
-| Person, active | `U+F007` nf-fa-user, in `ok` | `●` |
-| Person, away | `U+F2C0` nf-fa-user_o, in `faint` | `○` |
-| Group DM | `U+F0C0` nf-fa-users | `◎` |
+| Person, active | `●` in `ok` | `●` |
+| Person, away | `○` in `faint` | `○` |
+| Group DM | `U+F0B38` nf-md-circle_multiple (a group, not a person) | `◎` |
 | Unreads entry | `U+F01C` nf-fa-inbox | `≡` |
-| CHANNELS section | `U+F292` nf-fa-hashtag | none |
+| CHANNELS section | `#` | none |
 | DIRECT MESSAGES section | `U+F086` nf-fa-comments | none |
 | EXTERNAL section | `U+F1AD` nf-fa-building | none |
 | Custom section | the section's Slack emoji (§3.1) | none |
@@ -140,7 +140,7 @@ Every pane is a **frame**: a rounded border (`lipgloss.RoundedBorder()`) with it
 - Labels get 1 cell of padding on each side and start 1 cell in from the corner.
 - The border is `accent` when focused and `rule` when idle. **This is the only focus signal.**
 - The composer is a separate small frame under its pane. Its border follows the mode (§7).
-- Frames sit ½ cell apart horizontally, with 1 row between a pane and its composer frame.
+- Frames sit ½ cell apart horizontally. A pane and its composer frame sit directly on top of each other, with no row between.
 
 ### Breakpoints
 
@@ -195,11 +195,11 @@ All columns are fixed width:
 | Muted channel | none | `faint` | none |
 | Your own DM | none | `muted` + `(you)` faint | none |
 
-- The icon is the Nerd Font glyph for the row type (§3). For people, presence is shown by the icon itself: a solid user icon in `ok` when active and an outline user icon in `faint` when away.
-- The status slot shows the person's real Slack status emoji, custom ones included (§3.1).
+- The icon is the glyph for the row type (§3). For people, presence is shown by the icon itself: `●` in `ok` when active and `○` in `faint` when away.
+- The status slot shows the person's real Slack status emoji, custom ones included (§3.1), always one cell clear of the name.
 - Custom sections show their Slack emoji in the header icon slot.
 - Nicknames go after the name in `faint` (`Kim Kyhlensø kiky`).
-- **Section headers** are `faint` and bold in caps, with `▾`/`▸` and the total count on the right in `faint`.
+- **Section headers** are `faint` and bold in caps, with `▾`/`▸`. They show no count unless folded (below).
 - A **folded** section still surfaces what's inside it: its unread conversations stay as rows, and the header sums them up. With mentions it shows a red `▌` and a red count. With plain unreads it shows a faint `▏` and "3 new" in `muted`.
 - The sidebar frame title is the team name (`muted`) and the right label is your handle (`faint`).
 - The first row is `≡ Unreads` with its total.
@@ -291,7 +291,7 @@ Hints follow the pattern `key label   key label   key label`: the key in `fg` bo
 
 - Centred horizontally, with its top at about 18% of the height. Width depends on content, at most 76 cells.
 - `raised` background, `accent` rounded border, and the title in the top border (left: bold `accent`; right: context in `faint`).
-- Everything behind it is re-rendered in `faint`, which acts as the dim.
+- Everything behind it is re-rendered in `rule`, which acts as the dim.
 - Layout: input row (`› query▏`), then a rule, then rows using the selection grammar. Groups get a `faint` bold caps header. **No footer.**
 - The mode pill names the modal, and its hints are in the status bar.
 
@@ -402,7 +402,7 @@ Gaps found while building this spec, and how they were filled.
 - **`bg` hex values** (dark #121315, light #ffffff) are what the contrast check assumes for the terminal background. They are never painted.
 - **`NO_COLOR`** forces lipgloss's ANSI profile with every token unset. lipgloss's own NO_COLOR handling would drop bold and reverse as well.
 - **Theme warnings** (an unknown token, an unparsable value, or contrast below 4.5:1) show in the status bar at start.
-- **Frames sit 1 cell apart.** A terminal can't draw half a cell, so the gap is one blank column. A pane and its composer frame have 1 blank row between them.
+- **Frames sit 1 cell apart.** A terminal can't draw half a cell, so the gap is one blank column. A pane and its composer frame touch, with no row between them.
 - **Focus under `NO_COLOR`.** With no border colour, the focused frame's title is drawn in reverse video. This is the only place where focus shows without colour.
 - **Selection rows** come from `selLine` in `frame.go`: a 1-cell bar column, then the row padded to the frame's width. `paintBg` restores the selection background after every SGR reset inside the row, so chips, links and custom-emoji images keep it.
 - **Folded sections** keep their unread conversations (and the open one) as rows, so nothing that needs you is hidden. Read ones fold away. The header still sums up the section with its flag and count.
@@ -410,7 +410,6 @@ Gaps found while building this spec, and how they were filled.
 - **The open conversation** is drawn in `fg` rather than `muted` when it's read, so it stands out when the cursor is elsewhere. With the cursor on it, it's the selected row.
 - **The sidebar count column** is as wide as the widest count among the visible rows, so names, status emoji and counts line up.
 - **Section header arrows** (▾/▸) sit in the icon column. The section's own icon (Nerd Font, or the custom section's Slack emoji) goes before its name.
-- **People's presence** is drawn with the solid or outline user icon in the sidebar. Headers and modals keep `●` (§3).
 - **The time gutter** is `max(6, width of time_format + 1)` cells, so a 12-hour `time_format` still fits.
 - **Mentions of you** include `@here`, `@channel` and `@everyone`, as Slack highlights those too. When a message both mentions you and is pinned, the mention tint wins. Selection wins over both.
 - **Day labels** are `Today`, `Yesterday`, then `Thursday 22 October` (the year is added when it isn't the current one).
@@ -447,3 +446,6 @@ Gaps found while building this spec, and how they were filled.
 - **Startup steps run at once** (the cache, the live connection, channels & people). A step shows the spinner while it runs. `channels & people` shows `·` until the cache has been read, because a cached start skips this screen: it draws the cache straight away. Without a cache, the first step reads `✓ no cache yet`.
 - **The cache's age** is the cache file's last write (the database or its write-ahead log). The status bar shows it as a time today, or a date before today.
 - **`e` on the error screen** opens `config.toml` in `$VISUAL`, `$EDITOR` or `vi`, then asks Slack again. Settings themselves are read at start, so the status bar says to restart for config changes. The error screen's bar shows only the `ERROR` pill and `e`/`q`, since nothing else works there.
+- **Hint keys are words** (`enter`, `alt+enter`, `esc`, `tab`). `⏎` drew badly in some fonts.
+- **The count column** is sized by the conversation rows only. A folded header's `2 new` may run into the status column, so it doesn't shorten every name.
+- **A presence circle**, not a user glyph, marks people everywhere (sidebar, switcher, completion, members). Group DMs get `nf-md-circle_multiple`.

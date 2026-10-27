@@ -16,6 +16,7 @@ type Styles struct {
 	theme Theme
 
 	Muted, Faint, Normal lipgloss.Style
+	Dim                  lipgloss.Style // what lies behind a modal
 	Unread, Header       lipgloss.Style
 	Title, Topic         lipgloss.Style
 	Bar, Rule            lipgloss.Style
@@ -64,6 +65,7 @@ func NewStyles(t Theme) Styles {
 		theme:      t,
 		Muted:      fg(t.Muted),
 		Faint:      fg(t.Faint),
+		Dim:        fg(t.Rule),
 		Normal:     fg(t.Fg),
 		Unread:     fg(t.Fg).Bold(true),
 		Header:     fg(t.Faint).Bold(true),

@@ -1,12 +1,12 @@
 ╭ [1;7mUnreads[0m ──────────────────────────────────────────────────── 3 conversations ╮
-│▌[7m! [1mSimon Konstantyner[0m[7m                                              2  10:30  [27;49m│
+│▌[7m!● [1mSimon Konstantyner[0m[7m                                              2  10:30  [27;49m│
 │▌[7m 10:30 [1mSimon Konstantyner[0m[7m siko                                               [27;49m│
 │▌[7m       got a minute?                                                         [27;49m│
 │                                                                              │
 │ ![1m[0m [1mpanda-v2[0m                                                        1  08:00  │
 │   loading…                                                                   │
 │                                                                              │
-│ ▏[1m[0m [1msjov-og-spass[0m                                                      07:00  │
+│ ▏[1m#[0m [1msjov-og-spass[0m                                                      07:00  │
 │   loading…                                                                   │
 │                                                                              │
 │                                                                              │
@@ -27,4 +27,4 @@
 │                                                                              │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
-[7m [0m[1;7mNORMAL[0m[7m [0m  ● live         [1m⏎[0m open   [1mr[0m mark read   [1mu[0m next unread   [1mh[0m back   [1m?[0m help 
+[7m [0m[1;7mNORMAL[0m[7m [0m  ● live     [1menter[0m open   [1mr[0m mark read   [1mu[0m next unread   [1mh[0m back   [1m?[0m help 

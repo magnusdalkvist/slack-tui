@@ -187,9 +187,9 @@ var scenes = []scene{
 			return backend.Hit{Message: backend.Message{TS: t, ThreadTS: thread, User: user, Text: text}, Channel: conv}
 		}
 		m.Update(searchMsg{seq: m.search.seq, query: "deploy", res: backend.SearchPage{Total: 3, Page: 1, Pages: 1, Hits: []backend.Hit{
-			mk("C1", ts(22, 9, 12), "", "U1", backend.HitStart + "deploy" + backend.HitEnd + "ed panda-v2 to staging"),
-			mk("C1", ts(20, 14, 0), ts(20, 13, 0), "U2", "who can " + backend.HitStart + "deploy" + backend.HitEnd + " on fridays?"),
-			mk("D1", ts(21, 11, 0), "", "U1", "the " + backend.HitStart + "deploy" + backend.HitEnd + " script needs a flag"),
+			mk("C1", ts(22, 9, 12), "", "U1", backend.HitStart+"deploy"+backend.HitEnd+"ed panda-v2 to staging"),
+			mk("C1", ts(20, 14, 0), ts(20, 13, 0), "U2", "who can "+backend.HitStart+"deploy"+backend.HitEnd+" on fridays?"),
+			mk("D1", ts(21, 11, 0), "", "U1", "the "+backend.HitStart+"deploy"+backend.HitEnd+" script needs a flag"),
 		}}})
 	}},
 	{"files", 30, func(m *Model) {

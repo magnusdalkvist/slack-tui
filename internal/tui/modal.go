@@ -54,7 +54,8 @@ func rightAlign(row, meta string, inner int) string {
 	return row + strings.Repeat(" ", max(1, room-ansi.StringWidth(row))) + meta
 }
 
-// overlayModal lays box over the screen body, which goes faint.
+// overlayModal lays box over the screen body, which is dimmed to the
+// rule colour so the modal stands out.
 func (m *Model) overlayModal(body, box string) string {
 	lines := strings.Split(body, "\n")
 	for i, l := range lines {
@@ -66,9 +67,9 @@ func (m *Model) overlayModal(body, box string) string {
 	y := min(max(0, len(lines)*18/100), max(0, len(lines)-len(rows)))
 	for i, l := range lines {
 		if k := i - y; k >= 0 && k < len(rows) {
-			lines[i] = sty.Faint.Render(cells(l, 0, x)) + rows[k] + sty.Faint.Render(cells(l, x+bw, m.width))
+			lines[i] = sty.Dim.Render(cells(l, 0, x)) + rows[k] + sty.Dim.Render(cells(l, x+bw, m.width))
 		} else {
-			lines[i] = sty.Faint.Render(l)
+			lines[i] = sty.Dim.Render(l)
 		}
 	}
 	return strings.Join(lines, "\n")
