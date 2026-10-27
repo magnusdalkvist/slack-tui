@@ -34,16 +34,16 @@ type paneSpec struct {
 	previewTitle string
 }
 
-// paneSplit is whether the main area has room for a second column (the
-// thread, or a pane's Preview).
-func (m *Model) paneSplit(mainW int) bool { return mainW >= 80 }
+// paneSplit is whether there is room for a second column (the thread, or
+// a pane's Preview): from thread_split_cols on.
+func (m *Model) paneSplit() bool { return m.layout() == layoutWide }
 
 // paneWidths are the pane's and the preview's outer widths (0: none).
 func (m *Model) paneWidths(w int, preview bool) (int, int) {
-	if !preview || !m.paneSplit(w) {
+	if !preview || !m.paneSplit() {
 		return w, 0
 	}
-	pw := w * 45 / 100
+	pw := min(threadW, w*45/100)
 	return w - pw - 1, pw
 }
 

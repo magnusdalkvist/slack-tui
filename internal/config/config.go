@@ -49,9 +49,20 @@ type UI struct {
 	Icons string `toml:"icons"`
 }
 
+// Layout is the [layout] table: the window widths the layout changes at.
+type Layout struct {
+	// NarrowCols: below it, one frame fills the window at a time (stack
+	// mode: conversations, then the chat, then the thread).
+	NarrowCols int `toml:"narrow_cols"`
+	// ThreadSplitCols: from it on, an open thread (or a pane's preview)
+	// sits beside the chat; below it, the thread takes the chat's place.
+	ThreadSplitCols int `toml:"thread_split_cols"`
+}
+
 type Config struct {
 	Theme    Theme            `toml:"theme"`
 	UI       UI               `toml:"ui"`
+	Layout   Layout           `toml:"layout"`
 	Sections []Section        `toml:"section"`
 	Statuses []StatusTemplate `toml:"status"`
 	// TimeFormat is a Go time layout for message timestamps.
@@ -76,7 +87,7 @@ type Config struct {
 }
 
 func Default() Config {
-	return Config{TimeFormat: "15:04", SidebarWidth: 30, RefreshMinutes: 5, PresenceMinutes: 3, Images: "auto", ImageMaxCols: 40, ImageMaxRows: 12}
+	return Config{Layout: Layout{NarrowCols: 100, ThreadSplitCols: 140}, TimeFormat: "15:04", SidebarWidth: 30, RefreshMinutes: 5, PresenceMinutes: 3, Images: "auto", ImageMaxCols: 40, ImageMaxRows: 12}
 }
 
 // Dir is the config directory.
@@ -127,6 +138,12 @@ func Load() (Config, error) {
 	}
 	if c.ImageMaxRows <= 0 {
 		c.ImageMaxRows = d.ImageMaxRows
+	}
+	if c.Layout.NarrowCols <= 0 {
+		c.Layout.NarrowCols = d.Layout.NarrowCols
+	}
+	if c.Layout.ThreadSplitCols <= 0 {
+		c.Layout.ThreadSplitCols = d.Layout.ThreadSplitCols
 	}
 	return c, nil
 }

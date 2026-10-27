@@ -66,6 +66,10 @@ name = "auto"             # auto (by the terminal background), dark, light, or a
 [ui]
 icons = "nerd"            # Nerd Font glyphs, or "unicode" for terminals without a Nerd Font
 
+[layout]
+narrow_cols = 100         # below this, one frame at a time: conversations → chat → thread (⏎, t, esc)
+thread_split_cols = 140   # from this on, an open thread (or a pane's preview) sits beside the chat
+
 # Custom sidebar sections, above the built-in Channels, Direct messages (one-to-one first,
 # then groups, each by recent activity) and External (Slack Connect channels and people).
 # Slack's own sections are not in the public API.

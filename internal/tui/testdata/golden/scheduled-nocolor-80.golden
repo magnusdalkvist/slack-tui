@@ -1,30 +1,30 @@
-╭ [1mBørsen[0m ───────── @mada ╮ ╭ [1;7mScheduled[0m ───────────────────────────── 3 waiting ╮
-│ [1m[0m [1mUnreads[0m             3│ │ [1m development[0m                                     │
-│                        │ │▌[7m  today 11:45                                    [27;49m│
-│ [1m[0m [1mTEAM[0m                3│ │▌[7m   standup in 5                                   [27;49m│
-│ [7m development          [27;49m│ │   tomorrow 12:45                                 │
-│! [1mSimon Konstantyn…[0m🏡 2│ │    weekly notes are up                            │
-│  Kim Kyhlensø kiky    │ │                                                   │
-│                        │ │ [1mSimon Konstantyner[0m                                │
-│ [1m[0m [1m[0m [1mCHANNELS[0m          3│ │   today 13:45                                    │
-│  general              │ │    ping me when the build is green                │
-│![1m[0m [1mpanda-v2[0m            1│ │                                                   │
-│▏[1m[0m [1msjov-og-spass[0m        │ │                                                   │
-│                        │ │                                                   │
-│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m   2│ │                                                   │
-│  mada (you)           │ │                                                   │
-│  Simon Konstantyn…    │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-│                        │ │                                                   │
-╰────────────────────────╯ ╰───────────────────────────────────────────────────╯
+╭ [1;7mScheduled[0m ──────────────────────────────────────────────────────── 3 waiting ╮
+│ [1m development[0m                                                                │
+│▌[7m  today 11:45                                                               [27;49m│
+│▌[7m   standup in 5                                                              [27;49m│
+│   tomorrow 12:45                                                            │
+│    weekly notes are up                                                       │
+│                                                                              │
+│ [1mSimon Konstantyner[0m                                                           │
+│   today 13:45                                                               │
+│    ping me when the build is green                                           │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
 [7m [0m[1;7mNORMAL[0m[7m [0m  ● live             [1m⏎[0m go to   [1me[0m edit   [1md[0m cancel it   [1mR[0m reload   [1m?[0m help 

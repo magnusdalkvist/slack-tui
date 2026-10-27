@@ -1,30 +1,30 @@
-╭ [1mBørsen[0m ───────── @mada ╮ ╭ [1;7m development[0m  Builds, deploys and [1mreviews[0m ───────╮
-│ [1m[0m [1mUnreads[0m             3│ │                                                   │
-│                        │ │                                                   │
-│ [1m[0m [1mTEAM[0m                3│ │                                                   │
-│ [7m development          [27;49m│ │       ────────────────[1m Yesterday [0m─────────────────│
-│! [1mSimon Konstantyn…[0m🏡 2│ │ 16:02 [1mkiky[0m kim.kyhlensoe                          │
-│  Kim Kyhlensø kiky    │ │       anyone up for reviewing the cache change?   │
-│                        │ │ 16:03 it's small, promise (edited)                │
-│ [1m[0m [1m[0m [1mCHANNELS[0m          3│ │       ──────────────────[1m Today [0m───────────────────│
-│  general              │ │       ──────────────────────────────────────── [1mnew[0m│
-│![1m[0m [1mpanda-v2[0m            1│ │▌09:12 [1mSimon Konstantyner[0m siko   pinned           │
-│▏[1m[0m [1msjov-og-spass[0m        │ │▌      deployed [7mpanda-v2[0m to staging 🚀             │
-│                        │ │▌      [7m [0m[1;7m🎉 2[0m[7m [0m [7m [0m[7m👀 1[0m[7m [0m                               │
-│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m   2│ │ 09:40 [3m→ [0m[3m@Anna Jensen has joined the channel[0m       │
-│  mada (you)           │ │▌10:02 [1mAnna Jensen[0m anna                            │
-│  Simon Konstantyn…    │ │▌      [1m@mada[0m can you look at the failing test? see │
-│                        │ │▌      https://example.com/ci/123                  │
-│                        │ │▌       4 replies · last 14m ago                  │
-│                        │ │ 10:20 [1mGitHub[0m 󰚩 [7m [0m[7mAPP[0m[7m [0m                              │
-│                        │ │       build #812 passed                           │
-│                        │ │▌[7m10:40 [1mSimon Konstantyner[0m[7m siko                     [27;49m│
-│                        │ │▌[7m      plan attached                               [27;49m│
-│                        │ │▌[7m       plan.pdf  PDF                             [27;49m│
-│                        │ │▌[7m       diagram.png  PNG                          [27;49m│
-│                        │ ╰───────────────────────────────────────────────────╯
-│                        │ ▌[7m  [1mSi[0m[7mmon Konstantyner                         @siko [27;49m
-│                        │ ╭ [1m[0m ─────────────────────────────────────────────────╮
-│                        │ │ [37m[0mhey @si[7m [0m                                          │
-╰────────────────────────╯ ╰───────────────────────────────────────────────────╯
+╭ [1;7m‹  development[0m  Builds, deploys and [1mreviews[0m ────────── Børsen › development ╮
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│       ──────────────────────────────[1m Yesterday [0m──────────────────────────────│
+│ 16:02 [1mkiky[0m kim.kyhlensoe                                                     │
+│       anyone up for reviewing the cache change?                              │
+│ 16:03 it's small, promise (edited)                                           │
+│       ────────────────────────────────[1m Today [0m────────────────────────────────│
+│       ─────────────────────────────────────────────────────────────────── [1mnew[0m│
+│▌09:12 [1mSimon Konstantyner[0m siko   pinned                                      │
+│▌      deployed [7mpanda-v2[0m to staging 🚀                                        │
+│▌      [7m [0m[1;7m🎉 2[0m[7m [0m [7m [0m[7m👀 1[0m[7m [0m                                                          │
+│ 09:40 [3m→ [0m[3m@Anna Jensen has joined the channel[0m                                  │
+│▌10:02 [1mAnna Jensen[0m anna                                                       │
+│▌      [1m@mada[0m can you look at the failing test? see https://example.com/ci/123 │
+│▌       4 replies · last 14m ago                                             │
+│ 10:20 [1mGitHub[0m 󰚩 [7m [0m[7mAPP[0m[7m [0m                                                         │
+│       build #812 passed                                                      │
+│▌[7m10:40 [1mSimon Konstantyner[0m[7m siko                                                [27;49m│
+│▌[7m      plan attached                                                          [27;49m│
+│▌[7m       plan.pdf  PDF                                                        [27;49m│
+│▌[7m       diagram.png  PNG                                                     [27;49m│
+╰──────────────────────────────────────────────────────────────────────────────╯
+▌[7m  [1mSi[0m[7mmon Konstantyner                            @siko [27;49m                        
+╭ [1m[0m ────────────────────────────────────────────────────────────────────────────╮
+│ [37m[0mhey @si[7m [0m                                                                     │
+╰──────────────────────────────────────────────────────────────────────────────╯
 [7m [0m[1;7mINSERT[0m[7m [0m  ● live                             [1mtab[0m insert   [1m↑↓[0m choose   [1mesc[0m close 

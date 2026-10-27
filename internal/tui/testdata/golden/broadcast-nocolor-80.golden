@@ -1,30 +1,30 @@
-╭ [1mBørsen[0m ───────── @mada ╮ ╭ [1;7mThread[0m  in  development ─────────────────────────╮
-│ [1m[0m [1mUnreads[0m             3│ │                                                   │
-│                        │ │                                                   │
-│ [1m[0m [1mTEAM[0m                3│ │                                                   │
-│ [7m development          [27;49m│ │                                                   │
-│! [1mSimon Konstantyn…[0m🏡 2│ │                                                   │
-│  Kim Kyhlensø kiky    │ │                                                   │
-│                        │ │                                                   │
-│ [1m[0m [1m[0m [1mCHANNELS[0m          3│ │                                                   │
-│  general              │ │                                                   │
-│![1m[0m [1mpanda-v2[0m            1│ │                                                   │
-│▏[1m[0m [1msjov-og-spass[0m        │ │                                                   │
-│                        │ │                                                   │
-│ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m   2│ │                                                   │
-│  mada (you)           │ │       ──────────────────[1m Today [0m───────────────────│
-│  Simon Konstantyn…    │ │▌10:02 [1mAnna Jensen[0m anna                            │
-│                        │ │▌      [1m@mada[0m can you look at the failing test? see │
-│                        │ │▌      https://example.com/ci/123                  │
-│                        │ │ 10:05 [1mSimon Konstantyner[0m siko                     │
-│                        │ │       on it, looks like a flaky timeout           │
-│                        │ │▌[7m10:30 [1mmada[0m[7m                                        [27;49m│
-│                        │ │▌[7m      bumped it to 30s 👍                         [27;49m│
-│                        │ │▌[7m      [7m ctx, cancel := context.WithTimeout(ctx,[0m[7m    [27;49m│
-│                        │ │▌[7m      [7m30*time.Second) [0m[7m                            [27;49m│
-│                        │ ╰───────────────────────────────────────────────────╯
-│                        │                                                      
-│                        │ ╭ [1mbroadcast[0m ─────────── ■ also send to #development ╮
-│                        │ │ [37m[0mfixed[7m [0m                                            │
-╰────────────────────────╯ ╰───────────────────────────────────────────────────╯
+╭ [1;7m‹ Thread[0m  in  development ──────────────────────────── development › Thread ╮
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│       ────────────────────────────────[1m Today [0m────────────────────────────────│
+│▌10:02 [1mAnna Jensen[0m anna                                                       │
+│▌      [1m@mada[0m can you look at the failing test? see https://example.com/ci/123 │
+│ 10:05 [1mSimon Konstantyner[0m siko                                                │
+│       on it, looks like a flaky timeout                                      │
+│▌[7m10:30 [1mmada[0m[7m                                                                   [27;49m│
+│▌[7m      bumped it to 30s 👍                                                    [27;49m│
+│▌[7m      [7m ctx, cancel := context.WithTimeout(ctx, 30*time.Second) [0m[7m              [27;49m│
+╰──────────────────────────────────────────────────────────────────────────────╯
+                                                                                
+╭ [1mbroadcast[0m ────────────────────────────────────── ■ also send to #development ╮
+│ [37m[0mfixed[7m [0m                                                                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
 [7m [0m[1;7mINSERT[0m[7m [0m  ● live  [1m⏎[0m send   [1malt+⏎[0m new line   [1mctrl+o[0m also to channel   [1mesc[0m normal 

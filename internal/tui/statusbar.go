@@ -281,8 +281,13 @@ func (m *Model) hints() []Hint {
 		hs = append(hs, Hint{"⏎", "open"}, Hint{"z", "fold"}, Hint{"u", "next unread"}, Hint{"ctrl+k", "jump"})
 	case m.current == unreadsID:
 		hs = append(hs, Hint{"⏎", "open"}, Hint{"r", "mark read"}, Hint{"u", "next unread"})
+		if m.stacked() {
+			hs = append(hs, Hint{"h", "back"})
+		}
 	case m.focus == fThread && m.thread != nil:
-		hs = append(hs, Hint{"i", "reply"}, Hint{"+", "react"}, Hint{"x", "close"}, Hint{"esc", "back"})
+		hs = append(hs, Hint{"esc", "back"}, Hint{"i", "reply"}, Hint{"+", "react"}, Hint{"x", "close"})
+	case m.stacked():
+		hs = append(hs, Hint{"esc", "back"}, Hint{"t", "thread"}, Hint{"i", "write"}, Hint{"+", "react"})
 	default:
 		if l := m.lists[m.current]; l != nil && l.hasMore && l.sel == 0 {
 			hs = append(hs, Hint{"k", "older messages"})

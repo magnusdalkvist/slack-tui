@@ -439,3 +439,8 @@ Gaps found while building this spec, and how they were filled.
 - **GIF meta** reads `▶ playing` once every frame is in the terminal, and `❚❚` until then. Only GIFs on screen tick, so ones scrolled away are paused by construction.
 - **Image viewer:** the header's place is `in <conversation> · Mon 2 Jan 15:04`, and the Details panel adds the file's kind, size and pixel size under File. `s` saves the image from the viewer too.
 - **Kind tags** (`[PDF]`) have one cell of padding. In the Open chooser they sit in a column 4 letters wide, so the names line up.
+- **The sidebar width** stays `sidebar_width` (30 by default, never more than a third of the window) rather than a fixed 33, so existing configs keep their look. The thread frame is 56 cells, or 45% of the main area when that's narrower. A pane's Preview is the same width.
+- **Between the breakpoints** (100–139), an open thread takes the chat's place while it has focus. Its title gets `‹` and a `development › Thread` breadcrumb, as in stack mode, because esc goes back there too. `tab` still cycles to it.
+- **Previews** show only from `thread_split_cols` on, where the thread would sit beside the chat.
+- **esc in the chat** goes back to the conversation list in stack mode. In the wider layouts it keeps its old meaning (back to the newest message).
+- **Stack-mode filtering** (`/` in the conversation list, optional in §12) isn't added. `ctrl+k` is the way to jump there.

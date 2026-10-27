@@ -220,6 +220,10 @@ func (m *Model) listKey(k tea.KeyMsg, l *msgList, inThread bool) tea.Cmd {
 	if sel < 0 || sel >= n {
 		sel = n - 1
 	}
+	if k.String() == "esc" && !inThread && m.stacked() {
+		m.focus = fSidebar // stack mode: back to the conversations
+		return nil
+	}
 	var cmd tea.Cmd
 	follow := false // back at the bottom: follow new messages again
 	switch k.String() {

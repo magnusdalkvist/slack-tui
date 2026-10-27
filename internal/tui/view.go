@@ -31,39 +31,21 @@ func (m *Model) View() string {
 	}
 
 	h := m.height - 1
-	sw := min(m.cfg.SidebarWidth, m.width/3)
-	mainW := m.width - sw - 1
-
-	var main string
-	switch {
-	case m.help != nil:
-		main = m.renderHelp(mainW, h)
-	case m.search != nil && m.search.open:
-		main = m.renderSearch(mainW, h)
-	case m.pins != nil:
-		main = m.renderPins(mainW, h)
-	case m.sched != nil:
-		main = m.renderScheduled(mainW, h)
-	case m.chans != nil:
-		main = m.renderChans(mainW, h)
-	case m.members != nil:
-		main = m.renderMembers(mainW, h)
-	case m.shared != nil:
-		main = m.renderShared(mainW, h)
-	case m.current == unreadsID:
-		main = m.renderUnreads(mainW, h)
-	case m.thread != nil && mainW >= 80:
-		tw := mainW * 45 / 100
-		cw := mainW - tw - 1
-		main = lipgloss.JoinHorizontal(lipgloss.Top,
-			fit(m.renderConvPane(cw, h), cw, h), gapCol(h), fit(m.renderThreadPane(tw, h), tw, h))
-	case m.thread != nil:
-		main = m.renderThreadPane(mainW, h)
-	default:
-		main = m.renderConvPane(mainW, h)
+	var body string
+	if m.layout() == layoutStack {
+		// One frame fills the window: the conversations, the chat or the
+		// thread, whichever has focus; panes take the chat's level.
+		switch main := m.renderMain(m.width, h, true); {
+		case main != "":
+			body = fit(main, m.width, h)
+		default:
+			body = m.renderSidebar(m.width, h)
+		}
+	} else {
+		sw := min(m.cfg.SidebarWidth, m.width/3)
+		mainW := m.width - sw - 1
+		body = lipgloss.JoinHorizontal(lipgloss.Top, m.renderSidebar(sw, h), gapCol(h), fit(m.renderMain(mainW, h, false), mainW, h))
 	}
-
-	body := lipgloss.JoinHorizontal(lipgloss.Top, m.renderSidebar(sw, h), gapCol(h), fit(main, mainW, h))
 	if box := m.renderModal(); box != "" {
 		body = m.overlayModal(body, box)
 	}
@@ -155,11 +137,19 @@ func (m *Model) renderConvPane(w, h int) string {
 	if n := m.scheduledIn(c.ID); n > 0 {
 		right = sty.Faint.Render(fmt.Sprintf("%s %d scheduled", ico.Scheduled, n))
 	}
+	title := m.convTitle(c)
+	if m.stacked() {
+		// The level above is the conversation list: ‹ and a breadcrumb.
+		if right != "" {
+			ctx = append(ctx, right)
+		}
+		title, right = "‹ "+title, sty.Faint.Render(m.client.TeamName+" › "+m.convLabel(c))
+	}
 	isTarget := !(m.focus == fThread && m.thread != nil)
 	input := m.renderInput(w, isTarget, false, "Message "+m.convTitle(c))
 	paneH := max(3, h-lineCount(input)-1)
 	list := m.renderList(m.lists[m.current], w-2, paneH-2, focused, false)
-	pane := RenderFrame(list, w, paneH, frameTitle(m.convTitle(c), focused, ctx...), right, focused)
+	pane := RenderFrame(list, w, paneH, frameTitle(title, focused, ctx...), right, focused)
 	return m.withCompletion(pane+"\n", input, w, isTarget)
 }
 
@@ -173,7 +163,11 @@ func (m *Model) renderThreadPane(w, h int) string {
 	input := m.renderInput(w, focused, true, "Reply in thread")
 	paneH := max(3, h-lineCount(input)-1)
 	list := m.renderList(&t.list, w-2, paneH-2, focused, true)
-	pane := RenderFrame(list, w, paneH, frameTitle("Thread", focused, where), "", focused)
+	title, right := "Thread", ""
+	if c := m.convs[t.conv]; c != nil && m.layout() != layoutWide {
+		title, right = "‹ Thread", sty.Faint.Render(m.convLabel(c)+" › Thread")
+	}
+	pane := RenderFrame(list, w, paneH, frameTitle(title, focused, where), right, focused)
 	return m.withCompletion(pane+"\n", input, w, focused)
 }
 
