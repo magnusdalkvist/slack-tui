@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -316,7 +317,7 @@ func TestStatusTemplates(t *testing.T) {
 	if c := m.cmd.complete; c == nil || len(c.items) != 1 || c.items[0].label != "focus" {
 		t.Fatalf("want focus, got %+v", m.cmd.complete)
 	}
-	if v := dump(t, m); !strings.Contains(v, "🎧  focus  Focusing · until 15:00") {
+	if v := dump(t, m); !regexp.MustCompile(`🎧 focus +Focusing · until 15:00`).MatchString(v) {
 		t.Errorf("template row missing")
 	}
 	m.handleKey(tabKey())

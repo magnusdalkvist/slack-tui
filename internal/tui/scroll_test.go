@@ -64,7 +64,7 @@ func TestTallMessageScrollsByLines(t *testing.T) {
 	if _, last := rowsShown(t, m); last != 40 {
 		t.Errorf("coming from below shows up to row %d, want 40", last)
 	}
-	if v := dump(t, m); !strings.Contains(v, "Bob") || !strings.Contains(v, "more lines") {
+	if v := dump(t, m); !strings.Contains(v, "Bob") || !strings.Contains(v, "· lines ") {
 		t.Errorf("no sticky sender/hint over a message cut off above")
 	}
 	// Scrolling up through it shows every row before moving on.

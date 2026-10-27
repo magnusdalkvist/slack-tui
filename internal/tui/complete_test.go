@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -24,7 +25,7 @@ func TestEmojiCompletion(t *testing.T) {
 		t.Fatalf("want tada first, got %+v", m.complete)
 	}
 	v := ansi.Strip(m.View())
-	if !strings.Contains(v, "🎉  :tada:") || !strings.Contains(v, "tab insert") {
+	if !strings.Contains(v, "🎉 :tada:") {
 		t.Errorf("list not shown:\n%s", v)
 	}
 	m.handleKey(tabKey())
@@ -86,7 +87,7 @@ func TestMentionCompletion(t *testing.T) {
 		t.Fatalf("@jens should find Anna Jensen by her last name: %+v", m.complete)
 	}
 	v := ansi.Strip(m.View())
-	if !strings.Contains(v, "@Anna Jensen  @anna") {
+	if !regexp.MustCompile(`Anna Jensen +@anna`).MatchString(v) {
 		t.Errorf("row should show the username:\n%s", v)
 	}
 	m.handleKey(tabKey())

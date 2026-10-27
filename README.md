@@ -104,9 +104,9 @@ expires = "until tomorrow"
 | `enter` / `alt+enter`, `ctrl+j` | send / new line (insert mode) |
 | `- `, `* `, `• `, `1. ` (line start) | the lines are sent as a real Slack list (indent with two spaces per level), like the Slack app's editor; also from `slack @person` |
 | `ctrl+b` / `alt+i` (insert mode) | bold / italic the word at the cursor (again to undo; with no word, starts a `**` pair). `[label](https://…)` is sent as a link |
-| paste an image, `ctrl+v` | attach the clipboard image (repeat for up to 10 in one message); `enter` uploads it with the typed text, `ctrl+x` drops it (insert mode) |
+| paste an image, `ctrl+v` | attach the clipboard image (repeat for up to 10 in one message); `enter` uploads it with the typed text. `ctrl+←` `ctrl+→` pick an attached image, `ctrl+x` drops the picked one (insert mode) |
 | `ctrl+s` (insert mode) | send later: opens `:later ` for a time (below) |
-| `ctrl+o` (insert mode, thread) | also send the reply to the channel, like Slack's checkbox (the bar above the box shows it; files stay in the thread) |
+| `ctrl+o` (insert mode, thread) | also send the reply to the channel, like Slack's checkbox (`■ also send to …` on the composer shows it; files stay in the thread) |
 | `:ta` `@an` `#de` (insert mode) | complete emoji, people (also @here/@channel/@everyone) and channels: `tab`/`enter` inserts, `↑` `↓` choose, `esc` closes. People and channels are sent as real mentions |
 | `esc` | back to normal mode |
 | `/` | search messages: Slack's own query syntax (`from:@anna in:#dev after:2026-01-01 "exact words"`); typing `@`, `#` or a name after `from:`/`in:` suggests people and channels (Slack's search matches handles, not display names, so pick from the list); `enter` goes to the message (its thread for replies), `o` opens it in Slack |

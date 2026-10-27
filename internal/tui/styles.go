@@ -28,6 +28,8 @@ type Styles struct {
 	ModeInsert           lipgloss.Style
 	OK, Warn, Err        lipgloss.Style
 	Box, Key             lipgloss.Style
+	AppTag               lipgloss.Style // "APP" after a bot's name
+	Match                lipgloss.Style // what a filter matched
 	FrameTitle           lipgloss.Style // an idle frame's title
 	FrameTitleFocus      lipgloss.Style
 	sel, selFocus        lipgloss.Style // selection backgrounds
@@ -83,6 +85,8 @@ func NewStyles(t Theme) Styles {
 		Box:        lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(t.Accent).Padding(0, 1),
 		Key:        fg(t.Fg).Bold(true),
 
+		AppTag:          on(t.Muted, t.Sel).Padding(0, 1),
+		Match:           fg(t.Accent).Bold(true),
 		FrameTitle:      fg(t.Muted).Bold(true),
 		FrameTitleFocus: fg(t.Accent).Bold(true).Reverse(t.NoColor), // no border colour to show focus
 		sel:             on(t.Fg, t.Sel),
@@ -127,6 +131,21 @@ func bgPrefix(st lipgloss.Style) string {
 		return sgrPrefix(lipgloss.NewStyle().Reverse(true))
 	}
 	return sgrPrefix(lipgloss.NewStyle().Background(st.GetBackground()))
+}
+
+// SelfBar and PinBar are the bar column of messages that mention us and
+// of pinned ones; the tints go behind their rows.
+func (s Styles) SelfBar() string       { return fgStyle(s.theme.Self).Render("▌") }
+func (s Styles) PinBar() string        { return fgStyle(s.theme.Warn).Render("▌") }
+func (s Styles) MentionTintOn() string { return bgOn(s.theme.MentionTint) }
+func (s Styles) PinTintOn() string     { return bgOn(s.theme.PinTint) }
+func (s Styles) RaisedBgOn() string    { return bgOn(s.theme.Raised) }
+
+func bgOn(c lipgloss.TerminalColor) string {
+	if _, none := c.(lipgloss.NoColor); none {
+		return ""
+	}
+	return sgrPrefix(lipgloss.NewStyle().Background(c))
 }
 
 // SelOff closes a selection background (or reverse video).

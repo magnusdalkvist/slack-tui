@@ -4,6 +4,7 @@ import (
 	"math/rand/v2"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
@@ -83,5 +84,14 @@ func TestInputGrowsWithWrapping(t *testing.T) {
 	dump(t, m)
 	if h, limit := m.input.Height(), min(6, m.height/3); h != limit {
 		t.Errorf("input is %d rows, want the %d-row limit", h, limit)
+	}
+}
+
+func TestAgo(t *testing.T) {
+	now := time.Date(2026, 10, 22, 12, 0, 0, 0, time.UTC)
+	for d, want := range map[time.Duration]string{20 * time.Second: "just now", 14 * time.Minute: "14m ago", 2 * time.Hour: "2h ago", 50 * time.Hour: "2d ago"} {
+		if got := ago(now.Add(-d), now); got != want {
+			t.Errorf("%v: %q, want %q", d, got, want)
+		}
 	}
 }

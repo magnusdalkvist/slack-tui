@@ -38,7 +38,7 @@ func TestPasteImageAttaches(t *testing.T) {
 	if m.input.Value() != "" {
 		t.Errorf("image bytes leaked into the input: %q", m.input.Value())
 	}
-	if v := dump(t, m); !strings.Contains(v, "ctrl+x remove") {
+	if v := dump(t, m); !strings.Contains(v, "1 of 10 attachments") {
 		t.Error("no attachment bar")
 	}
 	m.Update(tea.KeyMsg{Type: tea.KeyCtrlX})
@@ -67,5 +67,29 @@ func TestCtrlVWithoutImage(t *testing.T) {
 	m.Update(cmd())
 	if len(m.attach) != 0 || !strings.Contains(m.status, "no image") {
 		t.Fatalf("attach=%v status=%q", m.attach, m.status)
+	}
+}
+
+func TestDropSelectedAttachment(t *testing.T) {
+	m := chanWithMessages(t)
+	m.Update(key("i"))
+	m.attach = []*attachment{{name: "a.png"}, {name: "b.png"}, {name: "c.png"}}
+	m.attachSel = 2
+	m.Update(tea.KeyMsg{Type: tea.KeyCtrlLeft})
+	m.Update(tea.KeyMsg{Type: tea.KeyCtrlLeft})
+	m.Update(tea.KeyMsg{Type: tea.KeyCtrlLeft}) // stops at the first
+	if m.attachSel != 0 {
+		t.Fatalf("attachSel = %d, want 0", m.attachSel)
+	}
+	m.Update(tea.KeyMsg{Type: tea.KeyCtrlRight})
+	m.Update(tea.KeyMsg{Type: tea.KeyCtrlX})
+	if len(m.attach) != 2 || m.attach[0].name != "a.png" || m.attach[1].name != "c.png" {
+		t.Fatalf("ctrl+x should drop the selected b.png: %v %v", m.attach[0].name, m.attach[1].name)
+	}
+	if m.attachSel != 1 {
+		t.Errorf("selection after dropping = %d, want 1 (c.png)", m.attachSel)
+	}
+	if v := dump(t, m); !strings.Contains(v, "2 of 10 attachments") || !strings.Contains(v, "c.png") {
+		t.Error("chips or label missing")
 	}
 }

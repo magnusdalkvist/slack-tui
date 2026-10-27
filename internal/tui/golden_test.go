@@ -100,7 +100,7 @@ func openSceneThread(m *Model) {
 			m.Update(repliesMsg{id: "C1", ts: msg.TS, msgs: []backend.Message{
 				msg,
 				{TS: ts(22, 10, 5), ThreadTS: msg.TS, User: "U1", Text: "on it, looks like a flaky timeout"},
-				{TS: ts(22, 10, 30), ThreadTS: msg.TS, User: "ME", Text: "bumped it to 30s :+1:"},
+				{TS: ts(22, 10, 30), ThreadTS: msg.TS, User: "ME", Text: "bumped it to 30s :+1:\n```ctx, cancel := context.WithTimeout(ctx, 30*time.Second)```"},
 			}})
 			return
 		}
@@ -119,6 +119,32 @@ var scenes = []scene{
 		m.focus = fSidebar
 	}},
 	{"thread", 30, openSceneThread},
+	{"complete", 30, func(m *Model) {
+		m.Update(key("i"))
+		typeText(m, "hey @si")
+	}},
+	{"attach", 30, func(m *Model) {
+		m.Update(key("i"))
+		m.attach = []*attachment{{name: "screenshot.png", data: make([]byte, 3000)}, {name: "pasted-2.png", data: make([]byte, 9000)}}
+		typeText(m, "here are the screenshots")
+	}},
+	{"broadcast", 30, func(m *Model) {
+		openSceneThread(m)
+		m.Update(key("i"))
+		m.Update(tea.KeyMsg{Type: tea.KeyCtrlO})
+		typeText(m, "fixed")
+	}},
+	{"tall", 30, func(m *Model) {
+		var b strings.Builder
+		for i := 1; i <= 40; i++ {
+			fmt.Fprintf(&b, "log line %02d\n", i)
+		}
+		l := m.lists["C1"]
+		l.msgs = append(l.msgs, backend.Message{TS: ts(22, 10, 44), User: "U2", Text: b.String()})
+		l.sel = len(l.msgs) - 1
+		m.Update(key("k"))
+		m.Update(key("j"))
+	}},
 	{"switcher", 30, func(m *Model) {
 		m.Update(key("ctrl+k"))
 		typeText(m, "si")

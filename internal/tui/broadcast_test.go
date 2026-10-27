@@ -16,11 +16,11 @@ func TestThreadReplyAlsoToChannel(t *testing.T) {
 	m.update(key("enter"))
 	m.update(repliesMsg{id: "C1", ts: "200.000001", msgs: []backend.Message{{TS: "200.000001", User: "U2", Text: "deploy?"}}})
 	m.update(key("i"))
-	if v := dump(t, m); !strings.Contains(v, "ctrl+o also send to #dev") {
+	if v := dump(t, m); !strings.Contains(v, "□ also send to #dev") {
 		t.Error("the thread composer should offer sending to the channel too")
 	}
 	m.update(tea.KeyMsg{Type: tea.KeyCtrlO})
-	if v := dump(t, m); !strings.Contains(v, "also sending to #dev") {
+	if v := dump(t, m); !strings.Contains(v, "■ also send to #dev") || !strings.Contains(v, "broadcast") {
 		t.Error("ctrl+o should turn it on")
 	}
 	m.update(key("done"))

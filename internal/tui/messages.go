@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -48,33 +49,36 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 
 	var all []string
 	blocks := make([]block, len(l.msgs))
+	gw := m.gutterW()
+	bodyW := width - 1 - gw // after the bar column and the time gutter
 	if l.hasMore && !inThread {
-		hint := "k at the top loads older messages"
+		hint := "older messages above"
 		if l.loading {
 			hint = "loading older messages…"
 		}
-		all = append(all, sty.Faint.Render(center(hint, width)))
+		all = append(all, sty.Faint.Render(center("── "+hint+" ──", width)))
 	}
 	var prev *backend.Message
 	for i := range l.msgs {
 		msg := &l.msgs[i]
 		var pre []string
 		if prev == nil || !sameDay(prev.Time(), msg.Time()) {
-			pre = append(pre, sty.Date.Render(center(dayLabel(msg.Time()), width)))
+			pre = append(pre, " "+strings.Repeat(" ", gw)+dateRule(dayLabel(msg.Time()), bodyW))
 		}
 		isNew := l.newSince != "" && backend.TSLess(l.newSince, msg.TS) && (prev == nil || !backend.TSLess(l.newSince, prev.TS))
 		if isNew {
-			pre = append(pre, sty.NewLine.Render(strings.Repeat("─", max(0, width-6))+" new"))
+			pre = append(pre, " "+strings.Repeat(" ", gw)+
+				sty.NewLine.Render(strings.Repeat("─", max(0, bodyW-4)))+" "+sty.NewLine.Bold(true).Render("new"))
 		}
 		grouped := prev != nil && len(pre) == 0 && !(inThread && i == 1) &&
 			senderKey(*prev) == senderKey(*msg) &&
 			!systemSubtypes[prev.SubType] && !systemSubtypes[msg.SubType] &&
 			msg.Time().Sub(prev.Time()) < 5*time.Minute
-		body := m.messageLines(*msg, width-2, !grouped, inThread)
+		body := m.messageLines(*msg, width-1, !grouped, inThread)
 
 		all = append(all, pre...)
 		blocks[i].start = len(all)
-		all = append(all, selLines(prefixAll(body, " "), width, i == sel, active)...)
+		all = append(all, m.paintMessage(*msg, body, width, i == sel, active)...)
 		blocks[i].lines = body
 		prev = msg
 	}
@@ -112,14 +116,19 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 	l.viewH, l.total = height, total
 
 	view := append([]string(nil), all[l.top:min(total, l.top+height)]...)
-	// A selected message cut off by the pane says so: its sender stays on
-	// the top row, and the bottom row counts the lines still below.
-	if height >= 4 && len(view) == height {
-		if above := l.top - b.start; above > 0 && end > l.top {
-			view[0] = selLine(" "+m.stickyHead(l.msgs[sel], above+1, width-2), width, true, active)
+	// A selected message taller than the pane keeps its sender line on
+	// the top row, saying which lines show, and the bottom row counts the
+	// lines still below.
+	if height >= 4 && len(view) == height && len(b.lines) > height {
+		msg := l.msgs[sel]
+		first, last := max(l.top, b.start)-b.start+1, min(l.top+height, end)-b.start
+		if b.start < l.top+height && end > l.top {
+			head := m.stickyHead(msg, first, last, len(b.lines), width-1)
+			view[0] = m.paintMessage(msg, []string{head}, width, true, active)[0]
 		}
-		if below := end - (l.top + height); below > 0 && b.start < l.top+height {
-			view[height-1] = selLine(" "+sty.Faint.Render(fmt.Sprintf("↓ %d more %s", below+1, plural(below+1, "line", "lines"))), width, true, active)
+		if below := end - (l.top + height); below > 0 {
+			more := strings.Repeat(" ", gw) + sty.Thread.Render(fmt.Sprintf("%s %d more %s", ico.Unfolded, below+1, plural(below+1, "line", "lines")))
+			view[height-1] = m.paintMessage(msg, []string{more}, width, true, active)[0]
 		}
 	}
 	pad := make([]string, 0, height)
@@ -137,33 +146,96 @@ func prefixAll(lines []string, p string) []string {
 	return out
 }
 
-// stickyHead stands in for the header of a message whose top has
-// scrolled out of view: who wrote it, when, and how much is above.
-func (m *Model) stickyHead(msg backend.Message, above, width int) string {
-	head := sty.Sender(senderKey(msg)).Render(m.senderName(msg)) + "  " +
-		sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat)) + "  " +
-		sty.Faint.Render(fmt.Sprintf("↑ %d more %s", above, plural(above, "line", "lines")))
+// stickyHead stands in for the sender line of a message taller than the
+// pane: who wrote it, when, and which of its lines are on screen.
+func (m *Model) stickyHead(msg backend.Message, first, last, total, width int) string {
+	head := m.gutter(msg) + m.senderLine(msg) +
+		sty.Faint.Render(fmt.Sprintf(" · lines %d–%d of %d", first, last, total))
 	return ansi.Truncate(head, width, "…")
 }
 
-// messageLines renders one message, wrapped to width.
+// gutterW is the time gutter: the time plus a space, at least 6 cells.
+func (m *Model) gutterW() int {
+	return max(6, ansi.StringWidth(time.Date(2006, 1, 2, 23, 59, 0, 0, time.UTC).Format(m.cfg.TimeFormat))+1)
+}
+
+// gutter is a message's time, padded to the gutter.
+func (m *Model) gutter(msg backend.Message) string {
+	t := msg.Time().Format(m.cfg.TimeFormat)
+	return sty.Time.Render(t) + strings.Repeat(" ", max(0, m.gutterW()-ansi.StringWidth(t)))
+}
+
+// dateRule is "──── Thursday 22 October ────" across the body column.
+func dateRule(label string, width int) string {
+	label = " " + label + " "
+	side := max(0, width-ansi.StringWidth(label))
+	return sty.Faint.Render(strings.Repeat("─", side/2)) + sty.Date.Render(label) + sty.Faint.Render(strings.Repeat("─", side-side/2))
+}
+
+// senderLine is the name in its colour, then the handle, an app's tag
+// and whether the message is pinned.
+func (m *Model) senderLine(msg backend.Message) string {
+	line := sty.Sender(senderKey(msg)).Render(m.senderName(msg))
+	if msg.User == "" && (msg.BotName != "" || msg.BotID != "") {
+		tag := sty.AppTag.Render("APP")
+		if ico.Bot != "" {
+			tag = sty.Muted.Render(ico.Bot) + " " + tag
+		}
+		line += " " + tag
+	} else if u, ok := m.users[msg.User]; ok && u.Name != "" && u.Name != m.senderName(msg) {
+		line += " " + sty.Faint.Render(u.Name)
+	}
+	if msg.Pinned {
+		line += "  " + sty.Warn.Render(ico.Pinned+" pinned")
+	}
+	return line
+}
+
+// mentionsMe is true for messages that mention us, or everyone here.
+func (m *Model) mentionsMe(msg backend.Message) bool {
+	return strings.Contains(msg.Text, "<@"+m.client.SelfID+">") ||
+		strings.Contains(msg.Text, "<!here") || strings.Contains(msg.Text, "<!channel") || strings.Contains(msg.Text, "<!everyone")
+}
+
+// paintMessage lays a message's lines into the list: the bar column, then
+// the line across the width. Selection wins over the tints for messages
+// that mention us (self bar on mentionTint) and pinned ones (warn bar on
+// pinTint).
+func (m *Model) paintMessage(msg backend.Message, lines []string, width int, selected, focused bool) []string {
+	flag, tint := " ", ""
+	switch {
+	case m.mentionsMe(msg):
+		flag, tint = sty.SelfBar(), sty.MentionTintOn()
+	case msg.Pinned:
+		flag, tint = sty.PinBar(), sty.PinTintOn()
+	}
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		if selected || tint == "" {
+			out[i] = flagLine(flag, l, width, selected, focused)
+		} else {
+			out[i] = flag + paintBg(l, width-1, tint)
+		}
+	}
+	return out
+}
+
+// messageLines is a message without its bar column, width cells wide:
+// the time gutter on its first line, the body after it.
 func (m *Model) messageLines(msg backend.Message, width int, header, inThread bool) []string {
+	gw := m.gutterW()
+	bw := width - gw
+	blank := strings.Repeat(" ", gw)
 	var lines []string
 	if systemSubtypes[msg.SubType] {
 		text := render.Mrkdwn(msg.Text, m, sty.Md)
-		t := sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat))
-		return wrap(sty.System.Render("→ ")+text+"  "+t, width)
+		for i, l := range wrap(sty.System.Render("→ ")+sty.System.Render(ansi.Strip(text)), bw) {
+			lines = append(lines, pick(i == 0, m.gutter(msg), blank)+l)
+		}
+		return lines
 	}
 	if header {
-		name := sty.Sender(senderKey(msg)).Render(m.senderName(msg))
-		if msg.User == "" && (msg.BotName != "" || msg.BotID != "") {
-			name += " " + sty.Faint.Render("APP")
-		}
-		head := name + "  " + sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat))
-		if msg.Pinned {
-			head += "  " + sty.Warn.Render(ico.Pinned+" pinned")
-		}
-		lines = append(lines, head)
+		lines = append(lines, m.senderLine(msg))
 	}
 	text := render.Mrkdwn(msg.Text, m, sty.Md)
 	if msg.Edited {
@@ -173,36 +245,65 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread bo
 		text += " " + sty.Warn.Render(ico.Pinned+" pinned")
 	}
 	if strings.TrimSpace(msg.Text) != "" || msg.Edited || (msg.Pinned && !header) {
-		lines = append(lines, wrap(text, width)...)
+		codeOn := sgrPrefix(sty.Md.CodeBlock)
+		for _, l := range wrap(text, bw) {
+			// Code blocks fill the body column.
+			if codeOn != "" && strings.HasPrefix(l, codeOn) {
+				l = paintBg(l, bw, sty.RaisedBgOn())
+			}
+			lines = append(lines, l)
+		}
 	}
 	for _, f := range msg.Files {
-		lines = append(lines, m.imageLines(f, width)...)
+		lines = append(lines, m.imageLines(f, bw)...)
 	}
 	if len(msg.Reactions) > 0 {
 		var chips []string
 		for _, r := range mergeSkinTones(msg.Reactions) {
 			chip := fmt.Sprintf("%s %d", m.emojiChip(r.Name), r.Count)
 			style := sty.Reaction
-			for _, u := range r.Users {
-				if u == m.client.SelfID {
-					style = sty.ReactSelf
-				}
+			if slices.Contains(r.Users, m.client.SelfID) {
+				style = sty.ReactSelf
 			}
 			chips = append(chips, style.Render(chip))
 		}
-		lines = append(lines, wrap(strings.Join(chips, " "), width)...)
+		lines = append(lines, wrap(strings.Join(chips, " "), bw)...)
 	}
 	if !inThread && msg.ReplyCount > 0 {
-		s := fmt.Sprintf("%d %s", msg.ReplyCount, plural(msg.ReplyCount, "reply", "replies"))
+		s := fmt.Sprintf("%s %d %s", ico.Thread, msg.ReplyCount, plural(msg.ReplyCount, "reply", "replies"))
 		if msg.LatestReply != "" {
-			s += sty.Muted.Render(" · last " + relTime(backend.TSTime(msg.LatestReply), m.cfg.TimeFormat))
+			s += " · last " + ago(backend.TSTime(msg.LatestReply), clockNow())
 		}
 		lines = append(lines, sty.Thread.Render(s))
 	}
 	if len(lines) == 0 {
 		lines = append(lines, sty.Faint.Render("(empty message)"))
 	}
+	for i := range lines {
+		lines[i] = pick(i == 0, m.gutter(msg), blank) + lines[i]
+	}
 	return lines
+}
+
+func pick(c bool, a, b string) string {
+	if c {
+		return a
+	}
+	return b
+}
+
+// ago is a short relative time: "just now", "5m ago", "2h ago", "3d ago".
+func ago(t, now time.Time) string {
+	d := now.Sub(t)
+	switch {
+	case d < time.Minute:
+		return "just now"
+	case d < time.Hour:
+		return fmt.Sprintf("%dm ago", int(d.Minutes()))
+	case d < 24*time.Hour:
+		return fmt.Sprintf("%dh ago", int(d.Hours()))
+	}
+	return fmt.Sprintf("%dd ago", int(d.Hours()/24))
 }
 
 func wrap(s string, width int) []string {
@@ -307,9 +408,9 @@ func dayLabel(t time.Time) string {
 	case sameDay(t, now.AddDate(0, 0, -1)):
 		return "Yesterday"
 	case t.Year() == now.Year():
-		return t.Format("Monday, 2 January")
+		return t.Format("Monday 2 January")
 	default:
-		return t.Format("Monday, 2 January 2006")
+		return t.Format("Monday 2 January 2006")
 	}
 }
 

@@ -17,11 +17,11 @@ func TestBotNameLookup(t *testing.T) {
 	if _, asked := m.bots["B1"]; !asked {
 		t.Fatal("bot name was not looked up")
 	}
-	if v := dump(t, m); !strings.Contains(v, "bot APP") || strings.Contains(v, "unknown") {
+	if v := dump(t, m); !strings.Contains(v, "bot "+ico.Bot+"  APP") || strings.Contains(v, "unknown") {
 		t.Error("while loading, show 'bot', never 'unknown'")
 	}
 	m.Update(botMsg{id: "B1", name: "Builder"})
-	if v := dump(t, m); !strings.Contains(v, "Builder APP") {
+	if v := dump(t, m); !strings.Contains(v, "Builder "+ico.Bot+"  APP") {
 		t.Error("bot name not shown")
 	}
 }

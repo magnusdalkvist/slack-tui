@@ -395,10 +395,12 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.setStatus(fmt.Sprintf("at most %d images per message", maxAttach), true)
 			}
 			m.attach = append(m.attach, msg.img)
+			m.attachSel = len(m.attach) - 1
+			thumb := m.thumbAttachment(msg.img)
 			if len(m.attach) == 1 {
-				return m, m.setStatus("image attached — enter sends it", false)
+				return m, tea.Batch(thumb, m.setStatus("image attached", false))
 			}
-			return m, m.setStatus(fmt.Sprintf("%d images attached", len(m.attach)), false)
+			return m, tea.Batch(thumb, m.setStatus(fmt.Sprintf("%d images attached", len(m.attach)), false))
 		}
 		m.input.InsertString(msg.text)
 		m.fitInput()
@@ -410,6 +412,7 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Keep the image and text so a retry is one enter away.
 			if len(m.attach) == 0 {
 				m.attach = msg.atts
+				m.attachSel = len(m.attach) - 1
 			}
 			if m.input.Value() == "" {
 				m.input.SetValue(msg.text)

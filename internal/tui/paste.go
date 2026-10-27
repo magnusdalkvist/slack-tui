@@ -11,8 +11,10 @@ import (
 	"unicode/utf8"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
+	"github.com/magnusdalkvist/slack-tui/internal/kitty"
 )
 
 // attachment is a clipboard image waiting in the composer; enter uploads it
@@ -20,6 +22,8 @@ import (
 type attachment struct {
 	name string
 	data []byte
+	// thumb is its m.images key: a 4×1-cell thumbnail for the chip.
+	thumb string
 }
 
 // clipMsg is what a paste turned out to be: an image to attach, or the
@@ -162,20 +166,74 @@ func (m *Model) upload(id, threadTS string, atts []*attachment, text string) tea
 	}
 }
 
-// attachLabel is the bar above the composer while images wait there.
+// attachLabel is the composer's border label while images wait there.
 func (m *Model) attachLabel() string {
-	switch len(m.attach) {
-	case 0:
+	if len(m.attach) == 0 {
 		return ""
-	case 1:
-		a := m.attach[0]
-		return fmt.Sprintf(" %s · %s · enter send · ctrl+x remove ", a.name, humanSize(len(a.data)))
 	}
-	size := 0
-	for _, a := range m.attach {
-		size += len(a.data)
+	return fmt.Sprintf("%d of %d attachments", len(m.attach), maxAttach)
+}
+
+// thumbAttachment makes the chip thumbnail of a pasted image: 4 cells by
+// one row, in m.images like any other picture.
+func (m *Model) thumbAttachment(a *attachment) tea.Cmd {
+	if m.gfx == nil {
+		return nil
 	}
-	return fmt.Sprintf(" %d images · %s · enter send · ctrl+x remove last ", len(m.attach), humanSize(size))
+	a.thumb = fmt.Sprintf("attach:%p", a)
+	id := m.newImageID()
+	m.images[a.thumb] = &imgState{id: id}
+	cw, ch, key, data := m.cellW, m.cellH, a.thumb, a.data
+	return func() tea.Msg {
+		png, cols, rows, err := scaleImage(data, cw, ch, 4, 1, true)
+		if err == nil {
+			err = m.gfx.Show(id, png, cols, rows)
+		}
+		return imageMsg{fileID: key, cols: cols, rows: rows, png: png, err: err}
+	}
+}
+
+// attachChips is the row of pasted images above the composer's text: a
+// thumbnail and the name of each, the selected one highlighted. Chips
+// scroll so the selected one stays in width.
+func (m *Model) attachChips(width int) string {
+	var chips []string
+	for i, a := range m.attach {
+		thumb := ico.Image + "   "
+		if st := m.images[a.thumb]; st != nil && st.status == imgReady && st.rows > 0 {
+			st.seen = m.viewSeq
+			thumb = padRight(kitty.Placeholder(st.shownID(), st.cols, 1)[0], 4)
+		}
+		label := " " + thumb + " " + a.name + " "
+		if i == m.attachSel {
+			chips = append(chips, paintBg(sty.FrameTitleFocus.Render(label), ansi.StringWidth(label), sty.SelFocusBgOn()))
+		} else {
+			chips = append(chips, paintBg(sty.Normal.Render(label), ansi.StringWidth(label), sty.RaisedBgOn()))
+		}
+	}
+	first := 0
+	for first < m.attachSel && ansi.StringWidth(strings.Join(chips[first:m.attachSel+1], " ")) > width {
+		first++
+	}
+	return ansi.Truncate(strings.Join(chips[first:], " "), width, "…")
+}
+
+// dropAttachment removes the selected chip.
+func (m *Model) dropAttachment() tea.Cmd {
+	i := min(max(m.attachSel, 0), len(m.attach)-1)
+	a := m.attach[i]
+	m.attach = append(m.attach[:i], m.attach[i+1:]...)
+	if st := m.images[a.thumb]; st != nil {
+		if m.gfx != nil {
+			m.gfx.Delete(st.id)
+		}
+		delete(m.images, a.thumb)
+	}
+	m.attachSel = min(i, len(m.attach)-1)
+	if len(m.attach) == 0 {
+		return m.setStatus("removed "+a.name, false)
+	}
+	return m.setStatus(fmt.Sprintf("removed %s · %d left", a.name, len(m.attach)), false)
 }
 
 func humanSize(n int) string {

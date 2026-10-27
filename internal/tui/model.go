@@ -104,6 +104,7 @@ type Model struct {
 	extUsers    map[string]bool // people from other organisations
 	opener      *opener         // what `o` opens, when a message has several
 	attach      []*attachment   // clipboard images going out with the next send
+	attachSel   int             // the chip ctrl+←/→ selected, ctrl+x drops
 	broadcast   bool            // thread replies also go to the channel (ctrl+o)
 
 	switcher *switcher

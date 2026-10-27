@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/render"
@@ -29,7 +30,7 @@ type compItem struct {
 	detail string // dim text after the label
 }
 
-const completeRows = 8
+const completeRows = 6
 
 // Like Slack: the trigger starts a word. Emoji need two shortcode
 // characters, so "12:30" and a lone ":" don't open the list; people and
@@ -264,33 +265,50 @@ func (m *Model) acceptCompletion() {
 	m.fitInput()
 }
 
-// renderCompletion draws the list that sits above the input box.
+// renderCompletion draws the popup that sits on the composer's top edge.
 func (m *Model) renderCompletion(w int) []string {
 	return m.renderCompItems(m.complete, w)
 }
 
+// renderCompItems draws up to completeRows rows on raised, in the modal
+// row grammar: icon, name with the query's match marked, meta on the
+// right.
 func (m *Model) renderCompItems(c *completion, w int) []string {
 	start := max(0, c.sel-completeRows+1)
 	var lines []string
 	for i := start; i < len(c.items) && i < start+completeRows; i++ {
 		it := c.items[i]
-		var row string
-		if it.emoji != "" && it.label != "" {
-			row = m.emojiChip(it.emoji) + "  " + it.label
-			if it.detail != "" {
-				row += "  " + sty.Muted.Render(it.detail)
+		var left string
+		switch {
+		case it.emoji != "":
+			name := it.label
+			if name == "" {
+				name = it.insert
 			}
-		} else if it.emoji != "" {
-			row = m.emojiChip(it.emoji) + "  " + it.insert
-		} else {
-			row = it.label
-			if it.detail != "" {
-				row += "  " + sty.Muted.Render(it.detail)
+			left = m.emojiChip(it.emoji) + " " + markMatch(name, c.query, sty.Normal)
+		case strings.HasPrefix(it.token, "<@"):
+			uid := strings.TrimSuffix(strings.TrimPrefix(it.token, "<@"), ">")
+			icon := sty.Faint.Render(ico.UserAway)
+			if m.presence[uid] {
+				icon = sty.OK.Render(ico.UserActive)
 			}
+			left = slot(icon) + markMatch(strings.TrimPrefix(it.label, "@"), c.query, sty.Normal)
+		case strings.HasPrefix(it.token, "<#"):
+			left = slot(sty.Muted.Render(ico.Channel)) + markMatch(strings.TrimPrefix(it.label, "#"), c.query, sty.Normal)
+		default:
+			left = slot("") + markMatch(it.label, c.query, sty.Normal)
 		}
-		lines = append(lines, selLine(" "+row, w, i == c.sel, true))
+		row := " " + left
+		if room := w - 4 - ansi.StringWidth(row); it.detail != "" && room > 3 {
+			detail := sty.Faint.Render(ansi.Truncate(it.detail, room, "…"))
+			row += strings.Repeat(" ", w-2-ansi.StringWidth(row)-ansi.StringWidth(detail)) + detail
+		}
+		if i == c.sel {
+			lines = append(lines, selLine(row, w, true, true))
+		} else {
+			lines = append(lines, " "+paintBg(row, w-1, sty.RaisedBgOn()))
+		}
 	}
-	lines = append(lines, sty.Faint.Render("  tab insert · ↑↓ choose · esc close"))
 	return lines
 }
 

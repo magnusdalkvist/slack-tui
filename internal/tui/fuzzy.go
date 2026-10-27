@@ -4,6 +4,8 @@ import (
 	"slices"
 	"strings"
 	"unicode"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 // fuzzyRank returns the indexes of candidates that contain every rune of
@@ -67,4 +69,48 @@ func isBoundary(before, r rune) bool {
 		return true
 	}
 	return unicode.IsLower(before) && unicode.IsUpper(r)
+}
+
+// markMatch draws text in base with the characters query matched in
+// accent bold: the first place it appears whole, otherwise its runes in
+// order, as fuzzyScore matches them.
+func markMatch(text, query string, base lipgloss.Style) string {
+	q := []rune(strings.ToLower(strings.TrimSpace(query)))
+	rs := []rune(text)
+	if len(q) == 0 {
+		return base.Render(text)
+	}
+	hit := make([]bool, len(rs))
+	if i := strings.Index(strings.ToLower(text), string(q)); i >= 0 && len([]rune(strings.ToLower(text))) == len(rs) {
+		start := len([]rune(text[:i]))
+		for k := range q {
+			hit[start+k] = true
+		}
+	} else {
+		qi := 0
+		for si, r := range rs {
+			if qi < len(q) && unicode.ToLower(r) == q[qi] {
+				hit[si] = true
+				qi++
+			}
+		}
+		if qi < len(q) {
+			return base.Render(text)
+		}
+	}
+	var b strings.Builder
+	match := base.Inherit(sty.Match)
+	for i := 0; i < len(rs); {
+		j := i
+		for j < len(rs) && hit[j] == hit[i] {
+			j++
+		}
+		if hit[i] {
+			b.WriteString(match.Render(string(rs[i:j])))
+		} else {
+			b.WriteString(base.Render(string(rs[i:j])))
+		}
+		i = j
+	}
+	return b.String()
 }

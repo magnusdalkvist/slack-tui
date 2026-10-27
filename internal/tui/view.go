@@ -146,11 +146,11 @@ func (m *Model) renderConvPane(w, h int) string {
 		right = sty.Faint.Render(fmt.Sprintf("%s %d scheduled", ico.Scheduled, n))
 	}
 	isTarget := !(m.focus == fThread && m.thread != nil)
-	input := m.renderInput(w, isTarget, "Message "+m.convTitle(c))
+	input := m.renderInput(w, isTarget, false, "Message "+m.convTitle(c))
 	paneH := max(3, h-lineCount(input)-1)
 	list := m.renderList(m.lists[m.current], w-2, paneH-2, focused, false)
 	pane := RenderFrame(list, w, paneH, frameTitle(m.convTitle(c), focused, ctx...), right, focused)
-	return pane + "\n\n" + input
+	return m.withCompletion(pane+"\n", input, w, isTarget)
 }
 
 func (m *Model) renderThreadPane(w, h int) string {
@@ -160,63 +160,83 @@ func (m *Model) renderThreadPane(w, h int) string {
 	if c := m.convs[t.conv]; c != nil {
 		where = sty.Muted.Render("in " + m.convTitle(c))
 	}
-	input := m.renderInput(w, focused, "Reply in thread")
+	input := m.renderInput(w, focused, true, "Reply in thread")
 	paneH := max(3, h-lineCount(input)-1)
 	list := m.renderList(&t.list, w-2, paneH-2, focused, true)
 	pane := RenderFrame(list, w, paneH, frameTitle("Thread", focused, where), "", focused)
-	return pane + "\n\n" + input
+	return m.withCompletion(pane+"\n", input, w, focused)
+}
+
+// withCompletion stacks above the composer: the pane, then the gap row,
+// with the completion popup laid over their bottom rows so it sits flush
+// on the composer's top edge, aligned to its left.
+func (m *Model) withCompletion(above, input string, w int, isTarget bool) string {
+	if m.complete == nil || !isTarget || !m.insert {
+		return above + "\n" + input
+	}
+	pw := min(w, 56)
+	rows := m.renderCompletion(pw)
+	lines := strings.Split(above, "\n")
+	at := max(0, len(lines)-len(rows))
+	for k, r := range rows {
+		if i := at + k; i < len(lines) {
+			lines[i] = r + ansi.TruncateLeft(lines[i], pw, "")
+		}
+	}
+	return strings.Join(lines, "\n") + "\n" + input
 }
 
 // renderInput is the composer: a small frame under the pane it sends to,
-// its border following the mode. The other pane's composer shows only its
+// its border following the mode (rule, ok while typing). Its labels sit
+// in the top border; the thread's composer says on the right whether the
+// reply also goes to the channel. The other pane's composer shows only its
 // placeholder.
-func (m *Model) renderInput(w int, isTarget bool, placeholder string) string {
+func (m *Model) renderInput(w int, isTarget, inThread bool, placeholder string) string {
+	right := ""
+	if inThread {
+		right = m.broadcastLabel()
+	}
 	if !isTarget || !m.insert {
-		return frameWith(" "+sty.Faint.Render(placeholder), w, 3, "", "", sty.Rule)
+		return frameWith(" "+sty.Faint.Render(placeholder), w, 3, "", right, sty.Rule)
 	}
 	m.input.SetWidth(w - 4)
 	m.fitInput() // the width may have changed, and with it the wrapping
-	// Labels go into the top border: "╭ editing ─ image … ──╮".
+	border := sty.OK
 	var labels []string
 	if m.editing != nil {
-		labels = append(labels, sty.OK.Bold(true).Render("editing"))
+		labels = append(labels, "editing")
 	}
-	if label := m.broadcastLabel(); label != "" {
-		if m.broadcast {
-			labels = append(labels, sty.Warn.Render(label))
-		} else {
-			labels = append(labels, sty.Faint.Render(label))
-		}
+	if inThread && m.broadcast {
+		labels = append(labels, "broadcast")
 	}
 	if label := m.attachLabel(); label != "" {
-		labels = append(labels, sty.Warn.Render(label))
+		labels = append(labels, label)
 	}
-	border := sty.OK
-	box := m.input.View()
-	frame := frameWith(indent(box, " "), w, lineCount(box)+2,
-		strings.Join(labels, border.Render(" ─ ")), "", border)
-	if m.complete != nil {
-		frame = strings.Join(m.renderCompletion(w), "\n") + "\n" + frame
+	box := indent(m.input.View(), " ")
+	if len(m.attach) > 0 {
+		box = " " + m.attachChips(w-4) + "\n" + box
 	}
-	return frame
+	return frameWith(box, w, lineCount(box)+2, border.Bold(true).Render(strings.Join(labels, " · ")), right, border)
 }
 
-// broadcastLabel is the bar above a thread reply being written: whether it
-// also goes to the channel, as Slack's checkbox.
+// broadcastLabel is the thread composer's "□ also send to #dev", ■ and in
+// warn while ctrl+o has it on.
 func (m *Model) broadcastLabel() string {
-	conv, thread := m.inputTarget()
-	c := m.convs[conv]
-	if thread == "" || c == nil || m.editing != nil {
+	if m.thread == nil || m.editing != nil {
+		return ""
+	}
+	c := m.convs[m.thread.conv]
+	if c == nil {
 		return ""
 	}
 	where := "#" + c.Name
 	if c.IsDM() {
-		where = "the conversation"
+		where = m.convLabel(c)
 	}
 	if m.broadcast {
-		return " also sending to " + where + " · ctrl+o undo "
+		return sty.Warn.Render("■ also send to " + where)
 	}
-	return " ctrl+o also send to " + where + " "
+	return sty.Faint.Render("□ also send to " + where)
 }
 
 func indent(s, prefix string) string {

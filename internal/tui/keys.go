@@ -506,8 +506,11 @@ func (m *Model) insertKey(k tea.KeyMsg) tea.Cmd {
 		m.toggleMark('_')
 		return nil
 	case k.Type == tea.KeyCtrlX && len(m.attach) > 0:
-		m.attach = m.attach[:len(m.attach)-1]
-		return m.setStatus(plural(len(m.attach), "1 image left", fmt.Sprintf("%d images left", len(m.attach))), false)
+		return m.dropAttachment()
+	case (k.Type == tea.KeyCtrlLeft || k.Type == tea.KeyCtrlRight) && len(m.attach) > 0:
+		d := map[bool]int{true: -1, false: 1}[k.Type == tea.KeyCtrlLeft]
+		m.attachSel = min(max(m.attachSel+d, 0), len(m.attach)-1)
+		return nil
 	case k.Type == tea.KeyEsc:
 		if m.editing != nil {
 			m.cancelEdit()

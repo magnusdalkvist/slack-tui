@@ -110,7 +110,12 @@ func Mrkdwn(text string, r Resolver, st Styles) string {
 	parts := strings.Split(text, "```")
 	for i, part := range parts {
 		if i%2 == 1 && i < len(parts)-1 {
-			out = append(out, codeBlock(part, st))
+			block := codeBlock(part, st)
+			// A fence on its own line already starts one.
+			if n := len(out); n > 0 && strings.HasSuffix(out[n-1], "\n") {
+				block = block[1:]
+			}
+			out = append(out, block)
 			continue
 		}
 		if i%2 == 1 { // unclosed fence: treat literally

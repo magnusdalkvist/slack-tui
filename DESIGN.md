@@ -411,3 +411,10 @@ Gaps found while building this spec, and how they were filled.
 - **The sidebar count column** is as wide as the widest count among the visible rows, so names, status emoji and counts line up.
 - **Section header arrows** (▾/▸) sit in the icon column. The section's own icon (Nerd Font, or the custom section's Slack emoji) goes before its name.
 - **People's presence** is drawn with the solid or outline user icon in the sidebar. Headers and modals keep `●` (§3).
+- **The time gutter** is `max(6, width of time_format + 1)` cells, so a 12-hour `time_format` still fits.
+- **Mentions of you** include `@here`, `@channel` and `@everyone`, as Slack highlights those too. When a message both mentions you and is pinned, the mention tint wins. Selection wins over both.
+- **Day labels** are `Today`, `Yesterday`, then `Thursday 22 October` (the year is added when it isn't the current one).
+- **Completion popup** is 56 cells wide, at most (or the composer's width when it's narrower). Its bottom row lies on the blank row above the composer, and the rows above it cover the bottom of the pane. Rows that don't fit their meta truncate it with `…`.
+- **Attachment chips** without graphics show the image icon in place of the thumbnail. The thumbnail is drawn once, 4×1 cells, and kept with the other images so it survives a tmux pane switch.
+- **Composer labels** are joined with ` · ` when there are several (`editing · 2 of 10 attachments`).
+- **The design canvas** ("Dark · normal mode", "Light · insert mode") wasn't available while building this, so the chat was checked against this spec's text and the golden renders instead.
