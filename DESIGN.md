@@ -200,7 +200,7 @@ All columns are fixed width:
 - Custom sections show their Slack emoji in the header icon slot.
 - Nicknames go after the name in `faint` (`Kim Kyhlensø kiky`).
 - **Section headers** are `faint` and bold in caps, with `▾`/`▸` and the total count on the right in `faint`.
-- A **folded** section still surfaces what's inside it. With mentions it shows a red `▌` and a red count. With plain unreads it shows a faint `▏` and "3 new" in `muted`.
+- A **folded** section still surfaces what's inside it: its unread conversations stay as rows, and the header sums them up. With mentions it shows a red `▌` and a red count. With plain unreads it shows a faint `▏` and "3 new" in `muted`.
 - The sidebar frame title is the team name (`muted`) and the right label is your handle (`faint`).
 - The first row is `≡ Unreads` with its total.
 
@@ -405,7 +405,7 @@ Gaps found while building this spec, and how they were filled.
 - **Frames sit 1 cell apart.** A terminal can't draw half a cell, so the gap is one blank column. A pane and its composer frame have 1 blank row between them.
 - **Focus under `NO_COLOR`.** With no border colour, the focused frame's title is drawn in reverse video. This is the only place where focus shows without colour.
 - **Selection rows** come from `selLine` in `frame.go`: a 1-cell bar column, then the row padded to the frame's width. `paintBg` restores the selection background after every SGR reset inside the row, so chips, links and custom-emoji images keep it.
-- **Folded sections** keep only the open conversation as a row. Everything else is summed up in the header's flag and count. Previously, unread rows stayed visible under a folded header.
+- **Folded sections** keep their unread conversations (and the open one) as rows, so nothing that needs you is hidden. Read ones fold away. The header still sums up the section with its flag and count.
 - **Muted channels** (the `faint` row state) aren't drawn, because the client doesn't load Slack's mute preferences. That would be a data-layer change, which is out of scope here.
 - **The open conversation** is drawn in `fg` rather than `muted` when it's read, so it stands out when the cursor is elsewhere. With the cursor on it, it's the selected row.
 - **The sidebar count column** is as wide as the widest count among the visible rows, so names, status emoji and counts line up.

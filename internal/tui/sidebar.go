@@ -143,11 +143,13 @@ func (m *Model) rebuildSidebar() {
 		head := sideItem{header: sec.name}
 		var rows []sideItem
 		for _, id := range sec.ids {
-			// A folded section keeps only the open conversation; its
-			// header sums up the rest.
-			if m.folded[sec.name] && id != m.current {
-				head.hidden++
-				continue
+			// A folded section still shows what needs attention: its
+			// unread conversations, and the open one.
+			if m.folded[sec.name] {
+				if c := m.convs[id]; c == nil || (!c.Unread() && id != m.current) {
+					head.hidden++
+					continue
+				}
 			}
 			rows = append(rows, sideItem{id: id})
 		}
