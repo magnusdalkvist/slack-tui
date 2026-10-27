@@ -238,7 +238,7 @@ All columns are fixed width:
 - The **placeholder** is `Message siko` / `Reply in thread` in `faint`, with no hints.
 - The thread composer shows `□ also send to siko` on the right in `faint`. When it's on, it becomes `■ also send to siko` in `warn`.
 - **Attachments:** a row of chips above the text, one per pasted image. Each chip is a 1-cell-tall kitty thumbnail 4 cells wide, then the name, on `raised`. The selected chip uses `selFocus` + `accent`. ctrl+←/→ picks a chip and ctrl+x drops the selected one.
-- **Completion popup** (`@` `#` `:`): stacked flush on the composer's top edge, aligned to its left edge, on `raised`, up to 6 rows. Rows follow the modal row grammar, with fuzzy-matched characters in `accent` bold.
+- **Completion popup** (`@` `#` `:`): its own rounded frame (`faint` border, labelled `emoji`, `people`, `channels` or `commands`), stacked flush on the composer's top edge, aligned to its left edge, rows on `raised`, up to 6 rows. Rows follow the modal row grammar, with fuzzy-matched characters in `accent` bold.
 
 ---
 

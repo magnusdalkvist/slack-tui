@@ -140,6 +140,10 @@ var scenes = []scene{
 		m.Update(key("i"))
 		typeText(m, "hey @si")
 	}},
+	{"complete-emoji", 30, func(m *Model) {
+		m.Update(key("i"))
+		typeText(m, "ship it :ta")
+	}},
 	{"attach", 30, func(m *Model) {
 		m.Update(key("i"))
 		m.attach = []*attachment{{name: "screenshot.png", data: make([]byte, 3000)}, {name: "pasted-2.png", data: make([]byte, 9000)}}

@@ -267,7 +267,18 @@ func (m *Model) acceptCompletion() {
 
 // renderCompletion draws the popup that sits on the composer's top edge.
 func (m *Model) renderCompletion(w int) []string {
-	return m.renderCompItems(m.complete, w)
+	return m.compPopup(m.complete, w)
+}
+
+// compPopup is a completion list in its own frame, w wide, so it stands
+// apart from the chat it lies over; the frame's label says what it lists.
+func (m *Model) compPopup(c *completion, w int) []string {
+	rows := m.renderCompItems(c, w-2)
+	label := map[string]string{":": "emoji", "@": "people", "#": "channels", "cmd": "commands", "tpl": "status templates"}[c.trigger]
+	if label != "" {
+		label = sty.Faint.Render(label)
+	}
+	return strings.Split(frameWith(strings.Join(rows, "\n"), w, len(rows)+2, label, "", sty.Faint), "\n")
 }
 
 // renderCompItems draws up to completeRows rows on raised, in the modal

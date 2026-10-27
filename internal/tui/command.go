@@ -239,7 +239,7 @@ func (m *Model) overlayCmdCompletion(body string) string {
 		return body
 	}
 	pw := min(m.width, 96)
-	rows := m.renderCompItems(m.cmd.complete, pw)
+	rows := m.compPopup(m.cmd.complete, pw)
 	lines := strings.Split(body, "\n")
 	if len(rows) >= len(lines) {
 		return body

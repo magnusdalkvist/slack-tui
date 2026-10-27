@@ -1,0 +1,30 @@
+╭ [1;7m‹ # development[0m  Builds, deploys and [1mreviews[0m ────────── Børsen › development ╮
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│       ──────────────────────────────[1m Yesterday [0m──────────────────────────────│
+│ 16:02 [1mkiky[0m kim.kyhlensoe                                                     │
+│       anyone up for reviewing the cache change?                              │
+│ 16:03 it's small, promise (edited)                                           │
+│       ────────────────────────────────[1m Today [0m────────────────────────────────│
+│       ─────────────────────────────────[1m new [0m─────────────────────────────────│
+│▌09:12 [1mSimon Konstantyner[0m siko   pinned                                      │
+│▌      deployed [7mpanda-v2[0m to staging 🚀                                        │
+│▌      [7m [0m[1;7m🎉 2[0m[7m [0m [7m [0m[7m👀 1[0m[7m [0m                                                          │
+│ 09:40 [3m→ [0m[3m@Anna Jensen has joined the channel[0m                                  │
+│▌10:02 [1mAnna Jensen[0m anna                                                       │
+│▌      [1m@mada[0m can you look at the failing test? see https://example.com/ci/123 │
+╭ emoji ───────────────────────────────────────────────╮                       │
+│▌[7m 🌮 :[1mta[0m[7mco:                                           [27;49m│[1m[0m[7m[0m[7m[0m[7m[0m                       │
+│  🎉 :[1mta[0mda:                                           │                       │
+│  🚕 :[1mta[0mxi:                                           │[7m[1m[0m[7m                       [27;49m│
+│  🫔 :[1mta[0mmale:                                         │[7m                       [27;49m│
+│  ♉ :[1mta[0murus:                                         │[7m                       [27;49m│
+│  🍊 :[1mta[0mngerine:                                      │[7m                       [27;49m│
+╰──────────────────────────────────────────────────────╯───────────────────────╯
+╭ [1mMessage # development[0m ───────────────────────────────────────────────────────╮
+│ [37m[0mship it :ta[7m [0m                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+[7m [0m[1;7mINSERT[0m[7m [0m  ● live                             [1mtab[0m insert   [1m↑↓[0m choose   [1mesc[0m close 

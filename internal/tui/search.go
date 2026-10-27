@@ -468,7 +468,7 @@ func (m *Model) renderSearch(w, h int) string {
 	if s.typing {
 		p.inputBorder = sty.Warn
 		if s.complete != nil {
-			p.popup = m.renderCompItems(s.complete, min(lw+2, 56))
+			p.popup = m.compPopup(s.complete, min(lw+2, 56))
 		}
 	}
 	switch {
