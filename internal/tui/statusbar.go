@@ -136,7 +136,7 @@ func shortDur(d time.Duration) string {
 }
 
 // busy is true while something runs that the bar shows a spinner for.
-func (m *Model) busy() bool { return m.infoPending > 0 }
+func (m *Model) busy() bool { return m.infoPending > 0 || (!m.booted && m.bootErr == nil) }
 
 // spinIfBusy starts the spinner when there is progress to show.
 func (m *Model) spinIfBusy() tea.Cmd {
@@ -182,7 +182,7 @@ func (m *Model) message() string {
 		return s
 	}
 	var parts []string
-	if m.busy() {
+	if m.infoPending > 0 {
 		parts = append(parts, sty.Bar.Render(m.spin.View())+" "+sty.Muted.Render("checking unreads")+"  "+
 			sty.Faint.Render(fmt.Sprintf("%d of %d channels", m.infoTotal-m.infoPending, m.infoTotal)))
 	}
@@ -201,6 +201,9 @@ func (m *Model) message() string {
 func (m *Model) renderStatus() string {
 	if m.cmd != nil && !m.cmd.inPane {
 		return m.renderCmdLine()
+	}
+	if m.bootErr != nil {
+		return m.bar(m.pill(), m.hints(), false) // only e and q work here
 	}
 	left := []string{m.pill()}
 	if m.confirm == nil {

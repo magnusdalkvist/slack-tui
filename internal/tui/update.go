@@ -188,6 +188,7 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.searchResult(msg)
 
 	case cacheMsg:
+		m.cacheChecked, m.cacheAge = true, msg.age
 		if msg.err != nil {
 			return m, m.setStatus("cache: "+msg.err.Error(), true)
 		}
@@ -201,6 +202,14 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case flushTick:
 		m.Flush()
 		return m, m.flushLater()
+
+	case configEditedMsg:
+		if msg.err != nil {
+			return m, m.setStatus("editor: "+msg.err.Error(), true)
+		}
+		// Settings are read at start; Slack is asked again now.
+		m.bootErr = nil
+		return m, tea.Batch(m.boot(), m.setStatus("trying again — restart for config changes", false))
 
 	case bootRetry:
 		if !m.offline {

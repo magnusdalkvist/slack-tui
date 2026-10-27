@@ -3,6 +3,7 @@ package tui
 import (
 	"encoding/json"
 	"hash/fnv"
+	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,6 +17,7 @@ const flushEvery = 3 * time.Second
 
 type cacheMsg struct {
 	snap cache.Snapshot
+	age  time.Time // the cache file's last write
 	err  error
 }
 
@@ -33,11 +35,21 @@ func (m *Model) SetCache(c *cache.Cache) { m.cache = c }
 
 func (m *Model) loadCache() tea.Cmd {
 	if m.cache == nil {
+		m.cacheChecked = true
 		return nil
 	}
+	path := cache.Path(m.client.TeamID)
 	return func() tea.Msg {
 		s, err := m.cache.Load()
-		return cacheMsg{s, err}
+		var age time.Time
+		if !s.Empty() {
+			for _, p := range []string{path, path + "-wal"} {
+				if fi, err := os.Stat(p); err == nil && fi.ModTime().After(age) {
+					age = fi.ModTime()
+				}
+			}
+		}
+		return cacheMsg{snap: s, age: age, err: err}
 	}
 }
 

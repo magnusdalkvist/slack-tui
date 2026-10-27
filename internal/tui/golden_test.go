@@ -40,6 +40,7 @@ func ts(day, hour, min int) string {
 func sceneModel(t *testing.T, w, h int) *Model {
 	t.Setenv("XDG_CACHE_HOME", t.TempDir())
 	t.Setenv("XDG_STATE_HOME", t.TempDir())
+	t.Setenv("XDG_CONFIG_HOME", "/home/you/.config") // shown on the error screen
 	c := backend.New(auth.Tokens{})
 	c.SelfID, c.TeamName = "ME", "Børsen"
 	cfg := config.Default()
@@ -255,6 +256,13 @@ var scenes = []scene{
 		m.viewer = &viewer{items: []viewItem{{file: f, ts: l.msgs[len(l.msgs)-1].TS}}, list: l, id: 7,
 			cache: map[string]*viewImg{f.ID: {cols: 40, rows: 10}}, shown: f.ID, details: true}
 		m.viewer.w, m.viewer.h = m.viewBox()
+	}},
+	{"loading", 24, func(m *Model) {
+		m.booted, m.conn = false, "connecting"
+		m.cacheChecked, m.cacheAge = true, goldenNow.Add(-47*time.Minute)
+	}},
+	{"fatal", 24, func(m *Model) {
+		m.booted, m.bootErr = false, fmt.Errorf("auth.test: invalid_auth — the user token was revoked or the app reinstalled; run slack-tui login")
 	}},
 	{"switcher", 30, func(m *Model) {
 		m.Update(key("ctrl+k"))

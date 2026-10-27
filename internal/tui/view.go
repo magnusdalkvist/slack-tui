@@ -18,12 +18,10 @@ func (m *Model) View() string {
 		return ""
 	}
 	if m.bootErr != nil {
-		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
-			sty.Err.Render("Could not load Slack: "+m.bootErr.Error())+"\n\n"+sty.Muted.Render("ctrl+c to quit"))
+		return m.renderFatal(m.height-1) + "\n" + m.renderStatus()
 	}
 	if !m.booted {
-		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center,
-			sty.Muted.Render("Loading "+m.client.TeamName+"…"))
+		return m.renderLoading(m.height-1) + "\n" + m.loadingBar()
 	}
 
 	if m.viewer != nil {

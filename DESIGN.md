@@ -444,3 +444,6 @@ Gaps found while building this spec, and how they were filled.
 - **Previews** show only from `thread_split_cols` on, where the thread would sit beside the chat.
 - **esc in the chat** goes back to the conversation list in stack mode. In the wider layouts it keeps its old meaning (back to the newest message).
 - **Stack-mode filtering** (`/` in the conversation list, optional in §12) isn't added. `ctrl+k` is the way to jump there.
+- **Startup steps run at once** (the cache, the live connection, channels & people). A step shows the spinner while it runs. `channels & people` shows `·` until the cache has been read, because a cached start skips this screen: it draws the cache straight away. Without a cache, the first step reads `✓ no cache yet`.
+- **The cache's age** is the cache file's last write (the database or its write-ahead log). The status bar shows it as a time today, or a date before today.
+- **`e` on the error screen** opens `config.toml` in `$VISUAL`, `$EDITOR` or `vi`, then asks Slack again. Settings themselves are read at start, so the status bar says to restart for config changes. The error screen's bar shows only the `ERROR` pill and `e`/`q`, since nothing else works there.

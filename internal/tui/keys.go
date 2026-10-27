@@ -66,8 +66,13 @@ func (m *Model) handleKey(k tea.KeyMsg) tea.Cmd {
 		return m.insertKey(k)
 	}
 	if !m.booted {
-		if k.String() == "q" {
+		switch k.String() {
+		case "q":
 			return m.quit()
+		case "e":
+			if m.bootErr != nil {
+				return m.editConfig()
+			}
 		}
 		return nil
 	}

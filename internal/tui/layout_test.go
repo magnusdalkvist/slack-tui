@@ -67,3 +67,34 @@ func TestBreakpoints(t *testing.T) {
 		}
 	}
 }
+
+func TestStartupScreens(t *testing.T) {
+	m := sceneModel(t, 100, 20)
+	m.booted, m.conn, m.cacheChecked = false, "connecting", false
+	v := ansi.Strip(m.View())
+	for _, want := range []string{"Børsen", "cache loaded", "connecting", "· channels & people", "slack-tui"} {
+		if !strings.Contains(v, want) {
+			t.Errorf("loading screen lacks %q:\n%s", want, v)
+		}
+	}
+	m.cacheChecked = true
+	m.conn = "connected"
+	if v := ansi.Strip(m.View()); !strings.Contains(v, "✓ connecting") || !strings.Contains(v, "✓ no cache yet") {
+		t.Errorf("finished steps should be ticked:\n%s", v)
+	}
+
+	m.bootErr = errFake("invalid_auth")
+	v = ansi.Strip(m.View())
+	for _, want := range []string{"✕ Couldn't start", "invalid_auth", "config.toml", "ERROR", "e edit config", "q quit"} {
+		if !strings.Contains(v, want) {
+			t.Errorf("error screen lacks %q:\n%s", want, v)
+		}
+	}
+	if m.handleKey(key("e")) == nil {
+		t.Error("e should open the config in an editor")
+	}
+}
+
+type errFake string
+
+func (e errFake) Error() string { return string(e) }

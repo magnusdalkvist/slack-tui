@@ -122,25 +122,27 @@ type Model struct {
 	profile  *profileState // `I`: a person's profile card, while open
 	members  *membersState // `:members`, while open
 
-	booted      bool
-	fromCache   bool // drawn from the cache; the API hasn't answered yet
-	bootErr     error
-	conn        string
-	infoPending int
-	infoTotal   int
-	status      string
-	statusErr   bool
-	statusSeq   int
-	statusOK    bool   // the status is a result: ✓ in ok
-	savedPath   string // the file the last save wrote, for the "o open it" hint
-	spin        spinner.Model
-	spinning    bool      // the spinner's tick is running
-	offline     bool      // the start failed; the cache is showing
-	retryAt     time.Time // when the next start is tried, while offline
-	markSeq     map[string]int
-	seenReplies map[string]bool // conv/ts of live replies already counted
-	folded      map[string]bool // sidebar sections that are collapsed
-	emoji       map[string]string
+	booted       bool
+	cacheChecked bool      // the cache was read (or there is none)
+	cacheAge     time.Time // when the cache was last written; zero without one
+	fromCache    bool      // drawn from the cache; the API hasn't answered yet
+	bootErr      error
+	conn         string
+	infoPending  int
+	infoTotal    int
+	status       string
+	statusErr    bool
+	statusSeq    int
+	statusOK     bool   // the status is a result: ✓ in ok
+	savedPath    string // the file the last save wrote, for the "o open it" hint
+	spin         spinner.Model
+	spinning     bool      // the spinner's tick is running
+	offline      bool      // the start failed; the cache is showing
+	retryAt      time.Time // when the next start is tried, while offline
+	markSeq      map[string]int
+	seenReplies  map[string]bool // conv/ts of live replies already counted
+	folded       map[string]bool // sidebar sections that are collapsed
+	emoji        map[string]string
 
 	gfx          *kitty.Writer // nil when the terminal can't draw images
 	gfxReason    string
