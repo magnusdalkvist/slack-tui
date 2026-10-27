@@ -81,7 +81,7 @@ func TestEditOwnMessage(t *testing.T) {
 	if got := m.input.Value(); got != "yes @Anna Jensen & #dev" {
 		t.Errorf("edit text = %q", got)
 	}
-	if v := ansi.Strip(m.View()); !strings.Contains(v, "╭ editing ") {
+	if v := ansi.Strip(m.View()); !strings.Contains(v, " · editing ") {
 		t.Error("no editing label")
 	}
 	m.input.SetValue("yes @Anna Jensen & #dev, at 12 <3")

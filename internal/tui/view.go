@@ -204,12 +204,10 @@ func (m *Model) renderInput(w int, isTarget, inThread bool, placeholder string) 
 	m.input.SetWidth(w - 4)
 	m.fitInput() // the width may have changed, and with it the wrapping
 	border := sty.OK
-	var labels []string
+	// Where it goes stays in the border while the placeholder is gone.
+	labels := []string{placeholder}
 	if m.editing != nil {
 		labels = append(labels, "editing")
-	}
-	if inThread && m.broadcast {
-		labels = append(labels, "broadcast")
 	}
 	if label := m.attachLabel(); label != "" {
 		labels = append(labels, label)

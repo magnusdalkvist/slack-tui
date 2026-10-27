@@ -20,7 +20,7 @@ func TestThreadReplyAlsoToChannel(t *testing.T) {
 		t.Error("the thread composer should offer sending to the channel too")
 	}
 	m.update(tea.KeyMsg{Type: tea.KeyCtrlO})
-	if v := dump(t, m); !strings.Contains(v, "■ also send to #dev") || !strings.Contains(v, "broadcast") {
+	if v := dump(t, m); !strings.Contains(v, "■ also send to #dev") {
 		t.Error("ctrl+o should turn it on")
 	}
 	m.update(key("done"))

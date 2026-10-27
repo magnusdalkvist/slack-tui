@@ -234,7 +234,7 @@ All columns are fixed width:
 
 - The composer is a frame under its pane with 1 line of content that grows to 6.
 - **Border by mode:** `rule` when idle in NORMAL, `ok` in INSERT, `warn` in SEARCH.
-- **Labels sit in the top border, left side,** in the border's colour and bold: `editing`, `broadcast`, `3 of 10 attachments`.
+- **Labels sit in the top border, left side,** in the border's colour and bold. While typing, the first is always where the message goes (`Message # siko`, `Reply in thread`), because the placeholder that said so is gone. After it come `editing` and `3 of 10 attachments` when they apply, joined with ` · `. Broadcast shows only as the right label's `■ also send to …`, so the two labels fit side by side in the thread's narrower frame.
 - The **placeholder** is `Message siko` / `Reply in thread` in `faint`, with no hints.
 - The thread composer shows `□ also send to siko` on the right in `faint`. When it's on, it becomes `■ also send to siko` in `warn`.
 - **Attachments:** a row of chips above the text, one per pasted image. Each chip is a 1-cell-tall kitty thumbnail 4 cells wide, then the name, on `raised`. The selected chip uses `selFocus` + `accent`. ctrl+←/→ picks a chip and ctrl+x drops the selected one.
