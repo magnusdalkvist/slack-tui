@@ -217,7 +217,7 @@ All columns are fixed width:
 - The **time gutter** is 6 cells and `faint`. It appears on the first line of every message, including follow-ups.
 - The **sender line** is the name in its hashed colour, bold, then the handle in `faint`. Messages from the same sender within 5 minutes skip the sender line.
 - **Date separator:** `──── Thursday 22 October ────` in `faint`, starting after the gutter.
-- **New messages:** a `mention`-coloured rule across the whole list, from its left edge (not after the gutter), ending in a plain `new` two cells in from the right.
+- **New messages:** `──── new ────`, a `mention`-coloured rule across the body column (starting after the gutter, like the date separator), with a bold `new` label in its centre.
 - **Links** are `accent` and underlined.
 - **Inline code** uses the `raised` background with `self` text. Code blocks use the `raised` background with full-width padding.
 - **Reactions** are chips (`raised` bg, `♥ 1`) with 1 cell between them. Reactions you added use the `selFocus` bg with `accent` bold text. Custom emoji are 2-cell images that fall back to `:name:` in `faint` on a `raised` chip.

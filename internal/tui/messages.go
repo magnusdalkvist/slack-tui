@@ -67,7 +67,7 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 		}
 		isNew := l.newSince != "" && backend.TSLess(l.newSince, msg.TS) && (prev == nil || !backend.TSLess(l.newSince, prev.TS))
 		if isNew {
-			pre = append(pre, sty.NewLine.Render(strings.Repeat("─", max(0, width-6))+" new"))
+			pre = append(pre, " "+strings.Repeat(" ", gw)+newRule(bodyW))
 		}
 		grouped := prev != nil && len(pre) == 0 && !(inThread && i == 1) &&
 			senderKey(*prev) == senderKey(*msg) &&
@@ -169,6 +169,15 @@ func dateRule(label string, width int) string {
 	label = " " + label + " "
 	side := max(0, width-ansi.StringWidth(label))
 	return sty.Faint.Render(strings.Repeat("─", side/2)) + sty.Date.Render(label) + sty.Faint.Render(strings.Repeat("─", side-side/2))
+}
+
+// newRule is "──── new ────" in mention across the body column: where the
+// unread messages start.
+func newRule(width int) string {
+	label := " new "
+	side := max(0, width-ansi.StringWidth(label))
+	return sty.NewLine.Render(strings.Repeat("─", side/2)) + sty.NewLine.Bold(true).Render(label) +
+		sty.NewLine.Render(strings.Repeat("─", side-side/2))
 }
 
 // senderLine is the name in its colour, then the handle, an app's tag
