@@ -67,8 +67,7 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 		}
 		isNew := l.newSince != "" && backend.TSLess(l.newSince, msg.TS) && (prev == nil || !backend.TSLess(l.newSince, prev.TS))
 		if isNew {
-			pre = append(pre, " "+strings.Repeat(" ", gw)+
-				sty.NewLine.Render(strings.Repeat("─", max(0, bodyW-4)))+" "+sty.NewLine.Bold(true).Render("new"))
+			pre = append(pre, sty.NewLine.Render(strings.Repeat("─", max(0, width-6))+" new"))
 		}
 		grouped := prev != nil && len(pre) == 0 && !(inThread && i == 1) &&
 			senderKey(*prev) == senderKey(*msg) &&
