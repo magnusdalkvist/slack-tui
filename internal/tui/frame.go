@@ -76,7 +76,12 @@ func frameTitle(title string, focused bool, context ...string) string {
 	if focused {
 		st = sty.FrameTitleFocus
 	}
-	out := st.Render(title)
+	return st.Render(title) + frameContext(context)
+}
+
+// frameContext is what follows a frame's title: each part two cells on.
+func frameContext(context []string) string {
+	out := ""
 	for _, c := range context {
 		if c != "" {
 			out += "  " + c

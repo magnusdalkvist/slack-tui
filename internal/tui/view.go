@@ -117,9 +117,10 @@ func (m *Model) renderConvPane(w, h int) string {
 	}
 	focused := m.focus == fMessages
 	var ctx []string
+	dot := "" // the presence circle, one space after the name
 	if c.Kind == backend.KindDM {
 		if m.isActive(c.UserID) {
-			ctx = append(ctx, sty.OK.Render(ico.UserActive))
+			dot = " " + sty.OK.Render(ico.UserActive)
 		}
 		if line := m.statusLine(c.UserID); line != "" {
 			if exp := m.users[c.UserID].StatusExpires; exp > 0 {
@@ -147,7 +148,7 @@ func (m *Model) renderConvPane(w, h int) string {
 	input := m.renderInput(w, isTarget, false, "Message "+m.convTitle(c))
 	paneH := max(3, h-lineCount(input))
 	list := m.renderList(m.lists[m.current], w-2, paneH-2, focused, false)
-	pane := RenderFrame(list, w, paneH, frameTitle(title, focused, ctx...), right, focused)
+	pane := RenderFrame(list, w, paneH, frameTitle(title, focused)+dot+frameContext(ctx), right, focused)
 	return m.withCompletion(pane, input, w, isTarget)
 }
 
