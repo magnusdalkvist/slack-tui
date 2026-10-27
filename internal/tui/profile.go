@@ -80,10 +80,14 @@ func (m *Model) profileFromSidebar() tea.Cmd {
 	return m.setStatus("I shows a person's profile: select a message or a DM", false)
 }
 
-// profileOfMessage is `I` on a message: its sender.
+// profileOfMessage is `I` on a message: its sender, or in a DM the other
+// person when the message is our own.
 func (m *Model) profileOfMessage(msg backend.Message) tea.Cmd {
 	if msg.User == "" {
 		return m.setStatus("apps have no profile", false)
+	}
+	if c := m.convs[m.current]; msg.User == m.client.SelfID && c != nil && c.Kind == backend.KindDM {
+		return m.openProfile(c.UserID)
 	}
 	return m.openProfile(msg.User)
 }

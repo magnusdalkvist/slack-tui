@@ -37,6 +37,12 @@ func TestProfileCard(t *testing.T) {
 		t.Error(":profile in a DM shows the other person")
 	}
 	m.update(key("esc"))
+	m.profile = nil
+	if m.profileOfMessage(backend.Message{TS: "200.0", User: "ME"}); m.profile == nil || m.profile.id != "U1" {
+		t.Errorf("I on our own message in a DM should show the other person, got %+v", m.profile)
+	}
+	m.profile = nil
+	m.update(key("esc"))
 	m.runCmd(":profile @bob")
 	if m.profile == nil || m.profile.id != "U2" {
 		t.Error(":profile @bob")
