@@ -184,7 +184,7 @@ This applies to every list: sidebar, messages, threads, search results, modals, 
 The name takes the row; what follows it sits flush right and takes room only when present:
 
 ```
-[bar 1][icon 2][name ………… flex, ellipsis] [status 2] [dot 1] [count]
+[bar 1][icon 2][name ………… flex, ellipsis] [status 2] [dot 1] [count][gap 1]
 ```
 
 | Row state | Dot | Name | Count |

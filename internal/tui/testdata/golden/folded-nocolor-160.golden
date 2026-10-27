@@ -1,14 +1,14 @@
 ╭ [1;7mBørsen[0m ──────────────── @mada ╮ ╭ [1m development[0m  Builds, deploys and [1mreviews[0m ────────────────────────────────────────────────────────────────────────────────╮
-│ [1m[0m [1mUnreads[0m                    3│ │                                                                                                                            │
+│ [1m[0m [1mUnreads[0m                   3 │ │                                                                                                                            │
 │                               │ │                                                                                                                            │
 │ [1m[0m [1mTEAM[0m                        │ │                                                                                                                            │
 │  development                 │ │                                                                                                                            │
-│ 󰝥 [1mSimon Konstantyner[0m    🏡 ● 2│ │                                                                                                                            │
+│ 󰝥 [1mSimon Konstantyner[0m   🏡 ● 2 │ │                                                                                                                            │
 │ 󰝦 Kim Kyhlensø kiky           │ │────────────────────────────────────────────────────────[1m Yesterday [0m─────────────────────────────────────────────────────────│
 │                               │ │ 16:02 [1mkiky[0m kim.kyhlensoe                                                                                                   │
-│ [1m[0m [1m[0m [1mCHANNELS[0m               ● 1│ │       anyone up for reviewing the cache change?                                                                            │
-│ [1m[0m [1mpanda-v2[0m                 ● 1│ │ 16:03 it's small, promise (edited)                                                                                         │
-│ [1m[0m [1msjov-og-spass[0m              •│ │──────────────────────────────────────────────────────────[1m Today [0m───────────────────────────────────────────────────────────│
+│ [1m[0m [1m[0m [1mCHANNELS[0m              ● 1 │ │       anyone up for reviewing the cache change?                                                                            │
+│ [1m[0m [1mpanda-v2[0m                ● 1 │ │ 16:03 it's small, promise (edited)                                                                                         │
+│ [1m[0m [1msjov-og-spass[0m             • │ │──────────────────────────────────────────────────────────[1m Today [0m───────────────────────────────────────────────────────────│
 │                               │ │───────────────────────────────────────────────────────────[1m new [0m────────────────────────────────────────────────────────────│
 │▌[7m[1m[0m[7m [1m[0m[7m [1mDIRECT MESSAGES[0m[7m           [27;49m│ │▌09:12 [1mSimon Konstantyner[0m siko   pinned                                                                                    │
 │                               │ │▌      deployed [7mpanda-v2[0m to staging 🚀                                                                                      │

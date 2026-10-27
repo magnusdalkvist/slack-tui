@@ -233,7 +233,8 @@ func (m *Model) renderSidebar(w, h int) string {
 	var lines []string
 	for i := m.sideTop; i < len(m.side) && i < m.sideTop+bodyH; i++ {
 		r := m.sideCells(m.side[i], secs)
-		lines = append(lines, flagLine(r.flag, r.layout(inner-1), inner, i == m.sideCur, focused))
+		// One cell clear of the frame's right edge.
+		lines = append(lines, flagLine(r.flag, r.layout(inner-2)+" ", inner, i == m.sideCur, focused))
 	}
 	handle := ""
 	if u, ok := m.users[m.client.SelfID]; ok && u.Name != "" {
