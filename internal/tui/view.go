@@ -274,6 +274,9 @@ func (m *Model) renderUnreads(w, h int) string {
 		if r.count != "" {
 			meta = r.count + "  " + meta
 		}
+		if r.dot != "" {
+			meta = r.dot + " " + meta
+		}
 		block := []string{rightAlign(head, meta, lw-1)}
 		msgs, ok := m.unreadMsgs[c.ID]
 		switch {

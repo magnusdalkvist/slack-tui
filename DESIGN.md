@@ -58,7 +58,7 @@ name = "auto"        # auto | dark | light | ansi
 accent = "#5fafff"
 ```
 
-`auto` uses `lipgloss.HasDarkBackground()`. With `NO_COLOR` set, the app drops every colour, keeps bold and reverse, and draws the edge flag as `!`.
+`auto` uses `lipgloss.HasDarkBackground()`. With `NO_COLOR` set, the app drops every colour and keeps bold and reverse.
 
 ---
 
@@ -99,8 +99,8 @@ These stay plain Unicode in both modes, because they're structure rather than ic
 
 | Use | Glyph |
 |---|---|
-| Selection bar, edge flag | `▌` (half block) |
-| Plain-unread flag | `▏` (faint) |
+| Selection bar | `▌` (half block) |
+| Unread markers | `●` (`mention`) and `•` (faint), right of the name |
 | System message | `→` |
 | Spinner | Braille: `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` (Bubble Tea `spinner.Dot` or `MiniDot`) |
 | Back affordance in narrow mode | `‹` |
@@ -184,14 +184,14 @@ This applies to every list: sidebar, messages, threads, search results, modals, 
 All columns are fixed width:
 
 ```
-[flag 1][icon 2][name ………… flex, ellipsis][status 2][count →]
+[bar 1][icon 2][name ………… flex, ellipsis][status 2][dot 1][count →]
 ```
 
-| Row state | Flag | Name | Count |
+| Row state | Dot | Name | Count |
 |---|---|---|---|
 | Read | none | `muted` | none |
-| Unread, no mention | `▏` faint | `fg` bold | none |
-| Mention, or DM unread | `▌` `mention` | `fg` bold | `mention` number |
+| Unread, no mention | `•` faint | `fg` bold | none |
+| Mention, or DM unread | `●` `mention` | `fg` bold | `mention` number |
 | Muted channel | none | `faint` | none |
 | Your own DM | none | `muted` + `(you)` faint | none |
 
@@ -200,7 +200,7 @@ All columns are fixed width:
 - Custom sections show their Slack emoji in the header icon slot.
 - Nicknames go after the name in `faint` (`Kim Kyhlensø kiky`).
 - **Section headers** are `faint` and bold in caps, with `▾`/`▸`. They show no count unless folded (below).
-- A **folded** section still surfaces what's inside it: its unread conversations stay as rows, and the header sums them up. With mentions it shows a red `▌` and a red count. With plain unreads it shows a faint `▏` only.
+- A **folded** section still surfaces what's inside it: its unread conversations stay as rows, and the header sums them up. With mentions it shows a red `●` and a red count. With plain unreads it shows a faint `•`.
 - The sidebar frame title is the team name (`muted`) and the right label is your handle (`faint`).
 - The first row is `≡ Unreads` with its total.
 
@@ -450,3 +450,4 @@ Gaps found while building this spec, and how they were filled.
 - **The count column** is sized by the conversation rows only. A folded header's mention count may run into the status column, so it doesn't shorten every name.
 - **A presence circle** (`nf-md-circle` / `nf-md-circle_outline`, `●`/`○` in unicode), not a user glyph, marks people everywhere: sidebar, DM header, switcher, completion, members and profile. Group DMs get `nf-md-circle_multiple_outline`.
 - **Your own presence** is the app's away setting (`:away` / `:back`), because `users.getPresence` isn't asked about you. You show as active unless you set yourself away: in your own DM, the switcher, members and your profile, which also shows Presence and DND for you.
+- **Unread markers are dots on the right** (`●` red for mentions and DM unreads, a small faint `•` for other unreads), in their own column before the count, so every unread row is marked and not only bold. The bar column on the left is left to the selection. `NO_COLOR` tells them apart by shape.

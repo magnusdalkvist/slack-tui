@@ -254,11 +254,12 @@ func (m *Model) renderSidebar(w, h int) string {
 }
 
 // sideCells is a sidebar row cut into its fixed columns (DESIGN.md §6):
-// [flag 1][icon 2][name … flex][status 2][count].
+// [bar 1][icon 2][name … flex][status 2][dot 1][count].
 type sideCells struct {
-	flag, icon     string // flag is one cell, icon one glyph (slot adds the space)
+	flag, icon     string // flag is the bar column (blank), icon one glyph (slot adds the space)
 	name, nick     string // already styled; nick follows the name in faint
 	status         string // a 2-cell emoji, or ""
+	dot            string // the unread marker: red ● for mentions, faint • otherwise
 	count          string // styled, right-aligned
 	header, spacer bool
 }
@@ -269,11 +270,17 @@ func (r sideCells) layout(width, countW int) string {
 	if r.spacer {
 		return ""
 	}
-	right := ""
+	// The marker sits in its own column before the counts, so markers
+	// line up whether or not the row has a number.
+	dot := r.dot
+	if dot == "" {
+		dot = " "
+	}
+	right := " " + dot
 	if cw := max(countW, ansi.StringWidth(r.count)); r.header && r.count != "" {
-		right = " " + r.count
+		right += " " + r.count
 	} else if cw > 0 {
-		right = " " + strings.Repeat(" ", cw-ansi.StringWidth(r.count)) + r.count
+		right += " " + strings.Repeat(" ", cw-ansi.StringWidth(r.count)) + r.count
 	}
 	// The status emoji keeps a cell between itself and the name.
 	status := "   "
@@ -293,16 +300,11 @@ func (r sideCells) layout(width, countW int) string {
 	return slot(r.icon) + name + strings.Repeat(" ", pad) + status + right
 }
 
-// Edge flags: a red ▌ for mentions and DM unreads, a faint ▏ for other
-// unread conversations. NO_COLOR draws the first as "!".
-func flagMention() string {
-	if sty.theme.NoColor {
-		return "!"
-	}
-	return sty.Err.Render("▌")
-}
+// Unread markers, at the right before the count: a red ● for mentions and
+// DM unreads, a small faint • for other unread conversations.
+func dotMention() string { return sty.Err.Render("●") }
 
-func flagUnread() string { return sty.Faint.Render("▏") }
+func dotUnread() string { return sty.Faint.Render("•") }
 
 func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 	if it.spacer {
@@ -347,12 +349,12 @@ func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 	var r sideCells
 	switch {
 	case c.Mentions > 0 || (c.IsDM() && c.Unread()):
-		style, r.flag = sty.Unread, flagMention()
+		style, r.flag, r.dot = sty.Unread, " ", dotMention()
 		if c.Mentions > 0 {
 			r.count = sty.Err.Render(fmt.Sprint(c.Mentions))
 		}
 	case c.Unread():
-		style, r.flag = sty.Unread, flagUnread()
+		style, r.flag, r.dot = sty.Unread, " ", dotUnread()
 	default:
 		r.flag = " "
 	}
@@ -385,7 +387,7 @@ func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 
 // headerCells is a section header: ▾/▸, the section's icon and its name
 // in caps. A folded one still says what is inside: mentions with a red
-// flag and count, other unreads with a faint flag.
+// dot and count, other unreads with a faint dot.
 func (m *Model) headerCells(name string, secs []section) sideCells {
 	arrow := ico.Unfolded
 	if m.folded[name] {
@@ -419,9 +421,9 @@ func (m *Model) headerCells(name string, secs []section) sideCells {
 	if m.folded[name] {
 		switch {
 		case mentions > 0:
-			r.flag, r.count = flagMention(), sty.Err.Render(fmt.Sprint(mentions))
+			r.dot, r.count = dotMention(), sty.Err.Render(fmt.Sprint(mentions))
 		case unread > 0:
-			r.flag = flagUnread()
+			r.dot = dotUnread()
 		}
 	}
 	return r
