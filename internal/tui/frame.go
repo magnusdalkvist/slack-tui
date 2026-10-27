@@ -79,6 +79,22 @@ func frameTitle(title string, focused bool, context ...string) string {
 	return st.Render(title) + frameContext(context)
 }
 
+// borderJoin sets each part after a frame's title apart with a stretch of
+// the border itself, so a status or topic doesn't read as part of the name.
+func borderJoin(parts []string, focused bool) string {
+	line := sty.Rule
+	if focused {
+		line = sty.Bar
+	}
+	out := ""
+	for _, p := range parts {
+		if p != "" {
+			out += " " + line.Render("──") + " " + p
+		}
+	}
+	return out
+}
+
 // frameContext is what follows a frame's title: each part two cells on.
 func frameContext(context []string) string {
 	out := ""

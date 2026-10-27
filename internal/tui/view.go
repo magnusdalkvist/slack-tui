@@ -117,8 +117,8 @@ func (m *Model) renderConvPane(w, h int) string {
 	}
 	focused := m.focus == fMessages
 	var ctx []string
-	// A DM's person: "Peter T ○ 🤒 Out sick · until 23:59", the presence
-	// circle and the status each one space on.
+	// A DM's person: their presence circle one space after the name, their
+	// status set apart by a stretch of the border: "Peter T ○ ── 🤒 Out sick".
 	person := ""
 	if c.Kind == backend.KindDM {
 		person = " " + sty.Faint.Render(ico.UserAway)
@@ -129,7 +129,7 @@ func (m *Model) renderConvPane(w, h int) string {
 			if exp := m.users[c.UserID].StatusExpires; exp > 0 {
 				line += sty.Faint.Render(" · until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
 			}
-			person += " " + line
+			ctx = append(ctx, line)
 		}
 	}
 	if c.Topic != "" {
@@ -151,7 +151,7 @@ func (m *Model) renderConvPane(w, h int) string {
 	input := m.renderInput(w, isTarget, false, "Message "+m.convTitle(c))
 	paneH := max(3, h-lineCount(input))
 	list := m.renderList(m.lists[m.current], w-2, paneH-2, focused, false)
-	pane := RenderFrame(list, w, paneH, frameTitle(title, focused)+person+frameContext(ctx), right, focused)
+	pane := RenderFrame(list, w, paneH, frameTitle(title, focused)+person+borderJoin(ctx, focused), right, focused)
 	return m.withCompletion(pane, input, w, isTarget)
 }
 
