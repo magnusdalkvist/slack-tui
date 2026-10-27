@@ -64,8 +64,7 @@ type cmdLine struct {
 
 func (m *Model) openCmd() tea.Cmd {
 	ti := textinput.New()
-	ti.Prompt = ":"
-	ti.PromptStyle = sty.Key
+	ti.Prompt = "" // the bar's ":" pill stands in
 	ti.CharLimit = 300
 	m.cmd = &cmdLine{input: ti, histAt: len(m.cmdHist)}
 	return m.cmd.input.Focus()
@@ -233,28 +232,20 @@ func (m *Model) acceptCmdCompletion() {
 }
 
 // renderCmdLine is the status bar while typing a command.
-func (m *Model) renderCmdLine() string {
-	m.cmd.input.Width = max(10, m.width-2)
-	return ansi.Truncate(m.cmd.input.View(), m.width, "")
-}
-
 // overlayCmdCompletion draws the suggestions over the bottom of the body.
 func (m *Model) overlayCmdCompletion(body string) string {
 	if m.cmd == nil || m.cmd.complete == nil {
 		return body
 	}
-	rows := append([]string{rule(m.width, true)}, m.renderCompItems(m.cmd.complete, m.width)...)
+	pw := min(m.width, 96)
+	rows := m.renderCompItems(m.cmd.complete, pw)
 	lines := strings.Split(body, "\n")
 	if len(rows) >= len(lines) {
 		return body
 	}
 	start := len(lines) - len(rows)
 	for i, r := range rows {
-		r = ansi.Truncate(r, m.width, "…")
-		if pad := m.width - ansi.StringWidth(r); pad > 0 {
-			r += strings.Repeat(" ", pad)
-		}
-		lines[start+i] = r
+		lines[start+i] = r + ansi.TruncateLeft(lines[start+i], pw, "")
 	}
 	return strings.Join(lines, "\n")
 }

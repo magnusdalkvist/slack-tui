@@ -100,7 +100,7 @@ func TestSearchNotMember(t *testing.T) {
 		{Message: backend.Message{TS: "2.0"}, Channel: "C8", ChannelName: "hidden", IsPrivate: true},
 	}}
 	m.Update(key("enter"))
-	if m.confirm == nil || !strings.Contains(dump(t, m), "not a member of #elsewhere. join it? y/n") {
+	if m.confirm == nil || !strings.Contains(dump(t, m), "Join #elsewhere?") {
 		t.Fatal("a public channel we aren't in should offer to join")
 	}
 	m.Update(key("n"))

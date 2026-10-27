@@ -87,7 +87,7 @@ func TestLeave(t *testing.T) {
 	m := fakeModel(t, 100, 20)
 	m.open("C1")
 	m.runCmd("leave")
-	if m.confirm == nil || m.confirm.prompt != "leave #dev? y/n" {
+	if m.confirm == nil || m.confirm.prompt != "Leave #dev?" {
 		t.Fatalf("confirm %+v", m.confirm)
 	}
 	m.Update(key("n"))
@@ -95,7 +95,7 @@ func TestLeave(t *testing.T) {
 		t.Fatal("n should not leave")
 	}
 	m.runCmd("leave #secret-project")
-	if m.confirm == nil || !strings.Contains(m.confirm.prompt, "only an invite brings you back") {
+	if m.confirm == nil || !strings.Contains(m.confirm.detail, "only an invite brings you back") {
 		t.Errorf("leaving a private channel should warn: %+v", m.confirm)
 	}
 	m.confirm = nil
@@ -149,12 +149,12 @@ func TestCreate(t *testing.T) {
 		t.Errorf("status %q", m.status)
 	}
 	m.runCmd("create --private Launch Plans")
-	if m.confirm == nil || m.confirm.prompt != "create private channel #launch-plans? y/n" {
+	if m.confirm == nil || m.confirm.prompt != "Create private channel #launch-plans?" {
 		t.Fatalf("confirm %+v", m.confirm)
 	}
 	m.confirm = nil
 	m.runCmd("create launch")
-	if m.confirm == nil || m.confirm.prompt != "create public channel #launch? y/n" {
+	if m.confirm == nil || m.confirm.prompt != "Create public channel #launch?" {
 		t.Fatalf("confirm %+v", m.confirm)
 	}
 	m.confirm = nil

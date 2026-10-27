@@ -46,7 +46,6 @@ func sceneModel(t *testing.T, w, h int) *Model {
 	cfg.Sections = []config.Section{{Name: "Team", Items: []string{"#development", "@siko", "@kiky"}}}
 	m := New(context.Background(), c, cfg)
 	m.Update(tea.WindowSizeMsg{Width: w, Height: h})
-	m.conn = "connected"
 	m.Update(bootMsg{
 		users: []backend.User{
 			{ID: "ME", Name: "mada", DisplayName: "mada", RealName: "Magnus Dalkvist"},
@@ -66,6 +65,8 @@ func sceneModel(t *testing.T, w, h int) *Model {
 		},
 	})
 	m.presence["U1"] = true
+	m.conn = "connected"
+	m.infoPending, m.infoTotal = 0, 0 // the unread checks are done
 	m.open("C1")
 	m.Update(historyMsg{id: "C1", msgs: []backend.Message{
 		{TS: ts(21, 16, 2), User: "U2", Text: "anyone up for reviewing the cache change?"},
@@ -168,6 +169,46 @@ var goldenThemes = []struct {
 }
 
 func TestGolden(t *testing.T) {
+	for _, sc := range scenes {
+		runGolden(t, sc.name, sc.h, sc.prep, func(m *Model) string { return m.View() })
+	}
+}
+
+// statusScenes are the status bar's states (DESIGN.md §8), drawn alone.
+var statusScenes = []scene{
+	{"live", 30, func(m *Model) {}},
+	{"me", 30, func(m *Model) {
+		u := m.users["ME"]
+		u.StatusEmoji, u.StatusText = ":house_with_garden:", "Working remotely"
+		m.users["ME"] = u
+		m.dnd.SnoozeEnd = goldenNow.Add(45 * time.Minute)
+		m.away = true
+	}},
+	{"progress", 30, func(m *Model) { m.infoPending, m.infoTotal = 68, 80 }},
+	{"result", 30, func(m *Model) { m.setResult("saved to ~/Downloads/plan (1).pdf"); m.savedPath = "/x" }},
+	{"error", 30, func(m *Model) { m.setStatus("couldn't save: disk full", true) }},
+	{"confirm", 30, func(m *Model) {
+		m.confirm = &confirmState{prompt: "Delete this message?", detail: "it goes for everyone", yesLabel: "delete", noLabel: "keep"}
+	}},
+	{"reconnecting", 30, func(m *Model) { m.conn = "connecting" }},
+	{"offline", 30, func(m *Model) { m.offline, m.retryAt = true, goldenNow.Add(24*time.Second) }},
+	{"insert", 30, func(m *Model) { m.Update(key("i")) }},
+	{"command", 30, func(m *Model) { m.Update(key(":")); typeText(m, "st") }},
+	{"jump", 30, func(m *Model) { m.Update(key("ctrl+k")) }},
+}
+
+func TestGoldenStatus(t *testing.T) {
+	for _, sc := range statusScenes {
+		runGolden(t, "status-"+sc.name, sc.h, sc.prep, func(m *Model) string {
+			v := m.View()
+			return v[strings.LastIndex(v, "\n")+1:]
+		})
+	}
+}
+
+// runGolden draws a scene for every theme and width and compares it with
+// its golden file.
+func runGolden(t *testing.T, name string, h int, prep func(m *Model), draw func(m *Model) string) {
 	preview := os.Getenv("SLACKTUI_PREVIEW")
 	prof, local, clock := lipgloss.ColorProfile(), time.Local, clockNow
 	t.Cleanup(func() {
@@ -179,25 +220,26 @@ func TestGolden(t *testing.T) {
 	time.Local = time.UTC
 	clockNow = func() time.Time { return goldenNow }
 
-	for _, sc := range scenes {
-		for _, th := range goldenThemes {
-			for _, w := range []int{80, 120, 160} {
-				name := fmt.Sprintf("%s-%s-%d", sc.name, th.name, w)
-				t.Run(name, func(t *testing.T) {
-					lipgloss.SetColorProfile(th.profile)
-					m := sceneModel(t, w, sc.h)
-					useTheme(th.theme())
-					useIcons(th.icons)
-					sc.prep(m)
-					got := m.View()
-					checkSize(t, got, w, sc.h)
-					if preview != "" {
-						_ = os.MkdirAll(preview, 0o755)
-						_ = os.WriteFile(filepath.Join(preview, name+".ansi"), []byte(got+"\x1b[0m\n"), 0o644)
-					}
-					compareGolden(t, filepath.Join("testdata", "golden", name+".golden"), got)
-				})
-			}
+	for _, th := range goldenThemes {
+		for _, w := range []int{80, 120, 160} {
+			full := fmt.Sprintf("%s-%s-%d", name, th.name, w)
+			t.Run(full, func(t *testing.T) {
+				lipgloss.SetColorProfile(th.profile)
+				m := sceneModel(t, w, h)
+				useTheme(th.theme())
+				useIcons(th.icons)
+				prep(m)
+				got := draw(m)
+				checkSize(t, got, w, strings.Count(got, "\n")+1)
+				if strings.Count(got, "\n") > 0 {
+					checkSize(t, got, w, h)
+				}
+				if preview != "" {
+					_ = os.MkdirAll(preview, 0o755)
+					_ = os.WriteFile(filepath.Join(preview, full+".ansi"), []byte(got+"\x1b[0m\n"), 0o644)
+				}
+				compareGolden(t, filepath.Join("testdata", "golden", full+".golden"), got)
+			})
 		}
 	}
 }

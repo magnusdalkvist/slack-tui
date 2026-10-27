@@ -223,20 +223,16 @@ func (m *Model) renderPins(w, h int) string {
 		title += sty.Muted.Render("  " + m.convTitle(c))
 	}
 	header := []string{title, rule(w, true)}
-	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" go to / open  ") +
-		sty.Key.Render("o") + sty.Faint.Render(" open in Slack  ") + sty.Key.Render("p") + sty.Faint.Render(" unpin  ") +
-		sty.Key.Render("a e d") + sty.Faint.Render(" add / edit / remove bookmark  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
-	footer = ansi.Truncate(footer, w, "…")
 	for _, e := range p.errs {
 		header = append(header, "  "+sty.Err.Render(e))
 	}
-	bodyH := max(1, h-len(header)-2)
+	bodyH := max(1, h-len(header))
 	if p.count() == 0 {
 		msg := "nothing pinned or bookmarked"
 		if p.loading {
 			msg = "loading…"
 		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
 	}
 
 	sel := min(max(p.sel, 0), p.count()-1)
@@ -315,7 +311,7 @@ func (m *Model) renderPins(w, h int) string {
 	for i := range view {
 		view[i] = ansi.Truncate(view[i], w, "…")
 	}
-	return strings.Join(append(append(header, view...), rule(w, false), footer), "\n")
+	return strings.Join(append(header, view...), "\n")
 }
 
 // bookmarkCmd opens the command line with a :bookmark to finish.
@@ -370,7 +366,7 @@ func (m *Model) askRemoveBookmark(conv string, b backend.Bookmark) tea.Cmd {
 		label = b.Link
 	}
 	m.confirm = &confirmState{
-		prompt: "remove the bookmark " + ansi.Truncate(label, 40, "…") + "? y/n",
+		prompt: "Remove the bookmark " + ansi.Truncate(label, 40, "…") + "?", yesLabel: "remove", noLabel: "keep",
 		yes: func() tea.Cmd {
 			return func() tea.Msg {
 				return bookmarkedMsg{conv: conv, done: "bookmark removed", err: m.client.RemoveBookmark(m.ctx, conv, b.ID)}
@@ -390,5 +386,5 @@ func (m *Model) bookmarkedResult(msg bookmarkedMsg) tea.Cmd {
 		p.loading = true
 		reload = m.loadPins(msg.conv)
 	}
-	return tea.Batch(m.setStatus(msg.done, false), reload)
+	return tea.Batch(m.setResult(msg.done), reload)
 }

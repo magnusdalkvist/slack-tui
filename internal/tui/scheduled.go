@@ -235,7 +235,7 @@ func (m *Model) scheduledResult(msg scheduledMsg) tea.Cmd {
 		m.schedThread[msg.s.ID] = msg.threadTS
 	}
 	m.addScheduled(msg.s)
-	return m.setStatus("scheduled for "+fmtWhen(msg.s.PostAt, clockNow(), m.cfg.TimeFormat)+" — :scheduled lists them", false)
+	return m.setResult("scheduled for " + fmtWhen(msg.s.PostAt, clockNow(), m.cfg.TimeFormat))
 }
 
 func (m *Model) openScheduled() tea.Cmd {
@@ -340,7 +340,7 @@ func (m *Model) schedKey(k tea.KeyMsg) tea.Cmd {
 		}
 		sm := *cur
 		m.confirm = &confirmState{
-			prompt: "cancel the message for " + fmtWhen(sm.PostAt, clockNow(), m.cfg.TimeFormat) + "? y/n",
+			prompt: "Cancel the message for " + fmtWhen(sm.PostAt, clockNow(), m.cfg.TimeFormat) + "?", detail: "it won't be sent", yesLabel: "cancel it", noLabel: "keep",
 			yes: func() tea.Cmd {
 				m.dropScheduled(sm.ID)
 				return func() tea.Msg {
@@ -396,16 +396,13 @@ func (m *Model) renderScheduled(w, h int) string {
 	if s.err != "" {
 		header = append(header, "  "+sty.Err.Render(s.err))
 	}
-	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" go to  ") +
-		sty.Key.Render("e") + sty.Faint.Render(" back to composer  ") + sty.Key.Render("d") + sty.Faint.Render(" cancel  ") +
-		sty.Key.Render("R") + sty.Faint.Render(" reload  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
-	bodyH := max(1, h-len(header)-2)
+	bodyH := max(1, h-len(header))
 	if len(list) == 0 {
 		msg := "nothing scheduled — write a message, then ctrl+s"
 		if s.loading {
 			msg = "loading…"
 		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
 	}
 
 	now := clockNow()
@@ -452,5 +449,5 @@ func (m *Model) renderScheduled(w, h int) string {
 	for i := range view {
 		view[i] = ansi.Truncate(view[i], w, "…")
 	}
-	return strings.Join(append(append(header, view...), rule(w, false), footer), "\n")
+	return strings.Join(append(header, view...), "\n")
 }

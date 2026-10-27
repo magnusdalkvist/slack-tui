@@ -100,6 +100,10 @@ func (m *Model) handleKey(k tea.KeyMsg) tea.Cmd {
 		return nil
 	case "i", "a":
 		return m.startInsert()
+	case "R":
+		if m.isOffline() {
+			return m.retryNow()
+		}
 	case "u":
 		return m.nextUnread()
 	case "r":

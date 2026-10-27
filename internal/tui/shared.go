@@ -360,14 +360,11 @@ func (m *Model) renderShared(w, h int) string {
 		}
 	}
 	header := []string{title, " " + strings.Join(tabs, " "), rule(w, true)}
-	footer := ansi.Truncate(sty.Faint.Render("  ")+sty.Key.Render("enter")+sty.Faint.Render(" go to message  ")+
-		sty.Key.Render("o")+sty.Faint.Render(" open  ")+sty.Key.Render("s")+sty.Faint.Render(" save  ")+sty.Key.Render("v")+sty.Faint.Render(" view images  ")+sty.Key.Render("c")+sty.Faint.Render(" copy link  ")+
-		sty.Key.Render("tab")+sty.Faint.Render(" files / links  ")+sty.Key.Render("esc")+sty.Faint.Render(" close"), w, "…")
 	t := &s.tabs[s.tab]
 	if t.err != "" {
 		header = append(header, "  "+sty.Err.Render(t.err))
 	}
-	bodyH := max(1, h-len(header)-2)
+	bodyH := max(1, h-len(header))
 	n := s.count()
 	if n == 0 {
 		msg := "no files shared here"
@@ -377,7 +374,7 @@ func (m *Model) renderShared(w, h int) string {
 		if t.loading {
 			msg = "loading…"
 		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
 	}
 
 	sel := min(max(t.sel, 0), n-1)
@@ -447,7 +444,7 @@ func (m *Model) renderShared(w, h int) string {
 		view = append(view, "")
 	}
 	truncateRows(view, w)
-	return strings.Join(append(append(header, view...), rule(w, false), footer), "\n")
+	return strings.Join(append(header, view...), "\n")
 }
 
 // picture marks a preview row while the pane is laid out.

@@ -122,7 +122,7 @@ func TestEditRules(t *testing.T) {
 func TestDeleteAsksFirst(t *testing.T) {
 	m := chanWithMessages(t)
 	m.handleKey(key("D"))
-	if m.confirm == nil || !strings.Contains(ansi.Strip(m.View()), "delete this message? y/n") {
+	if m.confirm == nil || !strings.Contains(ansi.Strip(m.View()), "Delete this message?") {
 		t.Fatal("no confirmation")
 	}
 	m.handleKey(key("n"))

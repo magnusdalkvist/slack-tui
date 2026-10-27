@@ -19,8 +19,10 @@ type editState struct {
 
 // confirmState is a y/n question in the status bar.
 type confirmState struct {
-	prompt string
-	yes    func() tea.Cmd
+	prompt            string // the question, "Delete this message?"
+	detail            string // what it means, in faint
+	yesLabel, noLabel string // the y and n hints: "delete", "keep"
+	yes               func() tea.Cmd
 }
 
 type editedMsg struct {
@@ -113,7 +115,7 @@ func (m *Model) askDelete(conv string, msg backend.Message) tea.Cmd {
 		return m.setStatus("you can only delete your own messages", false)
 	}
 	m.confirm = &confirmState{
-		prompt: "delete this message? y/n",
+		prompt: "Delete this message?", detail: "it goes for everyone", yesLabel: "delete", noLabel: "keep",
 		yes: func() tea.Cmd {
 			return func() tea.Msg {
 				return deletedMsg{conv: conv, ts: msg.TS, err: m.client.Delete(m.ctx, conv, msg.TS)}

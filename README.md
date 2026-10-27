@@ -113,6 +113,7 @@ expires = "until tomorrow"
 | `n` / `N` | after a search: go to the next / previous result without opening the list (the next page is fetched when needed) |
 | `:` | command line (below): `tab` completes, `↑` `↓` history, `esc` leaves |
 | `u` | next unread conversation |
+| `R` | while offline: retry now instead of waiting for the next try |
 | `r` | mark conversation read |
 | `U` | mark unread from the selected message: the read marker moves to just before it, in Slack too, until you read to the bottom or open it again (not for thread replies: the API can't) |
 | `I` | profile of the message's sender, or of the DM's person in the sidebar: name, title, pronouns, status, local time and how far ahead or behind, email, phone; `enter` writes to them, `c` copies the email (also `:profile @person`) |
@@ -149,7 +150,8 @@ expires = "until tomorrow"
 | `:bookmark link [title]` | add a link to the conversation's bookmarks (`https://` is added when left out; no title means the link is the title) |
 | `:away` / `:back` | show as away / let Slack decide again |
 
-A unique prefix is enough (`:st`, `:d 1h`). Your DND, away state and status sit in the status bar.
+A unique prefix is enough (`:st`, `:d 1h`). Your DND, away state and status sit in the status bar, and so do the
+keys for whatever has focus: the right of the status bar always shows what you can press.
 People in the DM list get a green dot after their name while active (checked every `presence_minutes`) and their
 status emoji after the name; the open DM's header shows their status and when it ends.
 

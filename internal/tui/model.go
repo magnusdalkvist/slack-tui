@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -130,6 +131,12 @@ type Model struct {
 	status      string
 	statusErr   bool
 	statusSeq   int
+	statusOK    bool   // the status is a result: ✓ in ok
+	savedPath   string // the file the last save wrote, for the "o open it" hint
+	spin        spinner.Model
+	spinning    bool      // the spinner's tick is running
+	offline     bool      // the start failed; the cache is showing
+	retryAt     time.Time // when the next start is tried, while offline
 	markSeq     map[string]int
 	seenReplies map[string]bool // conv/ts of live replies already counted
 	folded      map[string]bool // sidebar sections that are collapsed
@@ -222,6 +229,7 @@ func New(ctx context.Context, client *backend.Client, cfg config.Config) *Model 
 		focus:         fSidebar,
 		input:         ta,
 		conn:          "connecting",
+		spin:          newSpinner(),
 	}
 	if len(warns) > 0 {
 		m.status, m.statusErr = strings.Join(warns, "; "), true
@@ -444,10 +452,17 @@ func (m *Model) refreshLater() tea.Cmd {
 }
 
 func (m *Model) setStatus(s string, isErr bool) tea.Cmd {
-	m.status, m.statusErr = s, isErr
+	m.status, m.statusErr, m.statusOK = s, isErr, false
 	m.statusSeq++
 	seq := m.statusSeq
-	return tea.Tick(6*time.Second, func(time.Time) tea.Msg { return statusClear{seq} })
+	return tea.Tick(4*time.Second, func(time.Time) tea.Msg { return statusClear{seq} })
+}
+
+// setResult is setStatus for something done: "✓ saved to …" in ok.
+func (m *Model) setResult(s string) tea.Cmd {
+	cmd := m.setStatus(s, false)
+	m.statusOK = true
+	return cmd
 }
 
 // --- state helpers ----------------------------------------------------------

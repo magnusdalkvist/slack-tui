@@ -48,5 +48,5 @@ func (m *Model) copyText(text string) tea.Cmd {
 		return m.setStatus("copy: "+err.Error(), true)
 	}
 	n := len([]rune(text))
-	return m.setStatus("copied "+plural(n, "1 character", strconv.Itoa(n)+" characters"), false)
+	return m.setResult("copied " + plural(n, "1 character", strconv.Itoa(n)+" characters"))
 }

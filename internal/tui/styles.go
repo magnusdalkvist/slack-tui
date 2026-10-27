@@ -26,6 +26,8 @@ type Styles struct {
 	Reaction, ReactSelf  lipgloss.Style
 	ModeNormal           lipgloss.Style
 	ModeInsert           lipgloss.Style
+	PillWarn, PillErr    lipgloss.Style // SEARCH, CONFIRM; ERROR and the offline chip
+	PillCmd              lipgloss.Style // ":"
 	OK, Warn, Err        lipgloss.Style
 	Box, Key             lipgloss.Style
 	AppTag               lipgloss.Style // "APP" after a bot's name
@@ -79,6 +81,9 @@ func NewStyles(t Theme) Styles {
 		ReactSelf:  on(t.Accent, t.SelFocus).Bold(true).Padding(0, 1),
 		ModeNormal: pill(t.Accent),
 		ModeInsert: pill(t.OK),
+		PillWarn:   pill(t.Warn),
+		PillErr:    pill(t.Mention),
+		PillCmd:    pill(t.Fg),
 		OK:         fg(t.OK),
 		Warn:       fg(t.Warn),
 		Err:        fg(t.Mention),

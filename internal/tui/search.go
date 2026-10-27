@@ -232,7 +232,7 @@ func (m *Model) jumpTo(h backend.Hit) tea.Cmd {
 		m.closeSearch()
 		msg := h.Message
 		m.confirm = &confirmState{
-			prompt: "not a member of #" + h.ChannelName + ". join it? y/n",
+			prompt: "Join #" + h.ChannelName + "?", detail: "you're not a member", yesLabel: "join", noLabel: "cancel",
 			yes:    func() tea.Cmd { return m.join(h.Channel, h.ChannelName, &msg) },
 		}
 		return nil
@@ -473,27 +473,19 @@ func (m *Model) renderSearch(w, h int) string {
 		header = append(header, m.renderCompItems(s.complete, w)...)
 	}
 	header = append(header, rule(w, s.typing))
-	var footer string
-	if s.typing {
-		footer = sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" search  ") + sty.Key.Render("esc") + sty.Faint.Render(" back")
-	} else {
-		footer = sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" go to message  ") +
-			sty.Key.Render("o") + sty.Faint.Render(" open in Slack  ") + sty.Key.Render("/") + sty.Faint.Render(" edit query  ") +
-			sty.Key.Render("esc") + sty.Faint.Render(" close")
-	}
-	bodyH := max(1, h-len(header)-2)
+	bodyH := max(1, h-len(header))
 
 	switch {
 	case s.err != "":
-		return strings.Join(append(header, placeholder(sty.Err.Render(s.err), w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(sty.Err.Render(s.err), w, bodyH)), "\n")
 	case s.query == "":
-		return strings.Join(append(header, placeholder("type a query and press enter", w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder("type a query and press enter", w, bodyH)), "\n")
 	case len(s.hits) == 0:
 		msg := "no results"
 		if s.loading {
 			msg = "searching…"
 		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
 	}
 
 	sel := min(max(s.sel, 0), len(s.hits)-1)
@@ -554,7 +546,7 @@ func (m *Model) renderSearch(w, h int) string {
 		view = append(view, "")
 	}
 	truncateRows(view, w)
-	return strings.Join(append(append(header, view...), rule(w, false), footer), "\n")
+	return strings.Join(append(header, view...), "\n")
 }
 
 func fileLabel(f backend.File) string {

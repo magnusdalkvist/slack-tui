@@ -27,7 +27,7 @@ func (m *Model) View() string {
 	}
 
 	if m.viewer != nil {
-		return m.renderViewer()
+		return m.renderViewer() + "\n" + m.renderStatus()
 	}
 
 	h := m.height - 1
@@ -256,16 +256,14 @@ func (m *Model) renderUnreads(w, h int) string {
 		title += sty.Muted.Render(fmt.Sprintf("  %d %s", len(convs), plural(len(convs), "conversation", "conversations")))
 	}
 	header := []string{title, rule(w, m.focus == fMessages)}
-	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" open  ") +
-		sty.Key.Render("r") + sty.Faint.Render(" mark read  ") + sty.Key.Render("u") + sty.Faint.Render(" next unread")
-	bodyH := h - len(header) - 2
+	bodyH := h - len(header)
 
 	if len(convs) == 0 {
 		msg := "All caught up ✓"
 		if m.infoPending > 0 {
 			msg = fmt.Sprintf("checking for unreads… %d/%d", m.infoTotal-m.infoPending, m.infoTotal)
 		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH), "", footer), "\n")
+		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
 	}
 
 	sel := min(max(m.unreads.sel, 0), len(convs)-1)
@@ -327,44 +325,5 @@ func (m *Model) renderUnreads(w, h int) string {
 	for len(view) < bodyH {
 		view = append(view, "")
 	}
-	return strings.Join(append(append(header, view...), rule(w, false), footer), "\n")
-}
-
-func (m *Model) renderStatus() string {
-	mode := sty.ModeNormal.Render("NORMAL")
-	if m.insert {
-		mode = sty.ModeInsert.Render("INSERT")
-	} else if m.search != nil && m.search.typing {
-		mode = sty.ModeInsert.Render("SEARCH")
-	}
-	var conn string
-	switch m.conn {
-	case "connected":
-		conn = sty.OK.Render("● live")
-	case "error":
-		conn = sty.Err.Render("✕ offline")
-	default:
-		conn = sty.Warn.Render("○ connecting")
-	}
-	parts := append([]string{mode, conn}, m.meStatus()...)
-	if m.confirm != nil {
-		parts = append(parts, sty.Warn.Render(m.confirm.prompt))
-	}
-	if m.infoPending > 0 {
-		parts = append(parts, sty.Muted.Render(fmt.Sprintf("checking unreads %d/%d", m.infoTotal-m.infoPending, m.infoTotal)))
-	}
-	if m.status != "" {
-		if m.statusErr {
-			parts = append(parts, sty.Err.Render(m.status))
-		} else {
-			parts = append(parts, sty.Muted.Render(m.status))
-		}
-	}
-	left := strings.Join(parts, "  ")
-	right := sty.Muted.Render("ctrl+k jump · / search · : command · ? help ")
-	gap := m.width - lipgloss.Width(left) - lipgloss.Width(right)
-	if gap < 1 {
-		return ansi.Truncate(left, m.width, "…")
-	}
-	return left + strings.Repeat(" ", gap) + right
+	return strings.Join(append(header, view...), "\n")
 }

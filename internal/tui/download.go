@@ -135,5 +135,10 @@ func (m *Model) savedResult(msg savedMsg) tea.Cmd {
 	if len(msg.names) > 1 {
 		what = fmt.Sprintf("%d files", len(msg.names))
 	}
-	return m.setStatus("saved "+what+" to "+dir, false)
+	m.savedPath = ""
+	if len(msg.names) == 1 {
+		m.savedPath = filepath.Join(msg.dir, msg.names[0])
+		return m.setResult("saved to " + filepath.Join(dir, msg.names[0]))
+	}
+	return m.setResult("saved " + what + " to " + dir)
 }

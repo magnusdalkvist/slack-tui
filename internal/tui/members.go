@@ -136,15 +136,13 @@ func (m *Model) renderMembers(w, h int) string {
 		title += sty.Muted.Render(fmt.Sprintf("  %d %s", len(s.ids), plural(len(s.ids), "person", "people")))
 	}
 	header := []string{title, rule(w, true), " " + s.input.View(), ""}
-	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" profile  ") +
-		sty.Key.Render("↑ ↓") + sty.Faint.Render(" move  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
-	bodyH := max(1, h-len(header)-2)
+	bodyH := max(1, h-len(header))
 	if len(s.matches) == 0 {
 		msg := "nobody matches"
 		if s.ids == nil {
 			msg = "loading…"
 		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
 	}
 
 	sel := min(max(s.sel, 0), len(s.matches)-1)
@@ -190,7 +188,7 @@ func (m *Model) renderMembers(w, h int) string {
 	for len(rows) < bodyH {
 		rows = append(rows, "")
 	}
-	return strings.Join(append(append(header, rows...), rule(w, false), footer), "\n")
+	return strings.Join(append(header, rows...), "\n")
 }
 
 // memberIDs are people in the open members list that users.list didn't

@@ -167,6 +167,5 @@ func (m *Model) renderPicker(width, height int) string {
 	if len(p.matches) == 0 {
 		rows = append(rows, sty.Muted.Render("  no emoji match"))
 	}
-	rows = append(rows, "", sty.Faint.Render("enter react / un-react · esc close"))
 	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }

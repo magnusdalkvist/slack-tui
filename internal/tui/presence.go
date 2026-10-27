@@ -10,7 +10,6 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/config"
@@ -530,18 +529,3 @@ func (m *Model) cmdAway(away bool) tea.Cmd {
 
 // --- rendering ----------------------------------------------------------------
 
-// meStatus is the status-bar part for the user's own state: DND, away and
-// their custom status.
-func (m *Model) meStatus() []string {
-	var parts []string
-	if until, on := m.dnd.Until(clockNow()); on {
-		parts = append(parts, sty.Warn.Render(ico.DND+" dnd until "+clock(until, m.cfg.TimeFormat)))
-	}
-	if m.away {
-		parts = append(parts, sty.Muted.Render("away"))
-	}
-	if line := m.statusLine(m.client.SelfID); line != "" {
-		parts = append(parts, sty.Muted.Render(ansi.Truncate(line, 32, "…")))
-	}
-	return parts
-}

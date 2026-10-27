@@ -53,7 +53,7 @@ func TestSaveFiles(t *testing.T) {
 	}
 
 	m.Update(savedMsg{names: []string{"x.zip"}, dir: dl})
-	if m.status != "saved x.zip to "+dl {
+	if m.status != "saved to "+filepath.Join(dl, "x.zip") || !m.statusOK {
 		t.Errorf("status %q", m.status)
 	}
 	if m.saveFiles(nil); m.status != "no file on this message" {

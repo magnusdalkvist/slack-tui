@@ -105,7 +105,7 @@ func TestCommandLine(t *testing.T) {
 		t.Fatalf("want status suggested, got %+v", m.cmd.complete)
 	}
 	v := dump(t, m)
-	if !strings.Contains(v, ":st") || !strings.Contains(v, "set your status") {
+	if !strings.Contains(v, ":  st") || !strings.Contains(v, "set your status") {
 		t.Errorf("command line or suggestions missing:\n%s", v)
 	}
 	m.handleKey(tabKey())
@@ -177,7 +177,7 @@ func TestStatusAndPresenceShown(t *testing.T) {
 	lipgloss.SetColorProfile(prof)
 	v := dump(t, m)
 	status := strings.Split(v, "\n")[m.height-1]
-	for _, want := range []string{"dnd until " + soon.Format("15:04"), "🌴 Vacation"} {
+	for _, want := range []string{ico.DND + " dnd · 1h", "🌴 Vacation"} {
 		if !strings.Contains(status, want) {
 			t.Errorf("status bar lacks %q: %q", want, status)
 		}

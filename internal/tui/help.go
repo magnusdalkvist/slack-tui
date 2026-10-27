@@ -234,10 +234,8 @@ func (m *Model) renderHelp(width, height int) string {
 	for _, l := range lines[h.top:min(len(lines), h.top+listH)] {
 		rows = append(rows, ansi.Truncate(l, inner, "…"))
 	}
-	hint := "type to filter · ↑ ↓ move · enter on a command starts it · esc close"
 	if len(lines) > listH {
-		hint = fmt.Sprintf("%d of %d · ", min(h.sel+1, len(h.matches)), len(h.matches)) + hint
+		rows = append(rows, "", sty.Faint.Render(fmt.Sprintf("%d of %d", min(h.sel+1, len(h.matches)), len(h.matches))))
 	}
-	rows = append(rows, "", sty.Muted.Render(ansi.Truncate(hint, inner, "…")))
 	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }

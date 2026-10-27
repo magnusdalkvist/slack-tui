@@ -112,7 +112,7 @@ func TestBookmarkEditing(t *testing.T) {
 
 	m.Update(pinsMsg{conv: "C1", bookmarks: []backend.Bookmark{{ID: "B1", Title: "Runbook v2", Link: "https://example.com/runbook"}}})
 	m.Update(key("d"))
-	if m.confirm == nil || m.confirm.prompt != "remove the bookmark Runbook v2? y/n" {
+	if m.confirm == nil || m.confirm.prompt != "Remove the bookmark Runbook v2?" {
 		t.Fatalf("confirm %+v", m.confirm)
 	}
 	m.Update(key("n"))

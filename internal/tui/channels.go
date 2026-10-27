@@ -266,7 +266,7 @@ func (m *Model) joinedResult(msg joinedMsg) tea.Cmd {
 		return m.setStatus("couldn't join #"+msg.name+": "+slackReason(msg.err), true)
 	}
 	m.addConv(msg.conv)
-	status := m.setStatus("joined #"+msg.conv.Name, false)
+	status := m.setResult("joined #" + msg.conv.Name)
 	if msg.then != nil {
 		return tea.Batch(status, m.goToMessage(msg.conv.ID, *msg.then))
 	}
@@ -295,13 +295,13 @@ func (m *Model) cmdLeave(arg string) tea.Cmd {
 		return m.setStatus("direct messages can't be left", false)
 	}
 	where := m.convRef(c)
-	prompt := "leave " + where + "? y/n"
+	prompt, detail := "Leave "+where+"?", ""
 	if c.Kind != backend.KindChannel {
-		prompt = "leave " + where + "? only an invite brings you back. y/n"
+		detail = "only an invite brings you back"
 	}
 	id := c.ID
 	m.confirm = &confirmState{
-		prompt: prompt,
+		prompt: prompt, detail: detail, yesLabel: "leave", noLabel: "stay",
 		yes: func() tea.Cmd {
 			return func() tea.Msg { return leftMsg{id: id, name: where, err: m.client.Leave(m.ctx, id)} }
 		},
@@ -322,7 +322,7 @@ func (m *Model) leftResult(msg leftMsg) tea.Cmd {
 	if msg.err != nil {
 		return m.setStatus("couldn't leave "+msg.name+": "+slackReason(msg.err), true)
 	}
-	return tea.Batch(m.dropConv(msg.id), m.setStatus("left "+msg.name, false))
+	return tea.Batch(m.dropConv(msg.id), m.setResult("left "+msg.name))
 }
 
 // dropConv forgets a conversation we are no longer in, and leaves it if it
@@ -372,7 +372,7 @@ func (m *Model) cmdCreate(args string) tea.Cmd {
 		kind = "private"
 	}
 	m.confirm = &confirmState{
-		prompt: "create " + kind + " channel #" + name + "? y/n",
+		prompt: "Create " + kind + " channel #" + name + "?", yesLabel: "create", noLabel: "cancel",
 		yes: func() tea.Cmd {
 			return func() tea.Msg {
 				c, err := m.client.Create(m.ctx, name, private)
@@ -501,15 +501,13 @@ func (m *Model) renderChans(w, h int) string {
 		title += sty.Muted.Render(fmt.Sprintf("  %d public", len(m.public)))
 	}
 	header := []string{title, rule(w, true), " " + s.input.View(), ""}
-	footer := sty.Faint.Render("  ") + sty.Key.Render("enter") + sty.Faint.Render(" join / open  ") +
-		sty.Key.Render("↑ ↓") + sty.Faint.Render(" move  ") + sty.Key.Render("esc") + sty.Faint.Render(" close")
-	bodyH := max(1, h-len(header)-2)
+	bodyH := max(1, h-len(header))
 	if len(s.matches) == 0 {
 		msg := "no channel matches"
 		if m.public == nil {
 			msg = "loading…"
 		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH), rule(w, false), footer), "\n")
+		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
 	}
 
 	sel := min(max(s.sel, 0), len(s.matches)-1)
@@ -543,5 +541,5 @@ func (m *Model) renderChans(w, h int) string {
 	for len(rows) < bodyH {
 		rows = append(rows, "")
 	}
-	return strings.Join(append(append(header, rows...), rule(w, false), footer), "\n")
+	return strings.Join(append(header, rows...), "\n")
 }

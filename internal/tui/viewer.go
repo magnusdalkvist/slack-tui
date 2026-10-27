@@ -88,8 +88,9 @@ func (m *Model) openViewer(l *msgList, sel int) tea.Cmd {
 	return m.loadViewer()
 }
 
-// viewBox is the picture's area: the whole window but the caption line.
-func (m *Model) viewBox() (int, int) { return max(m.width, 1), max(m.height-1, 1) }
+// viewBox is the picture's area: the whole window but the caption line
+// and the status bar.
+func (m *Model) viewBox() (int, int) { return max(m.width, 1), max(m.height-2, 1) }
 
 // loadViewer fetches the current image and its neighbours, so stepping is
 // instant, and forgets the ones further away.
@@ -288,8 +289,6 @@ func (m *Model) renderViewer() string {
 		body = strings.Join(kitty.Placeholder(v.shownID(st), st.cols, st.rows), "\n")
 	}
 	pic := lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, body)
-	caption := sty.Muted.Render(fmt.Sprintf("  %s · %d/%d · ", name, v.idx+1, len(v.items))) +
-		sty.Key.Render("← →") + sty.Muted.Render(" browse · ") + sty.Key.Render("o") + sty.Muted.Render(" open · ") +
-		sty.Key.Render("esc") + sty.Muted.Render(" close")
+	caption := sty.Muted.Render(fmt.Sprintf("  %s · %d/%d", name, v.idx+1, len(v.items)))
 	return fit(pic, w, h) + "\n" + fit(caption, w, 1)
 }

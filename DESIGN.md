@@ -418,3 +418,9 @@ Gaps found while building this spec, and how they were filled.
 - **Attachment chips** without graphics show the image icon in place of the thumbnail. The thumbnail is drawn once, 4×1 cells, and kept with the other images so it survives a tmux pane switch.
 - **Composer labels** are joined with ` · ` when there are several (`editing · 2 of 10 attachments`).
 - **The design canvas** ("Dark · normal mode", "Light · insert mode") wasn't available while building this, so the chat was checked against this spec's text and the golden renders instead.
+- **Pills for panes** (pins, files and links, scheduled, the channel browser, members, help, unreads) are `NORMAL`, since §8 doesn't name one for them.
+- **`? help`** is left out of the hints while typing (INSERT, the command line, a filter input, CONFIRM), because `?` is a character there. When room is short, real hints come before `? help`.
+- **Status messages** fade after 4 s, all of them. They come in three kinds: results (`✓` in `ok`, from `setResult`), errors (`✕` in `mention`) and notes (`muted`).
+- **`R` while offline** retries the start when the cache is showing. When Socket Mode itself has given up, it starts the live connection again. Either way the bar counts down to the next automatic retry.
+- **The first connect** shows `◌ reconnecting…` too, because §8 has no separate "connecting" state.
+- **The image viewer** now keeps the status bar (its caption line moves up one row). That change comes from §8, ahead of the rest of phase 7.

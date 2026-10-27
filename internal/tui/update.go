@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
@@ -16,7 +17,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	_, cmd := m.update(msg)
 	// Whatever changed, start downloads for images and custom emoji that
 	// came into view.
-	return m, tea.Batch(cmd, m.scanImages(), m.scanEmoji(), m.scanBots(), m.scanUsers())
+	return m, tea.Batch(cmd, m.scanImages(), m.scanEmoji(), m.scanBots(), m.scanUsers(), m.spinIfBusy())
 }
 
 func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -153,9 +154,9 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(cmd, m.setStatus(msg.err.Error(), true))
 		}
 		if msg.added {
-			return m, m.setStatus("pinned", false)
+			return m, m.setResult("pinned")
 		}
-		return m, m.setStatus("unpinned", false)
+		return m, m.setResult("unpinned")
 
 	case editedMsg:
 		if msg.err != nil {
@@ -202,18 +203,43 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.flushLater()
 
 	case bootRetry:
+		if !m.offline {
+			return m, nil // R already retried and got through
+		}
 		return m, m.boot()
+
+	case offlineTick:
+		if !m.offline {
+			return m, nil
+		}
+		return m, offlineTicker()
+
+	case spinner.TickMsg:
+		if !m.busy() {
+			m.spinning = false
+			return m, nil
+		}
+		var cmd tea.Cmd
+		m.spin, cmd = m.spin.Update(msg)
+		return m, cmd
 
 	case bootMsg:
 		if msg.users == nil && msg.err != nil {
 			if m.fromCache {
 				// Offline, or Slack is down: keep showing the cache and try again.
 				retry := tea.Tick(30*time.Second, func(time.Time) tea.Msg { return bootRetry{} })
-				return m, tea.Batch(retry, m.setStatus("offline, showing cached messages: "+msg.err.Error(), true))
+				ticking := m.offline
+				m.offline, m.retryAt = true, clockNow().Add(30*time.Second)
+				cmds := []tea.Cmd{retry, m.setStatus(msg.err.Error(), true)}
+				if !ticking {
+					cmds = append(cmds, offlineTicker())
+				}
+				return m, tea.Batch(cmds...)
 			}
 			m.bootErr = msg.err
 			return m, nil
 		}
+		m.offline = false
 		for _, u := range msg.users {
 			m.users[u.ID] = u
 		}
@@ -419,7 +445,7 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, m.setStatus("upload failed: "+msg.err.Error(), true)
 		}
-		return m, m.setStatus(plural(len(msg.atts), "sent 1 image", fmt.Sprintf("sent %d images", len(msg.atts))), false)
+		return m, m.setResult(plural(len(msg.atts), "sent 1 image", fmt.Sprintf("sent %d images", len(msg.atts))))
 
 	case userInfoMsg:
 		if msg.err == nil && msg.user.ID != "" {

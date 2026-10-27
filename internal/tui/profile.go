@@ -171,11 +171,6 @@ func (m *Model) renderProfile(width int) string {
 	for i, r := range rows {
 		rows[i] = ansi.Truncate(r, inner, "…")
 	}
-	foot := "enter message · esc close"
-	if u.Email != "" {
-		foot = "enter message · c copy email · esc close"
-	}
-	rows = append(rows, "", sty.Faint.Render(foot))
 	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
 }
 
