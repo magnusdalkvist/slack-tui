@@ -493,53 +493,54 @@ func slackReason(err error) string {
 	return s
 }
 
+// renderChans is the channel browser pane: the filter in the composer
+// frame, member counts and whether we joined on the right.
 func (m *Model) renderChans(w, h int) string {
 	s := m.chans
-	s.input.Width = max(10, w-6)
-	title := sty.Title.Render("Channels")
+	lw := m.paneListW(w, true)
+	s.input.Width = max(10, lw-4)
+	p := paneSpec{title: frameTitle("Channels", true), top: &s.top,
+		input: paneInput(s.input.View(), "", true), inputBorder: sty.OK}
 	if m.public != nil {
-		title += sty.Muted.Render(fmt.Sprintf("  %d public", len(m.public)))
+		p.right = sty.Faint.Render(fmt.Sprintf("%d of %d public", len(s.matches), len(m.public)))
 	}
-	header := []string{title, rule(w, true), " " + s.input.View(), ""}
-	bodyH := max(1, h-len(header))
+	p.empty = "no channel matches"
+	if m.public == nil {
+		p.empty = "loading…"
+	}
 	if len(s.matches) == 0 {
-		msg := "no channel matches"
-		if m.public == nil {
-			msg = "loading…"
-		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
+		return m.renderPane(p, w, h)
 	}
-
+	q := strings.TrimSpace(s.input.Value())
 	sel := min(max(s.sel, 0), len(s.matches)-1)
-	if sel < s.top {
-		s.top = sel
-	}
-	if sel >= s.top+bodyH {
-		s.top = sel - bodyH + 1
-	}
-	var rows []string
-	for i := s.top; i < len(s.matches) && len(rows) < bodyH; i++ {
-		ch := m.public[s.matches[i]]
-		name := "#" + ch.Name
-		members := "1 member"
-		if ch.Members != 1 {
-			members = fmt.Sprintf("%d members", ch.Members)
-		}
-		info := members
+	p.selStart, p.selEnd = sel, sel+1
+	_, pw := m.paneWidths(w, true)
+	wide := pw > 0
+	for i, idx := range s.matches {
+		ch := m.public[idx]
+		style := sty.Unread
 		if ch.IsMember {
-			info = "joined · " + info
+			style = sty.Normal
 		}
+		meta := plural(ch.Members, "1 member", fmt.Sprintf("%d members", ch.Members))
+		if ch.IsMember {
+			meta = "joined · " + meta
+		}
+		row := slot(sty.Muted.Render(ico.Channel)) + markMatch(ch.Name, q, style)
+		if purpose := strings.Join(strings.Fields(ch.Purpose), " "); purpose != "" && !wide {
+			row += "  " + sty.Faint.Render(purpose) // no Preview to read it in
+		}
+		p.lines = append(p.lines, selLine(rightAlign(row, sty.Faint.Render(meta), lw-1), lw, i == sel, true))
+	}
+	ch := m.public[s.matches[sel]]
+	p.preview = func(w, h int) string {
+		out := []string{sty.Title.Render("#" + ch.Name)}
 		if p := strings.Join(strings.Fields(ch.Purpose), " "); p != "" {
-			info += " · " + p
+			out = append(out, "")
+			out = append(out, wrap(sty.Muted.Render(p), w)...)
 		}
-		row := sty.Unread.Render(name)
-		if ch.IsMember {
-			row = sty.Normal.Render(name)
-		}
-		rows = append(rows, selLine(" "+row+"  "+sty.Muted.Render(info), w, i == sel, true))
+		out = append(out, "", sty.Faint.Render(plural(ch.Members, "1 member", fmt.Sprintf("%d members", ch.Members))))
+		return strings.Join(out[:min(len(out), h)], "\n")
 	}
-	for len(rows) < bodyH {
-		rows = append(rows, "")
-	}
-	return strings.Join(append(header, rows...), "\n")
+	return m.renderPane(p, w, h)
 }

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -26,8 +27,8 @@ func TestJoinBrowser(t *testing.T) {
 	}
 	m.Update(publicChansMsg{chans: append([]backend.PublicChannel(nil), testPublic...)})
 	v := dump(t, m)
-	for _, want := range []string{"4 public", "#design  1 member · Mockups and reviews", "#dev  joined · 12 members"} {
-		if !strings.Contains(v, want) {
+	for _, want := range []string{"of 4 public", "design +Mockups and reviews +1 member", "dev +joined · 12 members"} {
+		if !regexp.MustCompile(want).MatchString(v) {
 			t.Errorf("missing %q", want)
 		}
 	}

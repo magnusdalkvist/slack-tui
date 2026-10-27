@@ -51,7 +51,7 @@ func TestSwitcherOffersPeople(t *testing.T) {
 		}
 	}
 	m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("berg")})
-	if v := dump(t, m); !strings.Contains(v, "Carl  Carl Berg") {
+	if v := dump(t, m); !strings.Contains(v, "Carl Carl Berg") {
 		t.Error("Carl should be offered")
 	}
 	for _, id := range m.switcher.matches {

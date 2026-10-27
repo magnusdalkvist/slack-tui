@@ -424,3 +424,13 @@ Gaps found while building this spec, and how they were filled.
 - **`R` while offline** retries the start when the cache is showing. When Socket Mode itself has given up, it starts the live connection again. Either way the bar counts down to the next automatic retry.
 - **The first connect** shows `◌ reconnecting…` too, because §8 has no separate "connecting" state.
 - **The image viewer** now keeps the status bar (its caption line moves up one row). That change comes from §8, ahead of the rest of phase 7.
+- **Modals** are drawn by `modalBox` + `overlayModal` (`modal.go`). The background goes faint by stripping its styling, and image placeholders are blanked, because they only draw in their own colours. The box's top row sits at 18% of the body height.
+- **Panes** are drawn by `renderPane` (`pane.go`). The Preview shows when the main area is at least 80 cells wide, the same rule as the thread split for now (phase 8 ties both to the breakpoints). Unreads and Help have no Preview. Their rows already are the context.
+- **Search groups** are runs of consecutive hits from one conversation. That keeps Slack's ranking and the order `n`/`N` step through, so a conversation can head more than one run.
+- **Switcher meta** shows `N mentions · channel` (in `mention`) when Slack counted mentions, and `new · channel` for other unread ones. The API gives no count of new messages, so the spec's `3 new` isn't possible.
+- **Emoji picker groups:** FREQUENT (the message's own reactions, then common ones) and CUSTOM with an empty query. With a query, the matching standard emoji come first, then CUSTOM.
+- **Help's key column** is as wide as the longest key shown (8 to 24 cells). Many keys (`ctrl+← ctrl+→ (insert)`) don't fit 8.
+- **Bookmarks** are added and edited in the Pins pane's composer frame (`new bookmark` / `editing bookmark` in its border), not on the status-bar command line.
+- **Files & links** puts image thumbnails in the Preview. Without room for one, they stay in the list.
+- **File sizes** needed one field on `backend.File` (`Size`, from Slack's `size`), the only data-layer change in this redesign.
+- **Profile local time** reads `11:45  GMT  +1h vs you`.

@@ -193,49 +193,36 @@ func (m *Model) helpKey(k tea.KeyMsg) tea.Cmd {
 	return cmd
 }
 
-func (m *Model) renderHelp(width, height int) string {
-	h := m.help
-	boxW := min(width-2, 100)
-	inner := boxW - 4
-	h.input.Width = inner - 3
-	keyW := 22
-	rows := []string{h.input.View(), sty.Faint.Render(strings.Repeat("─", inner))}
-	listH := max(3, height-6)
-
-	var lines []string
-	var selAt int
-	filtering := strings.TrimSpace(h.input.Value()) != ""
-	for k, i := range h.matches {
-		e := h.entries[i]
-		if !filtering && e.command && (k == 0 || !h.entries[h.matches[k-1]].command) {
-			lines = append(lines, "", sty.Title.Render("Commands"))
+// renderHelp is the Help pane: every key and command, filtered from the
+// composer frame. Rows: the key, what it does, a command's arguments.
+func (m *Model) renderHelp(w, h int) string {
+	hs := m.help
+	lw := m.paneListW(w, false)
+	hs.input.Width = max(10, lw-4)
+	p := paneSpec{title: frameTitle("Help", true), top: &hs.top, fromTop: hs.sel == 0,
+		input: paneInput(hs.input.View(), "", true), inputBorder: sty.OK, empty: "nothing matches"}
+	if len(hs.matches) > 0 {
+		p.right = sty.Faint.Render(fmt.Sprintf("%d of %d", min(hs.sel+1, len(hs.matches)), len(hs.matches)))
+	}
+	keyW := 8
+	for _, i := range hs.matches {
+		keyW = max(keyW, min(ansi.StringWidth(hs.entries[i].key), 24))
+	}
+	q := strings.TrimSpace(hs.input.Value())
+	for k, i := range hs.matches {
+		e := hs.entries[i]
+		switch {
+		case k == 0 && !e.command:
+			p.lines = append(p.lines, group("KEYS", ""))
+		case e.command && (k == 0 || !hs.entries[hs.matches[k-1]].command):
+			p.lines = append(p.lines, "", group("COMMANDS", ""))
 		}
-		if k == h.sel {
-			selAt = len(lines)
+		if k == hs.sel {
+			p.selStart, p.selEnd = len(p.lines), len(p.lines)+1
 		}
-		lines = append(lines, selLine(" "+sty.Key.Render(fmt.Sprintf("%-*s", keyW, e.key))+"  "+sty.Normal.Render(e.desc), width, k == h.sel, true))
-		if e.args != "" {
-			lines = append(lines, selLine(" "+strings.Repeat(" ", keyW+2)+sty.Muted.Render(e.args), width, k == h.sel, true))
-		}
+		key := sty.Key.Render(e.key) + strings.Repeat(" ", max(0, keyW-ansi.StringWidth(e.key)))
+		row := key + "  " + markMatch(e.desc, q, sty.Normal)
+		p.lines = append(p.lines, selLine(rightAlign(row, sty.Faint.Render(e.args), lw-1), lw, k == hs.sel, true))
 	}
-	if len(h.matches) == 0 {
-		lines = append(lines, sty.Muted.Render("  nothing matches"))
-	}
-	if selAt < h.top {
-		h.top = selAt
-	}
-	if selAt >= h.top+listH {
-		h.top = selAt - listH + 1
-	}
-	if h.sel == 0 {
-		h.top = 0
-	}
-	h.top = min(h.top, max(0, len(lines)-listH))
-	for _, l := range lines[h.top:min(len(lines), h.top+listH)] {
-		rows = append(rows, ansi.Truncate(l, inner, "…"))
-	}
-	if len(lines) > listH {
-		rows = append(rows, "", sty.Faint.Render(fmt.Sprintf("%d of %d", min(h.sel+1, len(h.matches)), len(h.matches))))
-	}
-	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	return m.renderPane(p, w, h)
 }

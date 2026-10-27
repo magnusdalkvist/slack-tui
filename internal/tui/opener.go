@@ -2,10 +2,10 @@ package tui
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/render"
@@ -15,6 +15,7 @@ import (
 type opener struct {
 	items []openItem
 	sel   int
+	msg   backend.Message // whose files and links they are
 }
 
 type openItem struct {
@@ -39,7 +40,7 @@ func (m *Model) openFrom(msg backend.Message) tea.Cmd {
 	case 1:
 		return m.openItem(items[0])
 	}
-	m.opener = &opener{items: items}
+	m.opener = &opener{items: items, msg: msg}
 	return nil
 }
 
@@ -73,36 +74,53 @@ func (m *Model) openerKey(k tea.KeyMsg) tea.Cmd {
 	return nil
 }
 
-func (m *Model) renderOpener(width int) string {
+// renderOpener is the Open modal: a number to press, the kind, the name,
+// the size.
+func (m *Model) renderOpener() string {
 	o := m.opener
-	boxW := min(70, width-4)
-	inner := boxW - 4
-	rows := []string{sty.Title.Render("Open"), sty.Faint.Render(strings.Repeat("─", inner))}
+	w := m.modalWidth(66)
+	inner := w - 2
+	var rows []string
 	start := max(0, o.sel-openerRows+1)
 	for i := start; i < len(o.items) && i < start+openerRows; i++ {
 		it := o.items[i]
-		num := "  "
+		num := " "
 		if i < 9 {
-			num = sty.Key.Render(fmt.Sprint(i+1)) + " "
+			num = fmt.Sprint(i + 1)
 		}
-		var label string
+		var row, meta string
 		if f := it.file; f != nil {
 			name := f.Title
 			if name == "" {
 				name = f.Name
 			}
-			kind := "file"
-			if f.IsImage() {
-				kind = "image"
+			row = kindTag(fileKind(f.Name, f.Mimetype)) + " " + sty.Normal.Render(name)
+			if f.Size > 0 {
+				meta = sty.Faint.Render(fmtSize(f.Size))
 			}
-			label = name + "  " + sty.Muted.Render(kind)
-		} else if it.link.Label != "" {
-			label = it.link.Label + "  " + sty.Muted.Render(it.link.URL)
 		} else {
-			label = it.link.URL
+			row = kindTag("URL") + " "
+			if it.link.Label != "" && it.link.Label != it.link.URL {
+				row += sty.Normal.Render(it.link.Label) + " "
+			}
+			row += sty.Md.Link.Render(it.link.URL)
 		}
-		label = ansi.Truncate(label, inner-4, "…")
-		rows = append(rows, selLine(" "+num+label, inner, i == o.sel, true))
+		rows = append(rows, modalRow(rightAlign(" "+sty.Faint.Render(num)+" "+row, meta, inner), inner, i == o.sel))
 	}
-	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	right := fmt.Sprintf("%d items · %s %s", len(o.items), m.senderName(o.msg), o.msg.Time().Format(m.cfg.TimeFormat))
+	return modalBox(w, "Open", right, rows)
+}
+
+// kindTag is a file's kind as a small tag: [PDF].
+func kindTag(kind string) string { return sty.KindTag.Render(fmt.Sprintf("%-4s", kind)) }
+
+// fileKind is the extension in caps (PDF, PNG), or from the MIME type.
+func fileKind(name, mimetype string) string {
+	if ext := strings.TrimPrefix(path.Ext(name), "."); ext != "" && len(ext) <= 5 {
+		return strings.ToUpper(ext)
+	}
+	if _, sub, ok := strings.Cut(mimetype, "/"); ok && len(sub) <= 5 {
+		return strings.ToUpper(sub)
+	}
+	return "FILE"
 }

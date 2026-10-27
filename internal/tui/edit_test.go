@@ -47,7 +47,7 @@ func TestReactionToggle(t *testing.T) {
 	for _, r := range "tada" {
 		m.handleKey(key(string(r)))
 	}
-	if v := ansi.Strip(m.View()); !strings.Contains(v, "🎉  :tada:") {
+	if v := ansi.Strip(m.View()); !strings.Contains(v, "🎉 :tada:") {
 		t.Errorf("picker does not list tada:\n%s", v)
 	}
 	m.handleKey(key("enter"))

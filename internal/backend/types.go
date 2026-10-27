@@ -100,6 +100,7 @@ type File struct {
 	// Anim is an animated version for GIFs (thumbnails are still frames).
 	Anim string
 	W, H int
+	Size int // bytes; 0 when Slack didn't say
 }
 
 // IsImage is true for files Slack made a picture thumbnail of.
@@ -212,7 +213,7 @@ func fromFile(f slack.File) File {
 	}
 	return File{
 		ID: f.ID, Name: f.Name, Title: f.Title, Mimetype: f.Mimetype, URL: f.URLPrivate, Permalink: f.Permalink,
-		Thumb: thumb, Anim: anim, W: f.OriginalW, H: f.OriginalH,
+		Thumb: thumb, Anim: anim, W: f.OriginalW, H: f.OriginalH, Size: f.Size,
 	}
 }
 

@@ -125,48 +125,45 @@ func (m *Model) membersKey(k tea.KeyMsg) tea.Cmd {
 	return nil
 }
 
+// renderMembers is the Members pane: presence, name, title; the filter in
+// the composer frame.
 func (m *Model) renderMembers(w, h int) string {
 	s := m.members
-	s.input.Width = max(10, w-6)
-	title := sty.Title.Render("Members")
+	lw := m.paneListW(w, true)
+	s.input.Width = max(10, lw-4)
+	p := paneSpec{title: frameTitle("Members", true), top: &s.top,
+		input: paneInput(s.input.View(), "", true), inputBorder: sty.OK}
 	if c := m.convs[s.conv]; c != nil {
-		title += sty.Muted.Render("  " + m.convRef(c))
+		p.title = frameTitle("Members", true, sty.Muted.Render(m.convRef(c)))
 	}
 	if s.ids != nil {
-		title += sty.Muted.Render(fmt.Sprintf("  %d %s", len(s.ids), plural(len(s.ids), "person", "people")))
+		p.right = sty.Faint.Render(fmt.Sprintf("%d %s", len(s.ids), plural(len(s.ids), "person", "people")))
 	}
-	header := []string{title, rule(w, true), " " + s.input.View(), ""}
-	bodyH := max(1, h-len(header))
+	p.empty = "nobody matches"
+	if s.ids == nil {
+		p.empty = "loading…"
+	}
 	if len(s.matches) == 0 {
-		msg := "nobody matches"
-		if s.ids == nil {
-			msg = "loading…"
-		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
+		return m.renderPane(p, w, h)
 	}
-
+	q := strings.TrimSpace(s.input.Value())
 	sel := min(max(s.sel, 0), len(s.matches)-1)
-	if sel < s.top {
-		s.top = sel
-	}
-	if sel >= s.top+bodyH {
-		s.top = sel - bodyH + 1
-	}
-	var rows []string
-	for i := s.top; i < len(s.matches) && len(rows) < bodyH; i++ {
-		id := s.ids[s.matches[i]]
+	p.selStart, p.selEnd = sel, sel+1
+	for i, idx := range s.matches {
+		id := s.ids[idx]
 		u := m.users[id]
-		name := m.memberName(id)
-		if id == m.client.SelfID {
-			name += " (you)"
-		}
+		dot := sty.Faint.Render("○")
 		if m.presence[id] {
-			name += " " + sty.OK.Render(onlineDot)
+			dot = sty.OK.Render(onlineDot)
+		}
+		row := dot + " " + markMatch(m.memberName(id), q, sty.Normal)
+		if id == m.client.SelfID {
+			row += " " + sty.Faint.Render("(you)")
+		}
+		if e := m.statusEmoji(id); e != "" {
+			row += " " + e
 		}
 		var info []string
-		if u.RealName != "" && u.RealName != u.Label() {
-			info = append(info, u.RealName)
-		}
 		if u.Title != "" {
 			info = append(info, u.Title)
 		}
@@ -176,19 +173,30 @@ func (m *Model) renderMembers(w, h int) string {
 		if u.IsBot {
 			info = append(info, "app")
 		}
-		row := " " + sty.Normal.Render(name)
-		if line := m.statusLine(id); line != "" {
-			row += " " + line
-		}
 		if len(info) > 0 {
-			row += "  " + sty.Muted.Render(strings.Join(info, " · "))
+			row += "  " + sty.Faint.Render(strings.Join(info, " · "))
 		}
-		rows = append(rows, selLine(row, w, i == sel, true))
+		p.lines = append(p.lines, selLine(row, lw, i == sel, true))
 	}
-	for len(rows) < bodyH {
-		rows = append(rows, "")
+	id := s.ids[s.matches[sel]]
+	p.preview = func(w, h int) string {
+		u := m.users[id]
+		out := []string{sty.Title.Render(m.memberName(id))}
+		if u.Title != "" {
+			out = append(out, sty.Muted.Render(u.Title))
+		}
+		out = append(out, "")
+		field := func(label, value string) {
+			if value != "" {
+				out = append(out, sty.Faint.Render(fmt.Sprintf("%-12s", label))+value)
+			}
+		}
+		field("Status", m.statusLine(id))
+		field("Local time", localTime(u, clockNow(), m.cfg.TimeFormat))
+		field("Email", u.Email)
+		return strings.Join(out[:min(len(out), h)], "\n")
 	}
-	return strings.Join(append(header, rows...), "\n")
+	return m.renderPane(p, w, h)
 }
 
 // memberIDs are people in the open members list that users.list didn't

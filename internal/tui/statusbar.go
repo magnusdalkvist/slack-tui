@@ -199,7 +199,7 @@ func (m *Model) message() string {
 }
 
 func (m *Model) renderStatus() string {
-	if m.cmd != nil {
+	if m.cmd != nil && !m.cmd.inPane {
 		return m.renderCmdLine()
 	}
 	left := []string{m.pill()}
@@ -210,7 +210,7 @@ func (m *Model) renderStatus() string {
 	if msg := m.message(); msg != "" {
 		left = append(left, msg)
 	}
-	typing := m.insert || m.confirm != nil || m.switcher != nil || m.picker != nil || m.help != nil ||
+	typing := m.insert || m.cmd != nil || m.confirm != nil || m.switcher != nil || m.picker != nil || m.help != nil ||
 		m.chans != nil || m.members != nil || (m.search != nil && m.search.typing)
 	return m.bar(strings.Join(left, "  "), m.hints(), !typing)
 }
@@ -243,6 +243,8 @@ func (m *Model) hints() []Hint {
 		hs = append(hs, Hint{"R", "retry now"})
 	}
 	switch {
+	case m.cmd != nil:
+		return []Hint{{"⏎", "save"}, {"esc", "cancel"}}
 	case m.confirm != nil:
 		return []Hint{{"y", m.confirm.yesLabel}, {"n", m.confirm.noLabel}}
 	case m.bootErr != nil:

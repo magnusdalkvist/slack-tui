@@ -59,7 +59,7 @@ func TestPinsView(t *testing.T) {
 		},
 	})
 	v := dump(t, m)
-	for _, want := range []string{"Pinned & bookmarks", ico.Channel + " dev", "BOOKMARKS", "Runbook", "example.com/runbook", "PINNED", "Anna Jensen", "in thread", "old news"} {
+	for _, want := range []string{"Pins & bookmarks", ico.Channel + " dev", "BOOKMARKS", "Runbook", "example.com/runbook", "PINNED", "Anna Jensen", "in thread", "old news"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("view lacks %q", want)
 		}
@@ -146,5 +146,24 @@ func TestCmdBookmark(t *testing.T) {
 	}
 	if m.runCmd("bookmark example.com/docs/ The docs") == nil {
 		t.Error("a link should be added")
+	}
+}
+
+func TestBookmarkInComposer(t *testing.T) {
+	m := fakeModel(t, 120, 30)
+	m.open("C1")
+	m.Update(key("P"))
+	m.Update(pinsMsg{conv: "C1"})
+	m.Update(key("a"))
+	if m.cmd == nil || !m.cmd.inPane {
+		t.Fatal("a in the pins pane should start a bookmark in its composer")
+	}
+	typeText(m, "example.com/docs Docs")
+	lines := strings.Split(dump(t, m), "\n")
+	if bar := lines[len(lines)-1]; strings.Contains(bar, "example.com") {
+		t.Errorf("the bookmark is typed in the status bar: %q", bar)
+	}
+	if v := strings.Join(lines, "\n"); !strings.Contains(v, "new bookmark") || !strings.Contains(v, ":bookmark example.com/docs Docs") {
+		t.Error("the composer frame should hold the bookmark being typed")
 	}
 }

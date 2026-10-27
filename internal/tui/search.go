@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/render"
@@ -233,7 +234,7 @@ func (m *Model) jumpTo(h backend.Hit) tea.Cmd {
 		msg := h.Message
 		m.confirm = &confirmState{
 			prompt: "Join #" + h.ChannelName + "?", detail: "you're not a member", yesLabel: "join", noLabel: "cancel",
-			yes:    func() tea.Cmd { return m.join(h.Channel, h.ChannelName, &msg) },
+			yes: func() tea.Cmd { return m.join(h.Channel, h.ChannelName, &msg) },
 		}
 		return nil
 	}
@@ -453,100 +454,105 @@ func (m *Model) hitWhere(h backend.Hit) string {
 	return "#" + h.ChannelName
 }
 
+// renderSearch is the Search pane: the results grouped by conversation,
+// the query in the composer frame, the selected hit in the Preview.
 func (m *Model) renderSearch(w, h int) string {
 	s := m.search
-	title := sty.Title.Render("Search")
-	switch {
-	case s.query == "":
-	case s.loading && len(s.hits) == 0:
-		title += sty.Muted.Render("  searching…")
-	case s.err == "":
-		title += sty.Muted.Render(fmt.Sprintf("  %d %s", s.total, plural(s.total, "result", "results")))
+	lw := m.paneListW(w, true)
+	p := paneSpec{
+		title: frameTitle("Search", !s.typing, sty.Normal.Render(s.query)),
+		top:   &s.top, fromTop: s.sel == 0,
+		input: paneInput(s.input.View(), s.input.Value(), s.typing), inputBorder: sty.Rule,
 	}
-	s.input.Width = max(10, w-4)
-	inputLine := "  " + s.input.View()
-	if !s.typing {
-		inputLine = "  " + sty.Muted.Render("/ "+s.input.Value())
+	s.input.Width = max(10, lw-4)
+	if s.typing {
+		p.inputBorder = sty.Warn
+		if s.complete != nil {
+			p.popup = m.renderCompItems(s.complete, min(lw+2, 56))
+		}
 	}
-	header := []string{title, rule(w, !s.typing), inputLine}
-	if s.typing && s.complete != nil {
-		header = append(header, m.renderCompItems(s.complete, w)...)
-	}
-	header = append(header, rule(w, s.typing))
-	bodyH := max(1, h-len(header))
-
 	switch {
 	case s.err != "":
-		return strings.Join(append(header, placeholder(sty.Err.Render(s.err), w, bodyH)), "\n")
+		p.empty = sty.Err.Render(s.err)
 	case s.query == "":
-		return strings.Join(append(header, placeholder("type a query and press enter", w, bodyH)), "\n")
+		p.empty = "type a query and press enter"
+	case len(s.hits) == 0 && s.loading:
+		p.empty = "searching…"
 	case len(s.hits) == 0:
-		msg := "no results"
-		if s.loading {
-			msg = "searching…"
-		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
+		p.empty = "no results"
+	}
+	if len(s.hits) == 0 {
+		return m.renderPane(p, w, h)
 	}
 
 	sel := min(max(s.sel, 0), len(s.hits)-1)
-	var all []string
-	var selStart, selEnd int
+	p.right = sty.Faint.Render(fmt.Sprintf("%d of %d", sel+1, s.total))
+	gw := max(m.gutterW(), 7)
 	for i, hit := range s.hits {
+		// A header over each run of hits from one conversation.
+		if i == 0 || s.hits[i-1].Channel != hit.Channel {
+			n := 1
+			for j := i + 1; j < len(s.hits) && s.hits[j].Channel == hit.Channel; j++ {
+				n++
+			}
+			if i > 0 {
+				p.lines = append(p.lines, "")
+			}
+			p.lines = append(p.lines, group(m.hitWhere(hit), fmt.Sprint(n)))
+		}
 		if i == sel {
-			selStart = len(all)
+			p.selStart = len(p.lines)
 		}
-		icon := "" // channels already read "#name"
-		switch c := m.convs[hit.Channel]; {
-		case c != nil && c.Kind == backend.KindPrivate:
-			icon = ico.Private + " "
-		case c != nil && c.Kind == backend.KindGroup, c == nil && hit.IsGroup:
-			icon = ico.Group + " "
-		case c != nil && c.Kind == backend.KindDM:
-			icon = ico.UserActive + " "
+		day := hit.Time().Format(m.cfg.TimeFormat)
+		if !sameDay(hit.Time(), clockNow()) {
+			day = hit.Time().Format("2 Jan")
 		}
-		where := sty.Unread.Render(icon + m.hitWhere(hit))
+		gutter := sty.Time.Render(day) + strings.Repeat(" ", max(1, gw-ansi.StringWidth(day)))
+		blank := strings.Repeat(" ", gw)
+		head := sty.Sender(senderKey(hit.Message)).Render(m.senderName(hit.Message))
+		if !sameDay(hit.Time(), clockNow()) {
+			head += " " + sty.Faint.Render(hit.Time().Format(m.cfg.TimeFormat))
+		}
 		if hit.ThreadTS != "" && hit.ThreadTS != hit.TS {
-			where += sty.Thread.Render("  in thread")
+			head += "  " + sty.Thread.Render("in thread")
 		}
-		name := sty.Sender(senderKey(hit.Message)).Render(m.senderName(hit.Message))
-		block := []string{where, name + " " + sty.Time.Render(relTime(hit.Time(), m.cfg.TimeFormat))}
+		block := []string{gutter + head}
 		text := strings.ReplaceAll(render.Mrkdwn(unmarkEntities(hit.Text), m, sty.Md), "\n", " ")
 		text = strings.NewReplacer(backend.HitStart, sty.HitOn(), backend.HitEnd, HitOff).Replace(text)
-		wrapped := wrap(text, w-4)
+		wrapped := wrap(text, lw-1-gw)
 		if len(wrapped) > 3 {
 			wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 		}
-		block = append(block, wrapped...)
+		for _, l := range wrapped {
+			block = append(block, blank+l)
+		}
 		for _, f := range hit.Files {
-			if pic := m.thumbLines(f); pic != nil {
-				block = append(block, pic...)
-			} else if !f.IsImage() || m.gfx == nil {
-				block = append(block, sty.Muted.Render(fileLabel(f)))
+			block = append(block, blank+fileLine(f, f.Size))
+			for _, row := range m.thumbLines(f) {
+				block = append(block, picture+blank+strings.TrimPrefix(row, picture))
 			}
 		}
-		all = append(all, selLines(prefixAll(block, " "), w, i == sel, !s.typing)...)
+		p.lines = append(p.lines, selLines(block, lw, i == sel, !s.typing)...)
 		if i == sel {
-			selEnd = len(all)
+			p.selEnd = len(p.lines)
 		}
-		all = append(all, "")
 	}
 	if s.page < s.pages {
-		all = append(all, sty.Faint.Render(center("more below…", w)))
+		p.lines = append(p.lines, "", sty.Faint.Render(center("more below…", lw)))
 	}
-
-	if selStart < s.top {
-		s.top = selStart
+	hit := s.hits[sel]
+	p.previewTitle = sty.Muted.Render("in " + m.hitWhere(hit))
+	p.preview = func(w, h int) string {
+		msg := hit.Message
+		msg.Text = unmarkEntities(msg.Text)
+		lines := m.messageLines(msg, w-1, true, true)
+		marks := strings.NewReplacer(backend.HitStart, sty.HitOn(), backend.HitEnd, HitOff)
+		for i, l := range lines {
+			lines[i] = marks.Replace(l)
+		}
+		return m.previewMessage(lines, w, h)
 	}
-	if selEnd > s.top+bodyH {
-		s.top = max(selStart, selEnd-bodyH)
-	}
-	s.top = min(max(s.top, 0), max(0, len(all)-bodyH))
-	view := all[s.top:min(len(all), s.top+bodyH)]
-	for len(view) < bodyH {
-		view = append(view, "")
-	}
-	truncateRows(view, w)
-	return strings.Join(append(header, view...), "\n")
+	return m.renderPane(p, w, h)
 }
 
 func fileLabel(f backend.File) string {

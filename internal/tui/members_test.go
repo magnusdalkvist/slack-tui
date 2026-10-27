@@ -23,7 +23,7 @@ func TestMembers(t *testing.T) {
 		t.Error("an unknown member should be looked up")
 	}
 	v := dump(t, m)
-	for _, want := range []string{"Members  #dev  4 people", "Anna Jensen  Backend developer", "Erik (you)"} {
+	for _, want := range []string{"Members  #dev", "4 people", "Anna Jensen  Backend developer", "Erik (you)"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("pane lacks %q", want)
 		}

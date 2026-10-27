@@ -22,7 +22,7 @@ func TestProfileCard(t *testing.T) {
 	}})
 	m.presence["U1"] = true
 	v := dump(t, m)
-	for _, want := range []string{"Anna Jensen", "anna.j · @anna · she/her", "Backend developer", "on holiday", "Japan Standard Time", "anna@example.com", "c copy email"} {
+	for _, want := range []string{"Anna Jensen", "anna.j · she/her", "@anna", "Backend developer", "on holiday", "Japan Standard Time", "anna@example.com", "c copy email"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("card lacks %q", want)
 		}
@@ -53,11 +53,11 @@ func TestLocalTime(t *testing.T) {
 	now := time.Date(2026, 10, 20, 12, 0, 0, 0, time.FixedZone("CEST", 2*3600))
 	tokyo := backend.User{TZ: "Asia/Tokyo", TZLabel: "Japan Standard Time", TZOffset: 9 * 3600}
 	got := localTime(tokyo, now, "15:04")
-	if !strings.HasPrefix(got, "19:00") || !strings.Contains(got, "7 h ahead") {
+	if !strings.HasPrefix(got, "19:00") || !strings.Contains(got, "+7h vs you") {
 		t.Errorf("Tokyo: %q", got)
 	}
 	india := backend.User{TZ: "Asia/Kolkata", TZOffset: 19800}
-	if got := localTime(india, now, "15:04"); !strings.Contains(got, "3 h 30 min ahead") {
+	if got := localTime(india, now, "15:04"); !strings.Contains(got, "+3h30m vs you") {
 		t.Errorf("India: %q", got)
 	}
 }

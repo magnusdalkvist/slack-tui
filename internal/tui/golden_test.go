@@ -146,6 +146,80 @@ var scenes = []scene{
 		m.Update(key("k"))
 		m.Update(key("j"))
 	}},
+	{"react", 30, func(m *Model) {
+		m.emoji["partyparrot"] = "https://emoji.slack-edge.com/T/pp/a.gif"
+		m.picker = m.newPicker("C1", m.lists["C1"].msgs[2])
+	}},
+	{"profile", 30, func(m *Model) {
+		u := m.users["U1"]
+		u.Title, u.Pronouns, u.Email, u.TZ, u.TZLabel, u.TZOffset = "Backend developer", "he/him", "siko@example.com", "Europe/London", "GMT", 0
+		m.users["U1"] = u
+		m.openProfile("U1")
+		m.profile.loading = false
+	}},
+	{"open", 30, func(m *Model) {
+		msg := m.lists["C1"].msgs[len(m.lists["C1"].msgs)-1]
+		msg.Files[0].Size, msg.Files[1].Size = 1258291, 219136
+		msg.Text = "plan attached, see <https://example.com/ci/123|the CI run>"
+		m.openFrom(msg)
+	}},
+	{"search", 30, func(m *Model) {
+		m.Update(key("/"))
+		typeText(m, "deploy")
+		m.Update(key("enter"))
+		mk := func(conv, t, thread, user, text string) backend.Hit {
+			return backend.Hit{Message: backend.Message{TS: t, ThreadTS: thread, User: user, Text: text}, Channel: conv}
+		}
+		m.Update(searchMsg{seq: m.search.seq, query: "deploy", res: backend.SearchPage{Total: 3, Page: 1, Pages: 1, Hits: []backend.Hit{
+			mk("C1", ts(22, 9, 12), "", "U1", backend.HitStart + "deploy" + backend.HitEnd + "ed panda-v2 to staging"),
+			mk("C1", ts(20, 14, 0), ts(20, 13, 0), "U2", "who can " + backend.HitStart + "deploy" + backend.HitEnd + " on fridays?"),
+			mk("D1", ts(21, 11, 0), "", "U1", "the " + backend.HitStart + "deploy" + backend.HitEnd + " script needs a flag"),
+		}}})
+	}},
+	{"files", 30, func(m *Model) {
+		m.Update(key("F"))
+		m.Update(convFilesMsg{conv: "C1", res: backend.FilesPage{Total: 2, Page: 1, Pages: 1, Files: []backend.SharedFile{
+			{File: backend.File{ID: "F1", Name: "plan.pdf", Mimetype: "application/pdf"}, User: "U1", Created: goldenNow.Add(-time.Hour), Size: 1_258_291, Kind: "PDF"},
+			{File: backend.File{ID: "F2", Name: "diagram.png", Mimetype: "image/png"}, User: "U2", Created: goldenNow.Add(-26 * time.Hour), Size: 219_136, Kind: "PNG"},
+		}}})
+	}},
+	{"pins", 30, func(m *Model) {
+		m.Update(key("P"))
+		m.Update(pinsMsg{conv: "C1",
+			bookmarks: []backend.Bookmark{{ID: "B1", Title: "Runbook", Link: "https://example.com/runbook"}},
+			pins:      []backend.Pin{{Message: m.lists["C1"].msgs[2], Channel: "C1"}},
+		})
+	}},
+	{"scheduled", 30, func(m *Model) {
+		m.scheduled = []backend.Scheduled{
+			{ID: "Q1", Channel: "C1", Text: "standup in 5", PostAt: goldenNow.Add(time.Hour)},
+			{ID: "Q2", Channel: "D1", Text: "ping me when the build is green", PostAt: goldenNow.Add(3 * time.Hour)},
+			{ID: "Q3", Channel: "C1", Text: "weekly notes are up", PostAt: goldenNow.Add(26 * time.Hour)},
+		}
+		m.runCmd("scheduled")
+		m.sched.loading = false
+	}},
+	{"channels", 30, func(m *Model) {
+		m.runCmd("join")
+		m.Update(publicChansMsg{chans: []backend.PublicChannel{
+			{ID: "C1", Name: "development", Members: 24, IsMember: true, Purpose: "Builds, deploys and reviews"},
+			{ID: "C9", Name: "design", Members: 9, Purpose: "Mockups and reviews"},
+			{ID: "C8", Name: "random", Members: 120},
+		}})
+	}},
+	{"members", 30, func(m *Model) {
+		m.runCmd("members")
+		m.update(membersMsg{conv: "C1", ids: []string{"U1", "ME", "U2", "U3"}})
+	}},
+	{"unreads", 30, func(m *Model) {
+		m.open(unreadsID)
+		m.Update(sinceMsg{id: "C1", msgs: m.lists["C1"].msgs[2:5]})
+		m.Update(sinceMsg{id: "D1", msgs: []backend.Message{{TS: ts(22, 10, 30), User: "U1", Text: "got a minute?"}}})
+	}},
+	{"help", 30, func(m *Model) {
+		m.Update(key("?"))
+		typeText(m, "pin")
+	}},
 	{"switcher", 30, func(m *Model) {
 		m.Update(key("ctrl+k"))
 		typeText(m, "si")

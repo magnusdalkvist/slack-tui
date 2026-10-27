@@ -17,7 +17,9 @@ type picker struct {
 	conv    string
 	msg     backend.Message
 	names   []string // every candidate
-	matches []string
+	custom  map[string]bool
+	matches []string // standard emoji first, then custom ones
+	split   int      // matches[split:] are custom (the CUSTOM group)
 	sel     int
 }
 
@@ -36,10 +38,11 @@ func (m *Model) newPicker(conv string, msg backend.Message) *picker {
 	ti.Prompt = "› "
 	ti.Placeholder = "react with…"
 	ti.Focus()
-	p := &picker{input: ti, conv: conv, msg: msg}
+	p := &picker{input: ti, conv: conv, msg: msg, custom: map[string]bool{}}
 	p.names = render.EmojiNames()
 	for n := range m.emoji {
 		p.names = append(p.names, n)
+		p.custom[n] = true
 	}
 	slices.Sort(p.names)
 	p.names = slices.Compact(p.names)
@@ -49,32 +52,44 @@ func (m *Model) newPicker(conv string, msg backend.Message) *picker {
 
 func (p *picker) filter() {
 	q := strings.ToLower(strings.Trim(strings.TrimSpace(p.input.Value()), ":"))
-	p.matches = p.matches[:0]
 	p.sel = 0
+	var std, custom []string
 	if q == "" {
-		// Reactions already on the message first, then the usual ones.
+		// FREQUENT: reactions already on the message, then the usual ones.
 		for _, r := range p.msg.Reactions {
-			p.matches = append(p.matches, r.Name)
+			std = append(std, r.Name)
 		}
 		for _, n := range commonReactions {
-			if !slices.Contains(p.matches, n) {
-				p.matches = append(p.matches, n)
+			if !slices.Contains(std, n) {
+				std = append(std, n)
 			}
 		}
-		return
-	}
-	for _, i := range fuzzyRank(q, p.names) {
-		p.matches = append(p.matches, p.names[i])
-		if len(p.matches) == 200 {
-			break
+		// CUSTOM: the workspace's own, by name.
+		for _, n := range p.names {
+			if p.custom[n] && !slices.Contains(std, n) && len(custom) < 200 {
+				custom = append(custom, n)
+			}
+		}
+	} else {
+		for _, i := range fuzzyRank(q, p.names) {
+			if n := p.names[i]; p.custom[n] {
+				custom = append(custom, n)
+			} else {
+				std = append(std, n)
+			}
+			if len(std)+len(custom) == 200 {
+				break
+			}
 		}
 	}
+	p.matches = append(std, custom...)
+	p.split = len(std)
 }
 
 // visible is the slice of matches on screen, so their images get loaded.
 func (p *picker) visible() []string {
 	start := max(0, p.sel-pickerRows+1)
-	return p.matches[start:min(len(p.matches), start+pickerRows)]
+	return p.matches[start:min(len(p.matches), start+pickerRows+1)]
 }
 
 func (m *Model) openPicker(conv string, msg backend.Message) tea.Cmd {
@@ -149,23 +164,34 @@ func (m *Model) toggleReaction(conv, ts, name string) tea.Cmd {
 	}
 }
 
-func (m *Model) renderPicker(width, height int) string {
+// renderPicker is the React modal: FREQUENT (or the matches), then the
+// workspace's CUSTOM emoji, each with its glyph and whether we added it.
+func (m *Model) renderPicker() string {
 	p := m.picker
-	boxW := min(50, width-4)
-	inner := boxW - 4
-	p.input.Width = inner - 3
-	rows := []string{p.input.View(), sty.Faint.Render(strings.Repeat("─", inner))}
+	w := m.modalWidth(50)
+	inner := w - 2
+	p.input.Width = inner - 4
+	q := strings.Trim(strings.TrimSpace(p.input.Value()), ":")
+	rows := []string{" " + p.input.View(), modalRule(inner)}
 	start := max(0, p.sel-pickerRows+1)
 	for i := start; i < len(p.matches) && i < start+pickerRows; i++ {
-		name := p.matches[i]
-		label := m.emojiChip(name) + "  :" + name + ":"
-		if m.hasReacted(p.conv, p.msg.TS, name) {
-			label += sty.OK.Render("  ✓")
+		switch {
+		case i == 0 && p.split > 0 && q == "":
+			rows = append(rows, modalHeader("Frequent"))
+		case i == p.split && i < len(p.matches):
+			rows = append(rows, modalHeader("Custom"))
 		}
-		rows = append(rows, selLine(" "+label, inner, i == p.sel, true))
+		name := p.matches[i]
+		row := " " + m.emojiChip(name) + " " + markMatch(":"+name+":", q, sty.Normal)
+		meta := ""
+		if m.hasReacted(p.conv, p.msg.TS, name) {
+			meta = sty.OK.Render("✓ added")
+		}
+		rows = append(rows, modalRow(rightAlign(row, meta, inner), inner, i == p.sel))
 	}
 	if len(p.matches) == 0 {
-		rows = append(rows, sty.Muted.Render("  no emoji match"))
+		rows = append(rows, " "+sty.Muted.Render("no emoji match"))
 	}
-	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	right := "to " + m.senderName(p.msg) + " " + p.msg.Time().Format(m.cfg.TimeFormat)
+	return modalBox(w, "React", right, rows)
 }

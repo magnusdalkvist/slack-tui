@@ -36,7 +36,7 @@ func TestSharedView(t *testing.T) {
 		hit("C1", "250.0", "200.0", "U1", "https <https://example.net/c>"),
 	}}})
 	v := dump(t, m)
-	for _, want := range []string{"Files & links", " Files 2 ", " Links 3+ ", "Launch plan  PDF · 1.3 MB", "Anna Jensen 2 Mar", "tiny.txt  820 B"} {
+	for _, want := range []string{"Files 2 · Links 3+", "Launch plan  PDF · 1.3 MB", "Anna Jensen 2 Mar", "tiny.txt  TXT · 820 B"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("files tab: missing %q", want)
 		}

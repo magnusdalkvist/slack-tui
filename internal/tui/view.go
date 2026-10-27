@@ -36,16 +36,8 @@ func (m *Model) View() string {
 
 	var main string
 	switch {
-	case m.switcher != nil:
-		main = lipgloss.Place(mainW, h, lipgloss.Center, lipgloss.Top, "\n\n"+m.renderSwitcher(mainW, h))
-	case m.picker != nil:
-		main = lipgloss.Place(mainW, h, lipgloss.Center, lipgloss.Top, "\n\n"+m.renderPicker(mainW, h))
-	case m.opener != nil:
-		main = lipgloss.Place(mainW, h, lipgloss.Center, lipgloss.Top, "\n\n"+m.renderOpener(mainW))
-	case m.profile != nil:
-		main = lipgloss.Place(mainW, h, lipgloss.Center, lipgloss.Top, "\n\n"+m.renderProfile(mainW))
 	case m.help != nil:
-		main = lipgloss.Place(mainW, h, lipgloss.Center, lipgloss.Top, "\n"+m.renderHelp(mainW, h-1))
+		main = m.renderHelp(mainW, h)
 	case m.search != nil && m.search.open:
 		main = m.renderSearch(mainW, h)
 	case m.pins != nil:
@@ -72,10 +64,28 @@ func (m *Model) View() string {
 	}
 
 	body := lipgloss.JoinHorizontal(lipgloss.Top, m.renderSidebar(sw, h), gapCol(h), fit(main, mainW, h))
-	if m.cmd != nil {
+	if box := m.renderModal(); box != "" {
+		body = m.overlayModal(body, box)
+	}
+	if m.cmd != nil && !m.cmd.inPane {
 		return m.overlayCmdCompletion(body) + "\n" + m.renderCmdLine()
 	}
 	return body + "\n" + m.renderStatus()
+}
+
+// renderModal is the open modal's box, or "".
+func (m *Model) renderModal() string {
+	switch {
+	case m.switcher != nil:
+		return m.renderSwitcher()
+	case m.picker != nil:
+		return m.renderPicker()
+	case m.opener != nil:
+		return m.renderOpener()
+	case m.profile != nil:
+		return m.renderProfile()
+	}
+	return ""
 }
 
 // fit forces s to exactly w×h cells so panes line up.
@@ -249,81 +259,58 @@ func indent(s, prefix string) string {
 
 func lineCount(s string) int { return strings.Count(s, "\n") + 1 }
 
+// renderUnreads is the Unreads pane: a block per conversation, its last
+// messages in the usual message anatomy, three lines each at most.
 func (m *Model) renderUnreads(w, h int) string {
 	convs := m.unreadConvs()
-	title := sty.Title.Render("Unreads")
+	focused := m.focus == fMessages
+	lw := m.paneListW(w, false)
+	u := &m.unreads
+	p := paneSpec{title: frameTitle("Unreads", focused), top: &u.top, empty: "All caught up ✓"}
 	if len(convs) > 0 {
-		title += sty.Muted.Render(fmt.Sprintf("  %d %s", len(convs), plural(len(convs), "conversation", "conversations")))
+		p.right = sty.Faint.Render(fmt.Sprintf("%d %s", len(convs), plural(len(convs), "conversation", "conversations")))
 	}
-	header := []string{title, rule(w, m.focus == fMessages)}
-	bodyH := h - len(header)
-
-	if len(convs) == 0 {
-		msg := "All caught up ✓"
-		if m.infoPending > 0 {
-			msg = fmt.Sprintf("checking for unreads… %d/%d", m.infoTotal-m.infoPending, m.infoTotal)
-		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
+	if len(convs) == 0 && m.infoPending > 0 {
+		p.empty = "checking for unreads…"
 	}
-
-	sel := min(max(m.unreads.sel, 0), len(convs)-1)
-	var all []string
-	var selStart, selEnd int
+	sel := min(max(u.sel, 0), len(convs)-1)
 	for i, c := range convs {
 		if i == sel {
-			selStart = len(all)
+			p.selStart = len(p.lines)
 		}
-		head := sty.Unread.Render(m.convTitle(c)) + "  " + sty.Time.Render(relTime(backend.TSTime(c.Latest), m.cfg.TimeFormat))
-		if c.Mentions > 0 {
-			head += " " + sty.Badge.Render(fmt.Sprint(c.Mentions))
+		r := m.sideCells(sideItem{id: c.ID}, nil)
+		head := r.flag + slot(r.icon) + sty.Unread.Render(m.convLabel(c))
+		meta := sty.Faint.Render(relTime(backend.TSTime(c.Latest), m.cfg.TimeFormat))
+		if r.count != "" {
+			meta = r.count + "  " + meta
 		}
-		block := []string{head}
+		block := []string{rightAlign(head, meta, lw-1)}
 		msgs, ok := m.unreadMsgs[c.ID]
 		switch {
 		case !ok:
-			block = append(block, sty.Muted.Render("  loading…"))
+			block = append(block, "  "+sty.Faint.Render("loading…"))
 		case len(msgs) == 0:
-			block = append(block, sty.Muted.Render("  (only thread replies or hidden messages)"))
+			block = append(block, "  "+sty.Faint.Render("only thread replies or hidden messages"))
 		default:
 			const show = 5
 			if len(msgs) > show {
-				block = append(block, sty.Muted.Render(fmt.Sprintf("  … %d earlier", len(msgs)-show)))
+				block = append(block, "  "+sty.Faint.Render(fmt.Sprintf("… %d earlier", len(msgs)-show)))
 				msgs = msgs[len(msgs)-show:]
 			}
-			for _, msg := range msgs {
-				name := sty.Sender(senderKey(msg)).Render(m.senderName(msg))
-				text := strings.ReplaceAll(render.Mrkdwn(msg.Text, m, sty.Md), "\n", " ")
-				if strings.TrimSpace(msg.Text) == "" && len(msg.Files) > 0 {
-					text = sty.Muted.Render(msg.Files[0].Name)
+			for j, msg := range msgs {
+				header := j == 0 || senderKey(msgs[j-1]) != senderKey(msg)
+				lines := m.messageLines(msg, lw-2, header, false)
+				if limit := 3 + map[bool]int{true: 1, false: 0}[header]; len(lines) > limit {
+					lines = append(lines[:limit-1:limit-1], strings.Repeat(" ", m.gutterW())+sty.Faint.Render("…"))
 				}
-				line := name + " " + sty.Time.Render(msg.Time().Format(m.cfg.TimeFormat)) + "  " + text
-				wrapped := wrap(line, w-4)
-				if len(wrapped) > 3 {
-					wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
-				}
-				for _, l := range wrapped {
-					block = append(block, "  "+l)
-				}
+				block = append(block, prefixAll(lines, " ")...)
 			}
 		}
-		all = append(all, selLines(prefixAll(block, " "), w, i == sel, m.focus == fMessages)...)
+		p.lines = append(p.lines, selLines(block, lw, i == sel, focused)...)
 		if i == sel {
-			selEnd = len(all)
+			p.selEnd = len(p.lines)
 		}
-		all = append(all, "")
+		p.lines = append(p.lines, "")
 	}
-
-	u := &m.unreads
-	if selStart < u.top {
-		u.top = selStart
-	}
-	if selEnd > u.top+bodyH {
-		u.top = max(selStart, selEnd-bodyH)
-	}
-	u.top = min(max(u.top, 0), max(0, len(all)-bodyH))
-	view := all[u.top:min(len(all), u.top+bodyH)]
-	for len(view) < bodyH {
-		view = append(view, "")
-	}
-	return strings.Join(append(header, view...), "\n")
+	return m.renderPane(p, w, h)
 }

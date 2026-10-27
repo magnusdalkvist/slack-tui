@@ -106,11 +106,13 @@ func (m *Model) profileKey(k tea.KeyMsg) tea.Cmd {
 	return nil
 }
 
-func (m *Model) renderProfile(width int) string {
+// renderProfile is the Profile modal: who, their title, then the
+// fields in a 12-cell label column.
+func (m *Model) renderProfile() string {
 	p := m.profile
 	u := m.users[p.id]
-	boxW := min(64, width-4)
-	inner := boxW - 4
+	w := m.modalWidth(64)
+	inner := w - 2
 
 	name := u.RealName
 	if name == "" {
@@ -119,42 +121,46 @@ func (m *Model) renderProfile(width int) string {
 	if name == "" {
 		name = p.id
 	}
-	head := sty.Title.Render(name)
-	if active, ok := m.presence[p.id]; ok && active {
-		head += " " + sty.OK.Render(onlineDot)
+	dot := sty.Faint.Render("○")
+	if m.presence[p.id] {
+		dot = sty.OK.Render(onlineDot)
 	}
-	rows := []string{head}
+	head := " " + dot + " " + sty.Title.Render(name)
 	var sub []string
 	if u.DisplayName != "" && u.DisplayName != name {
 		sub = append(sub, u.DisplayName)
-	}
-	if u.Name != "" {
-		sub = append(sub, "@"+u.Name)
 	}
 	if u.Pronouns != "" {
 		sub = append(sub, u.Pronouns)
 	}
 	if len(sub) > 0 {
-		rows = append(rows, sty.Muted.Render(strings.Join(sub, " · ")))
+		head += "  " + sty.Faint.Render(strings.Join(sub, " · "))
 	}
+	if m.extUsers[p.id] {
+		head += "  " + sty.AppTag.Render("EXTERNAL")
+	}
+	rows := []string{head}
 	if u.Title != "" {
-		rows = append(rows, u.Title)
+		rows = append(rows, "   "+sty.Muted.Render(u.Title))
 	}
-	rows = append(rows, sty.Faint.Render(strings.Repeat("─", inner)))
+	rows = append(rows, modalRule(inner))
 
 	field := func(label, value string) {
 		if value != "" {
-			rows = append(rows, sty.Muted.Render(fmt.Sprintf("%-11s", label))+value)
+			rows = append(rows, " "+sty.Faint.Render(fmt.Sprintf("%-12s", label))+value)
 		}
 	}
 	if line := m.statusLine(p.id); line != "" {
 		if exp := u.StatusExpires; exp > 0 {
-			line += sty.Muted.Render(" until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
+			line += sty.Faint.Render(" · until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
 		}
 		field("Status", line)
 	}
-	if active, ok := m.presence[p.id]; ok && p.id != m.client.SelfID {
-		field("Presence", map[bool]string{true: sty.OK.Render("active"), false: "away"}[active])
+	switch active, ok := m.presence[p.id]; {
+	case u.Deleted:
+		rows = append(rows, " "+sty.Err.Render("This account is deactivated"))
+	case ok && p.id != m.client.SelfID:
+		field("Presence", map[bool]string{true: sty.OK.Render("active"), false: sty.Muted.Render("away")}[active])
 	}
 	field("Local time", localTime(u, clockNow(), m.cfg.TimeFormat))
 	field("Email", u.Email)
@@ -162,20 +168,19 @@ func (m *Model) renderProfile(width int) string {
 	if m.extUsers[p.id] {
 		field("Workspace", "another organisation (Slack Connect)")
 	}
-	if u.Deleted {
-		field("Account", sty.Err.Render("deactivated"))
-	}
 	if p.loading {
-		rows = append(rows, sty.Faint.Render("loading…"))
+		rows = append(rows, " "+sty.Faint.Render("loading…"))
 	}
 	for i, r := range rows {
 		rows[i] = ansi.Truncate(r, inner, "…")
 	}
-	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	right := ""
+	if u.Name != "" {
+		right = "@" + u.Name
+	}
+	return modalBox(w, "Profile", right, rows)
 }
 
-// localTime is the person's clock now, and how far it is from ours:
-// "16:04  Central European Summer Time · 1 h ahead".
 func localTime(u backend.User, now time.Time, layout string) string {
 	if u.TZ == "" && u.TZOffset == 0 {
 		return ""
@@ -192,18 +197,15 @@ func localTime(u backend.User, now time.Time, layout string) string {
 	_, ours := now.Zone()
 	_, theirs := there.Zone()
 	if d := time.Duration(theirs-ours) * time.Second; d != 0 {
-		way := "ahead"
+		sign := "+"
 		if d < 0 {
-			d, way = -d, "behind"
+			d, sign = -d, "-"
 		}
-		gap := fmt.Sprintf("%d h", int(d.Hours()))
-		if m := int(d.Minutes()) % 60; m != 0 {
-			gap = fmt.Sprintf("%d h %d min", int(d.Hours()), m)
-			if d < time.Hour {
-				gap = fmt.Sprintf("%d min", m)
-			}
+		gap := fmt.Sprintf("%dh", int(d.Hours()))
+		if mins := int(d.Minutes()) % 60; mins != 0 {
+			gap = fmt.Sprintf("%dh%02dm", int(d.Hours()), mins)
 		}
-		s += sty.Muted.Render(" · " + gap + " " + way)
+		s += "  " + sty.Faint.Render(sign+gap+" vs you")
 	}
 	return s
 }

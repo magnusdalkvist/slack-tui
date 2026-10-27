@@ -60,6 +60,7 @@ type cmdLine struct {
 	histAt    int // index into m.cmdHist while browsing it; len = the new line
 	draft     string
 	bookmark  *bookmarkEdit // `e` in the pins pane: :bookmark changes this one
+	inPane    bool          // typed in the pins pane's composer frame, not the bar
 }
 
 func (m *Model) openCmd() tea.Cmd {

@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -22,8 +23,8 @@ func TestOpenChooser(t *testing.T) {
 		t.Fatalf("want a chooser with 3 items, got %+v", m.opener)
 	}
 	v := dump(t, m)
-	for _, want := range []string{"1 plan.pdf  file", "2 the docs  https://docs.dk", "3 https://b.dk"} {
-		if !strings.Contains(v, want) {
+	for _, want := range []string{`1 +PDF +plan\.pdf`, `2 +URL +the docs https://docs\.dk`, `3 +URL +https://b\.dk`} {
+		if !regexp.MustCompile(want).MatchString(v) {
 			t.Errorf("chooser missing %q", want)
 		}
 	}

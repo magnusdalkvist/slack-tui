@@ -28,7 +28,7 @@ func TestSearchView(t *testing.T) {
 		hit("D1", "200.0", "150.0", "U1", "did the deploy work?"),
 	}}})
 	v := dump(t, m)
-	for _, want := range []string{"2 results", "#dev", "Anna Jensen", "in thread", "deploying now"} {
+	for _, want := range []string{"1 of 2", "#dev", "Anna Jensen", "in thread", "deploying now"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("view lacks %q", want)
 		}

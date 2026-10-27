@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 	"sync"
@@ -216,102 +217,93 @@ func (m *Model) pinEvent(ev backend.EvPin) tea.Cmd {
 	return nil
 }
 
+// renderPins is the Pins & bookmarks pane: BOOKMARKS, then PINNED.
 func (m *Model) renderPins(w, h int) string {
 	p := m.pins
-	title := sty.Title.Render("Pinned & bookmarks")
+	lw := m.paneListW(w, true)
+	spec := paneSpec{title: frameTitle("Pins & bookmarks", true), top: &p.top}
+	if c := m.cmd; c != nil && c.inPane {
+		// Adding or changing a bookmark happens in the composer frame.
+		c.input.Width = max(10, lw-4)
+		spec.input, spec.inputBorder = " "+sty.Faint.Render(":")+c.input.View(), sty.OK
+		spec.inputLabel = sty.OK.Bold(true).Render(map[bool]string{true: "editing bookmark", false: "new bookmark"}[c.bookmark != nil])
+	}
 	if c := m.convs[p.conv]; c != nil {
-		title += sty.Muted.Render("  " + m.convTitle(c))
+		spec.right = sty.Faint.Render("in " + m.convTitle(c))
 	}
-	header := []string{title, rule(w, true)}
 	for _, e := range p.errs {
-		header = append(header, "  "+sty.Err.Render(e))
+		spec.notes = append(spec.notes, " "+sty.Err.Render(e))
 	}
-	bodyH := max(1, h-len(header))
+	spec.empty = "nothing pinned or bookmarked"
+	if p.loading {
+		spec.empty = "loading…"
+	}
 	if p.count() == 0 {
-		msg := "nothing pinned or bookmarked"
-		if p.loading {
-			msg = "loading…"
-		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
+		return m.renderPane(spec, w, h)
 	}
 
 	sel := min(max(p.sel, 0), p.count()-1)
-	var all []string
-	var selStart, selEnd int
+	spec.fromTop = sel == 0 // keep the first heading in view
 	add := func(i int, block []string) {
 		if i == sel {
-			selStart = len(all)
+			spec.selStart = len(spec.lines)
 		}
-		all = append(all, selLines(prefixAll(block, " "), w, i == sel, true)...)
+		spec.lines = append(spec.lines, blockRows(block, lw, i == sel, true)...)
 		if i == sel {
-			selEnd = len(all)
+			spec.selEnd = len(spec.lines)
 		}
-		all = append(all, "")
+		spec.lines = append(spec.lines, "")
 	}
 	if len(p.bookmarks) > 0 {
-		all = append(all, "  "+sty.Header.Render("BOOKMARKS"), "")
+		spec.lines = append(spec.lines, group("BOOKMARKS", fmt.Sprint(len(p.bookmarks))))
 	}
 	for i, b := range p.bookmarks {
 		label := b.Title
 		if label == "" {
 			label = b.Link
 		}
+		icon := sty.Faint.Render(ico.Bookmark) + " "
 		if name := strings.Trim(b.Emoji, ":"); name != "" {
-			label = m.emojiChip(name) + " " + label
+			icon = m.emojiChip(name) + " "
 		}
-		add(i, []string{sty.Normal.Render(label), sty.Muted.Render(b.Link)})
+		add(i, []string{icon + sty.Normal.Render(label), "  " + sty.Md.Link.Render(b.Link)})
 	}
 	if len(p.pins) > 0 {
-		all = append(all, "  "+sty.Header.Render("PINNED"), "")
+		spec.lines = append(spec.lines, group("PINNED", fmt.Sprint(len(p.pins))))
 	}
 	for i, pin := range p.pins {
 		var block []string
 		if pin.TS == "" {
 			for _, f := range pin.Files {
-				name := f.Title
-				if name == "" {
-					name = f.Name
-				}
-				block = append(block, sty.Normal.Render(name), sty.Muted.Render("file"))
+				block = append(block, fileLine(f, f.Size))
 			}
 		} else {
-			name := sty.Sender(senderKey(pin.Message)).Render(m.senderName(pin.Message))
-			line := name + " " + sty.Time.Render(relTime(pin.Time(), m.cfg.TimeFormat))
+			line := sty.Sender(senderKey(pin.Message)).Render(m.senderName(pin.Message)) + " " + sty.Faint.Render(relTime(pin.Time(), m.cfg.TimeFormat))
 			if pin.IsReply() {
-				line += sty.Thread.Render("  in thread")
+				line += "  " + sty.Thread.Render("in thread")
 			}
-			block = append(block, line)
+			block = append(block, sty.Warn.Render(ico.Pinned)+" "+line)
 			text := strings.ReplaceAll(render.Mrkdwn(pin.Text, m, sty.Md), "\n", " ")
 			if strings.TrimSpace(pin.Text) == "" && len(pin.Files) > 0 {
-				text = sty.Muted.Render(pin.Files[0].Name)
+				text = fileLine(pin.Files[0], pin.Files[0].Size)
 			}
-			wrapped := wrap(text, w-4)
+			wrapped := wrap(text, lw-4)
 			if len(wrapped) > 3 {
 				wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 			}
-			block = append(block, wrapped...)
+			block = append(block, prefixAll(wrapped, "  ")...)
 		}
 		add(len(p.bookmarks)+i, block)
 	}
-
-	if selStart < p.top {
-		p.top = selStart
+	spec.preview = func(w, h int) string {
+		if sel < len(p.bookmarks) {
+			b := p.bookmarks[sel]
+			return strings.Join([]string{sty.Title.Render(b.Title), sty.Md.Link.Render(b.Link)}, "\n")
+		}
+		pin := p.pins[sel-len(p.bookmarks)]
+		return m.previewMessage(m.messageLines(pin.Message, w-1, true, true), w, h)
 	}
-	if selEnd > p.top+bodyH {
-		p.top = max(selStart, selEnd-bodyH)
-	}
-	if sel == 0 {
-		p.top = 0 // keep the first section heading in view
-	}
-	p.top = min(max(p.top, 0), max(0, len(all)-bodyH))
-	view := all[p.top:min(len(all), p.top+bodyH)]
-	for len(view) < bodyH {
-		view = append(view, "")
-	}
-	for i := range view {
-		view[i] = ansi.Truncate(view[i], w, "…")
-	}
-	return strings.Join(append(header, view...), "\n")
+	return m.renderPane(spec, w, h)
 }
 
 // bookmarkCmd opens the command line with a :bookmark to finish.
@@ -320,6 +312,7 @@ func (m *Model) bookmarkCmd(line string, edit *bookmarkEdit) tea.Cmd {
 	m.cmd.input.SetValue(line)
 	m.cmd.input.CursorEnd()
 	m.cmd.bookmark = edit
+	m.cmd.inPane = m.pins != nil
 	return cmd
 }
 

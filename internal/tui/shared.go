@@ -334,12 +334,11 @@ func fmtSize(n int) string {
 	return fmt.Sprintf("%.1f GB", float64(n)/1e9)
 }
 
+// renderShared is the Files & links pane: the tabs are its title, the
+// selected file or link is in the Preview.
 func (m *Model) renderShared(w, h int) string {
 	s := m.shared
-	title := sty.Title.Render("Files & links")
-	if c := m.convs[s.conv]; c != nil {
-		title += sty.Muted.Render("  " + m.convTitle(c))
-	}
+	lw := m.paneListW(w, true)
 	var tabs []string
 	for i, name := range []string{"Files", "Links"} {
 		t := s.tabs[i]
@@ -354,54 +353,43 @@ func (m *Model) renderShared(w, h int) string {
 			}
 		}
 		if i == s.tab {
-			tabs = append(tabs, paintBg(sty.FrameTitleFocus.Render(" "+label+" "), ansi.StringWidth(label)+2, sty.SelFocusBgOn()))
+			tabs = append(tabs, sty.FrameTitleFocus.Render(label))
 		} else {
-			tabs = append(tabs, sty.Muted.Render(" "+label+" "))
+			tabs = append(tabs, sty.FrameTitle.Render(label))
 		}
 	}
-	header := []string{title, " " + strings.Join(tabs, " "), rule(w, true)}
 	t := &s.tabs[s.tab]
-	if t.err != "" {
-		header = append(header, "  "+sty.Err.Render(t.err))
+	p := paneSpec{title: strings.Join(tabs, sty.Faint.Render(" · ")), top: &t.top}
+	if c := m.convs[s.conv]; c != nil {
+		p.right = sty.Faint.Render("in " + m.convTitle(c))
 	}
-	bodyH := max(1, h-len(header))
+	if t.err != "" {
+		p.notes = []string{" " + sty.Err.Render(t.err)}
+	}
 	n := s.count()
+	switch {
+	case n == 0 && t.loading:
+		p.empty = "loading…"
+	case n == 0 && s.tab == tabLinks:
+		p.empty = "no links shared here"
+	case n == 0:
+		p.empty = "no files shared here"
+	}
 	if n == 0 {
-		msg := "no files shared here"
-		if s.tab == tabLinks {
-			msg = "no links shared here"
-		}
-		if t.loading {
-			msg = "loading…"
-		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
+		return m.renderPane(p, w, h)
 	}
 
 	sel := min(max(t.sel, 0), n-1)
-	var all []string
-	var selStart, selEnd int
 	for i := range n {
 		var block []string
 		if s.tab == tabFiles {
 			f := s.files[i]
-			name := f.Title
-			if name == "" {
-				name = f.Name
-			}
-			info := []string{}
-			if f.Kind != "" {
-				info = append(info, f.Kind)
-			}
-			if f.Size > 0 {
-				info = append(info, fmtSize(f.Size))
-			}
-			line := sty.Normal.Render(name)
-			if len(info) > 0 {
-				line += sty.Muted.Render("  " + strings.Join(info, " · "))
-			}
 			by := backend.Message{User: f.User}
-			block = append([]string{line}, m.thumbLines(f.File)...)
-			block = append(block, sty.Sender(senderKey(by)).Render(m.senderName(by))+" "+sty.Time.Render(relTime(f.Created, m.cfg.TimeFormat)))
+			block = []string{fileLine(f.File, f.Size)}
+			if _, pw := m.paneWidths(w, true); pw == 0 {
+				block = append(block, m.thumbLines(f.File)...) // no Preview to show it in
+			}
+			block = append(block, "  "+sty.Sender(senderKey(by)).Render(m.senderName(by))+" "+sty.Faint.Render(relTime(f.Created, m.cfg.TimeFormat)))
 		} else {
 			r := s.links[i]
 			label := r.link.Label
@@ -409,42 +397,41 @@ func (m *Model) renderShared(w, h int) string {
 				label = r.link.URL
 			}
 			msg := r.hit.Message
-			sub := sty.Sender(senderKey(msg)).Render(m.senderName(msg)) + " " + sty.Time.Render(relTime(msg.Time(), m.cfg.TimeFormat))
+			sub := sty.Sender(senderKey(msg)).Render(m.senderName(msg)) + " " + sty.Faint.Render(relTime(msg.Time(), m.cfg.TimeFormat))
 			if msg.IsReply() {
-				sub += sty.Thread.Render("  in thread")
+				sub += "  " + sty.Thread.Render("in thread")
 			}
-			block = []string{sty.Normal.Render(label)}
+			block = []string{sty.Faint.Render(ico.Link) + " " + sty.Normal.Render(label)}
 			if label != r.link.URL {
-				block = append(block, sty.Muted.Render(r.link.URL))
+				block = append(block, "  "+sty.Md.Link.Render(r.link.URL))
 			}
-			block = append(block, sub)
+			block = append(block, "  "+sub)
 		}
 		if i == sel {
-			selStart = len(all)
+			p.selStart = len(p.lines)
 		}
-		all = append(all, selLines(prefixAll(block, " "), w, i == sel, true)...)
+		p.lines = append(p.lines, blockRows(block, lw, i == sel, true)...)
 		if i == sel {
-			selEnd = len(all)
+			p.selEnd = len(p.lines)
 		}
-		all = append(all, "")
+		p.lines = append(p.lines, "")
 	}
 	if t.loading {
-		all = append(all, "  "+sty.Faint.Render("loading more…"))
+		p.lines = append(p.lines, " "+sty.Faint.Render("loading more…"))
 	}
-
-	if selStart < t.top {
-		t.top = selStart
+	p.preview = func(w, h int) string {
+		if s.tab == tabFiles {
+			f := s.files[sel]
+			out := []string{fileLine(f.File, f.Size)}
+			out = append(out, m.thumbLines(f.File)...)
+			by := backend.Message{User: f.User}
+			out = append(out, "", sty.Faint.Render("shared by ")+sty.Sender(senderKey(by)).Render(m.senderName(by))+sty.Faint.Render(" · "+relTime(f.Created, m.cfg.TimeFormat)))
+			return strings.Join(out, "\n")
+		}
+		r := s.links[sel]
+		return m.previewMessage(m.messageLines(r.hit.Message, w-1, true, true), w, h)
 	}
-	if selEnd > t.top+bodyH {
-		t.top = max(selStart, selEnd-bodyH)
-	}
-	t.top = min(max(t.top, 0), max(0, len(all)-bodyH))
-	view := all[t.top:min(len(all), t.top+bodyH)]
-	for len(view) < bodyH {
-		view = append(view, "")
-	}
-	truncateRows(view, w)
-	return strings.Join(append(header, view...), "\n")
+	return m.renderPane(p, w, h)
 }
 
 // picture marks a preview row while the pane is laid out.

@@ -190,6 +190,7 @@ func TestStatusAndPresenceShown(t *testing.T) {
 	}
 	rows := 0
 	for _, l := range strings.Split(raw, "\n") {
+		l = ansi.Cut(l, 0, m.cfg.SidebarWidth) // the sidebar, not the Unreads pane
 		plain := ansi.Strip(l)
 		switch {
 		case strings.Contains(plain, ico.UserActive+" Anna Jensen"):

@@ -2,11 +2,12 @@ package tui
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/render"
@@ -260,7 +261,7 @@ func (m *Model) scheduledListResult(msg scheduledListMsg) tea.Cmd {
 	}
 	m.scheduled = msg.list
 	if s := m.sched; s != nil {
-		s.sel = min(s.sel, max(len(m.upcoming())-1, 0))
+		s.sel = min(s.sel, max(len(m.schedRows())-1, 0))
 	}
 	return nil
 }
@@ -282,7 +283,7 @@ func (m *Model) openAt(conv, threadTS string) tea.Cmd {
 
 func (m *Model) schedKey(k tea.KeyMsg) tea.Cmd {
 	s := m.sched
-	list := m.upcoming()
+	list := m.schedRows()
 	n := len(list)
 	var cur *backend.Scheduled
 	if n > 0 {
@@ -389,65 +390,78 @@ func (m *Model) scheduledIn(conv string) int {
 	return n
 }
 
+// renderScheduled is the Scheduled pane: what is waiting, grouped by
+// conversation.
 func (m *Model) renderScheduled(w, h int) string {
 	s := m.sched
-	list := m.upcoming()
-	header := []string{sty.Title.Render("Scheduled messages"), rule(w, true)}
-	if s.err != "" {
-		header = append(header, "  "+sty.Err.Render(s.err))
+	list := m.schedRows()
+	lw := m.paneListW(w, true)
+	p := paneSpec{title: frameTitle("Scheduled", true), top: &s.top}
+	if len(list) > 0 {
+		p.right = sty.Faint.Render(fmt.Sprintf("%d waiting", len(list)))
 	}
-	bodyH := max(1, h-len(header))
+	if s.err != "" {
+		p.notes = []string{" " + sty.Err.Render(s.err)}
+	}
+	p.empty = "nothing scheduled — write a message, then :later"
+	if s.loading {
+		p.empty = "loading…"
+	}
 	if len(list) == 0 {
-		msg := "nothing scheduled — write a message, then ctrl+s"
-		if s.loading {
-			msg = "loading…"
-		}
-		return strings.Join(append(header, placeholder(msg, w, bodyH)), "\n")
+		return m.renderPane(p, w, h)
 	}
 
 	now := clockNow()
 	sel := min(max(s.sel, 0), len(list)-1)
-	var all []string
-	var selStart, selEnd int
 	for i, sm := range list {
+		if i == 0 || list[i-1].Channel != sm.Channel {
+			where := sm.Channel
+			if c := m.convs[sm.Channel]; c != nil {
+				where = m.convTitle(c)
+			}
+			if i > 0 {
+				p.lines = append(p.lines, "")
+			}
+			p.lines = append(p.lines, group(where, ""))
+		}
 		if i == sel {
-			selStart = len(all)
+			p.selStart = len(p.lines)
 		}
-		where := sm.Channel
-		if c := m.convs[sm.Channel]; c != nil {
-			where = m.convTitle(c)
-		}
-		line := sty.Warn.Render(ico.Scheduled+" "+fmtWhen(sm.PostAt, now, m.cfg.TimeFormat)) + "  " + sty.Normal.Render(where)
+		line := sty.Warn.Render(ico.Scheduled + " " + fmtWhen(sm.PostAt, now, m.cfg.TimeFormat))
 		if m.schedThread[sm.ID] != "" {
-			line += sty.Thread.Render("  in thread")
+			line += "  " + sty.Thread.Render("in thread")
 		}
 		block := []string{line}
 		text := strings.ReplaceAll(render.Mrkdwn(sm.Text, m, sty.Md), "\n", " ")
-		wrapped := wrap(text, w-4)
+		wrapped := wrap(text, lw-4)
 		if len(wrapped) > 3 {
 			wrapped = append(wrapped[:3:3], sty.Faint.Render("…"))
 		}
-		block = append(block, wrapped...)
-		all = append(all, selLines(prefixAll(block, " "), w, i == sel, true)...)
+		block = append(block, prefixAll(wrapped, "  ")...)
+		p.lines = append(p.lines, blockRows(block, lw, i == sel, true)...)
 		if i == sel {
-			selEnd = len(all)
+			p.selEnd = len(p.lines)
 		}
-		all = append(all, "")
 	}
+	sm := list[sel]
+	p.preview = func(w, h int) string {
+		out := []string{sty.Warn.Render(ico.Scheduled + " " + fmtWhen(sm.PostAt, now, m.cfg.TimeFormat)), ""}
+		out = append(out, wrap(render.Mrkdwn(sm.Text, m, sty.Md), w)...)
+		return strings.Join(out[:min(len(out), h)], "\n")
+	}
+	return m.renderPane(p, w, h)
+}
 
-	if selStart < s.top {
-		s.top = selStart
+// schedRows are the scheduled messages as the pane lists them: grouped by
+// conversation, the soonest conversation first, each by time.
+func (m *Model) schedRows() []backend.Scheduled {
+	list := m.upcoming()
+	first := map[string]int{}
+	for i, s := range list {
+		if _, ok := first[s.Channel]; !ok {
+			first[s.Channel] = i
+		}
 	}
-	if selEnd > s.top+bodyH {
-		s.top = max(selStart, selEnd-bodyH)
-	}
-	s.top = min(max(s.top, 0), max(0, len(all)-bodyH))
-	view := all[s.top:min(len(all), s.top+bodyH)]
-	for len(view) < bodyH {
-		view = append(view, "")
-	}
-	for i := range view {
-		view[i] = ansi.Truncate(view[i], w, "…")
-	}
-	return strings.Join(append(header, view...), "\n")
+	slices.SortStableFunc(list, func(a, b backend.Scheduled) int { return first[a.Channel] - first[b.Channel] })
+	return list
 }

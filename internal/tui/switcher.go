@@ -1,11 +1,12 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 )
@@ -95,48 +96,89 @@ func (m *Model) switcherKey(k tea.KeyMsg) tea.Cmd {
 	return cmd
 }
 
-func (m *Model) renderSwitcher(width, height int) string {
+// renderSwitcher is the Jump to modal: icon, name with the query's
+// match marked, and what it is on the right.
+func (m *Model) renderSwitcher() string {
 	s := m.switcher
-	boxW := min(60, width-4)
-	inner := boxW - 4
-	s.input.Width = inner - 3
-	rows := []string{s.input.View(), sty.Faint.Render(strings.Repeat("─", inner))}
-	listH := max(3, min(15, height-8))
+	w := m.modalWidth(76)
+	inner := w - 2
+	s.input.Width = inner - 4
+	q := strings.TrimSpace(s.input.Value())
+	rows := []string{" " + s.input.View(), modalRule(inner)}
+	listH := max(3, min(12, m.height/2))
 	start := max(0, s.sel-listH+1)
 	for i := start; i < len(s.matches) && i < start+listH; i++ {
-		id := s.matches[i]
-		label := ico.Unreads + " Unreads"
-		unread := false
-		if uid, ok := strings.CutPrefix(id, personPrefix); ok {
-			u := m.users[uid]
-			label = ico.UserActive + " " + u.Label()
-			if u.RealName != "" && u.RealName != u.Label() {
-				label += sty.Faint.Render("  " + u.RealName)
-			}
-		} else if c := m.convs[id]; c != nil {
-			icon := "#"
-			switch c.Kind {
-			case backend.KindDM:
-				icon = ico.UserActive
-			case backend.KindGroup:
-				icon = ico.Group
-			case backend.KindPrivate:
-				icon = ico.Private
-			}
-			label = icon + " " + m.convLabel(c)
-			unread = c.Unread()
-		} else {
-			unread = m.unreadCount() > 0
+		icon, name, meta, style := m.switchRow(s.matches[i])
+		row := " " + slot(icon) + markMatch(name.label, q, style)
+		if name.extra != "" {
+			row += " " + sty.Faint.Render(name.extra)
 		}
-		label = ansi.Truncate(label, inner-2, "…")
-		style := sty.Muted
-		if unread {
-			style = sty.Unread
-		}
-		rows = append(rows, selLine(" "+style.Render(label), inner, i == s.sel, true))
+		rows = append(rows, modalRow(rightAlign(row, sty.Faint.Render(meta), inner), inner, i == s.sel))
 	}
 	if len(s.matches) == 0 {
-		rows = append(rows, sty.Muted.Render("  no matches"))
+		rows = append(rows, " "+sty.Muted.Render("no matches"))
 	}
-	return sty.Box.Width(boxW - 2).Render(strings.Join(rows, "\n"))
+	right := fmt.Sprintf("%d of %d", len(s.matches), len(s.ids))
+	return modalBox(w, "Jump to", right, rows)
+}
+
+type switchName struct{ label, extra string }
+
+// switchRow is a switcher entry's icon, name (and a faint extra: a
+// person's real name), meta and style.
+func (m *Model) switchRow(id string) (icon string, name switchName, meta string, style lipgloss.Style) {
+	style = sty.Muted
+	if uid, ok := strings.CutPrefix(id, personPrefix); ok {
+		u := m.users[uid]
+		name = switchName{label: u.Label()}
+		if u.RealName != "" && u.RealName != u.Label() {
+			name.extra = u.RealName
+		}
+		return m.personIcon(uid), name, "person", style
+	}
+	c := m.convs[id]
+	if c == nil {
+		n := m.unreadCount()
+		if n > 0 {
+			style = sty.Unread
+		}
+		return style.Render(ico.Unreads), switchName{label: "Unreads"}, fmt.Sprintf("%d %s", n, plural(n, "conversation", "conversations")), style
+	}
+	if c.Unread() {
+		style = sty.Unread
+	}
+	name = switchName{label: m.convLabel(c)}
+	switch c.Kind {
+	case backend.KindDM:
+		icon = m.personIcon(c.UserID)
+		switch {
+		case c.UserID == m.client.SelfID:
+			name.label, meta = strings.TrimSuffix(name.label, " (you)"), "you"
+		case m.presence[c.UserID]:
+			meta = "DM · active"
+		default:
+			meta = "DM · away"
+		}
+	case backend.KindGroup:
+		icon, meta = style.Render(ico.Group), "group DM"
+	case backend.KindPrivate:
+		icon, meta = style.Render(ico.Private), "private channel"
+	default:
+		icon, meta = style.Render(ico.Channel), "channel"
+	}
+	if c.Mentions > 0 {
+		meta = sty.Err.Render(fmt.Sprintf("%d %s", c.Mentions, plural(c.Mentions, "mention", "mentions"))) + sty.Faint.Render(" · "+meta)
+	} else if c.Unread() {
+		meta = "new · " + meta
+	}
+	return icon, name, meta, style
+}
+
+// personIcon is a person's icon, showing presence: solid in ok when
+// active, outline in faint when away.
+func (m *Model) personIcon(uid string) string {
+	if m.presence[uid] && uid != m.client.SelfID {
+		return sty.OK.Render(ico.UserActive)
+	}
+	return sty.Faint.Render(ico.UserAway)
 }

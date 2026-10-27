@@ -17,7 +17,6 @@ type Styles struct {
 
 	Muted, Faint, Normal lipgloss.Style
 	Unread, Header       lipgloss.Style
-	Badge                lipgloss.Style
 	Title, Topic         lipgloss.Style
 	Bar, Rule            lipgloss.Style
 	Time, System         lipgloss.Style
@@ -29,9 +28,10 @@ type Styles struct {
 	PillWarn, PillErr    lipgloss.Style // SEARCH, CONFIRM; ERROR and the offline chip
 	PillCmd              lipgloss.Style // ":"
 	OK, Warn, Err        lipgloss.Style
-	Box, Key             lipgloss.Style
+	Key                  lipgloss.Style
 	AppTag               lipgloss.Style // "APP" after a bot's name
 	Match                lipgloss.Style // what a filter matched
+	KindTag              lipgloss.Style // a file's kind: [PDF]
 	FrameTitle           lipgloss.Style // an idle frame's title
 	FrameTitleFocus      lipgloss.Style
 	sel, selFocus        lipgloss.Style // selection backgrounds
@@ -67,7 +67,6 @@ func NewStyles(t Theme) Styles {
 		Normal:     fg(t.Fg),
 		Unread:     fg(t.Fg).Bold(true),
 		Header:     fg(t.Faint).Bold(true),
-		Badge:      pill(t.Mention),
 		Title:      fg(t.Fg).Bold(true),
 		Topic:      fg(t.Muted),
 		Bar:        fg(t.Accent),
@@ -87,11 +86,11 @@ func NewStyles(t Theme) Styles {
 		OK:         fg(t.OK),
 		Warn:       fg(t.Warn),
 		Err:        fg(t.Mention),
-		Box:        lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(t.Accent).Padding(0, 1),
 		Key:        fg(t.Fg).Bold(true),
 
 		AppTag:          on(t.Muted, t.Sel).Padding(0, 1),
 		Match:           fg(t.Accent).Bold(true),
+		KindTag:         on(t.Fg, t.Sel).Bold(true).Padding(0, 1),
 		FrameTitle:      fg(t.Muted).Bold(true),
 		FrameTitleFocus: fg(t.Accent).Bold(true).Reverse(t.NoColor), // no border colour to show focus
 		sel:             on(t.Fg, t.Sel),
@@ -157,9 +156,11 @@ func bgOn(c lipgloss.TerminalColor) string {
 const SelOff = "\x1b[27;49m"
 
 // HitOn and HitOff mark search matches inside already styled text.
-func (s Styles) HitOn() string { return sgrPrefix(fgStyle(s.theme.Self).Bold(true)) }
+func (s Styles) HitOn() string {
+	return sgrPrefix(fgStyle(s.theme.Self).Background(s.theme.Raised).Bold(true))
+}
 
-const HitOff = "\x1b[22;39m"
+const HitOff = "\x1b[22;39;49m"
 
 func fgStyle(c lipgloss.TerminalColor) lipgloss.Style { return lipgloss.NewStyle().Foreground(c) }
 
