@@ -119,7 +119,7 @@ func (m *Model) renderConvPane(w, h int) string {
 	var ctx []string
 	if c.Kind == backend.KindDM {
 		if m.isActive(c.UserID) {
-			ctx = append(ctx, sty.OK.Render(onlineDot))
+			ctx = append(ctx, sty.OK.Render(ico.UserActive))
 		}
 		if line := m.statusLine(c.UserID); line != "" {
 			if exp := m.users[c.UserID].StatusExpires; exp > 0 {

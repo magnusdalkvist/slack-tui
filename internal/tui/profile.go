@@ -121,9 +121,9 @@ func (m *Model) renderProfile() string {
 	if name == "" {
 		name = p.id
 	}
-	dot := sty.Faint.Render("○")
+	dot := sty.Faint.Render(ico.UserAway)
 	if m.isActive(p.id) {
-		dot = sty.OK.Render(onlineDot)
+		dot = sty.OK.Render(ico.UserActive)
 	}
 	head := " " + dot + " " + sty.Title.Render(name)
 	var sub []string

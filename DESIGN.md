@@ -70,8 +70,8 @@ Nerd Fonts stay. Icons come from Nerd Font v3 and live in one `icons.go` map, so
 |---|---|---|
 | Public channel | `U+F4DF` nf-oct-hash (thinner than nf-fa-hashtag, which runs into the name) | `#` |
 | Private channel | `U+F023` nf-fa-lock | `◇` |
-| Person, active | `●` in `ok` | `●` |
-| Person, away | `○` in `faint` | `○` |
+| Person, active | `U+F0765` nf-md-circle, in `ok` | `●` |
+| Person, away | `U+F0766` nf-md-circle_outline, in `faint` | `○` |
 | Group DM | `U+F0695` nf-md-circle_multiple_outline (a group, not a person) | `◎` |
 | Unreads entry | `U+F01C` nf-fa-inbox | `≡` |
 | CHANNELS section | `U+F4DF` nf-oct-hash | none |
@@ -100,7 +100,6 @@ These stay plain Unicode in both modes, because they're structure rather than ic
 |---|---|
 | Selection bar, edge flag | `▌` (half block) |
 | Plain-unread flag | `▏` (faint) |
-| Presence in a header or modal | `●` / `○` |
 | System message | `→` |
 | Spinner | Braille: `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` (Bubble Tea `spinner.Dot` or `MiniDot`) |
 | Back affordance in narrow mode | `‹` |
@@ -448,5 +447,5 @@ Gaps found while building this spec, and how they were filled.
 - **`e` on the error screen** opens `config.toml` in `$VISUAL`, `$EDITOR` or `vi`, then asks Slack again. Settings themselves are read at start, so the status bar says to restart for config changes. The error screen's bar shows only the `ERROR` pill and `e`/`q`, since nothing else works there.
 - **Hint keys are words** (`enter`, `alt+enter`, `esc`, `tab`). `⏎` drew badly in some fonts.
 - **The count column** is sized by the conversation rows only. A folded header's `2 new` may run into the status column, so it doesn't shorten every name.
-- **A presence circle**, not a user glyph, marks people everywhere (sidebar, switcher, completion, members). Group DMs get `nf-md-circle_multiple_outline`.
-- **Your own presence** is the app's away setting (`:away` / `:back`), because `users.getPresence` isn't asked about you. You show as `●` active unless you set yourself away: in your own DM, the switcher, members and your profile, which also shows Presence and DND for you.
+- **A presence circle** (`nf-md-circle` / `nf-md-circle_outline`, `●`/`○` in unicode), not a user glyph, marks people everywhere: sidebar, DM header, switcher, completion, members and profile. Group DMs get `nf-md-circle_multiple_outline`.
+- **Your own presence** is the app's away setting (`:away` / `:back`), because `users.getPresence` isn't asked about you. You show as active unless you set yourself away: in your own DM, the switcher, members and your profile, which also shows Presence and DND for you.

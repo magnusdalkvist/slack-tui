@@ -211,7 +211,7 @@ func TestStatusAndPresenceShown(t *testing.T) {
 
 	m.open("D1")
 	v = dump(t, m)
-	if !strings.Contains(v, "Anna Jensen  ●  🏠 WFH") {
+	if !strings.Contains(v, "Anna Jensen  "+ico.UserActive+"  🏠 WFH") {
 		t.Errorf("DM header lacks presence and status")
 	}
 

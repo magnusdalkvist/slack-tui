@@ -26,9 +26,9 @@ type Icons struct {
 
 var nerdIcons = Icons{
 	// The Octicons hashtag (thinner than Font Awesome's, which fills its
-	// cell and runs into the name) and circles for people.
+	// cell and runs into the name) and presence circles for people.
 	Channel: "\uf4df", Private: "",
-	UserActive: "●", UserAway: "○",
+	UserActive: "\U000f0765", UserAway: "\U000f0766", // nf-md-circle, nf-md-circle_outline
 	Group: "\U000f0695", Unreads: "", // nf-md-circle_multiple_outline: a group, not a person
 	// nf-oct-hash, nf-cod-comment_discussion
 	SecChannels: "\uf4df", SecDMs: "\ueac7", SecExternal: "",

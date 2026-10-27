@@ -152,9 +152,9 @@ func (m *Model) renderMembers(w, h int) string {
 	for i, idx := range s.matches {
 		id := s.ids[idx]
 		u := m.users[id]
-		dot := sty.Faint.Render("○")
+		dot := sty.Faint.Render(ico.UserAway)
 		if m.isActive(id) {
-			dot = sty.OK.Render(onlineDot)
+			dot = sty.OK.Render(ico.UserActive)
 		}
 		row := dot + " " + markMatch(m.memberName(id), q, sty.Normal)
 		if id == m.client.SelfID {

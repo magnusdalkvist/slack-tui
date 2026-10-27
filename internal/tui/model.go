@@ -33,8 +33,6 @@ const (
 // unreadsID is the sidebar entry for the Unreads view.
 const unreadsID = "\x00unreads"
 
-// onlineDot marks people who are active, in headers and modals.
-const onlineDot = "●"
 
 const pageSize = 50
 
