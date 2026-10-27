@@ -141,7 +141,7 @@ func (m *Model) fetchThumbs(files []backend.File) tea.Cmd {
 		}
 		st := &imgState{id: m.newImageID()}
 		m.images[thumbKey(f.ID)] = st
-		cmds = append(cmds, m.fetchImageSized(thumbKey(f.ID), f, st.id, thumbCols, thumbRows))
+		cmds = append(cmds, m.fetchImageSized(thumbKey(f.ID), f, st.id, thumbCols, thumbRows, false))
 	}
 	return tea.Batch(cmds...)
 }
@@ -429,7 +429,7 @@ func (m *Model) renderShared(w, h int) string {
 			return strings.Join(out, "\n")
 		}
 		r := s.links[sel]
-		return m.previewMessage(m.messageLines(r.hit.Message, w-1, true, true), w, h)
+		return m.previewMessage(m.messageLines(r.hit.Message, w-1, true, true, false), w, h)
 	}
 	return m.renderPane(p, w, h)
 }

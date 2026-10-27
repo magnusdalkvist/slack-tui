@@ -290,6 +290,9 @@ func (m *Model) hints() []Hint {
 		if m.statusOK && m.savedPath != "" && m.status != "" {
 			hs = append(hs, Hint{"o", "open it"})
 		}
+		if len(m.failedImages()) > 0 {
+			hs = append(hs, Hint{"r", "retry"})
+		}
 		hs = append(hs, Hint{"i", "write"}, Hint{"⏎", "thread"}, Hint{"+", "react"}, Hint{"/", "search"})
 	}
 	return hs

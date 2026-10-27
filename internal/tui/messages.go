@@ -74,7 +74,7 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 			senderKey(*prev) == senderKey(*msg) &&
 			!systemSubtypes[prev.SubType] && !systemSubtypes[msg.SubType] &&
 			msg.Time().Sub(prev.Time()) < 5*time.Minute
-		body := m.messageLines(*msg, width-1, !grouped, inThread)
+		body := m.messageLines(*msg, width-1, !grouped, inThread, i == sel)
 
 		all = append(all, pre...)
 		blocks[i].start = len(all)
@@ -222,7 +222,7 @@ func (m *Model) paintMessage(msg backend.Message, lines []string, width int, sel
 
 // messageLines is a message without its bar column, width cells wide:
 // the time gutter on its first line, the body after it.
-func (m *Model) messageLines(msg backend.Message, width int, header, inThread bool) []string {
+func (m *Model) messageLines(msg backend.Message, width int, header, inThread, sel bool) []string {
 	gw := m.gutterW()
 	bw := width - gw
 	blank := strings.Repeat(" ", gw)
@@ -255,7 +255,7 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread bo
 		}
 	}
 	for _, f := range msg.Files {
-		lines = append(lines, m.imageLines(f, bw)...)
+		lines = append(lines, m.imageLines(f, bw, sel)...)
 	}
 	if len(msg.Reactions) > 0 {
 		var chips []string

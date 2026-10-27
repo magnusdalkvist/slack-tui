@@ -301,7 +301,7 @@ func (m *Model) renderPins(w, h int) string {
 			return strings.Join([]string{sty.Title.Render(b.Title), sty.Md.Link.Render(b.Link)}, "\n")
 		}
 		pin := p.pins[sel-len(p.bookmarks)]
-		return m.previewMessage(m.messageLines(pin.Message, w-1, true, true), w, h)
+		return m.previewMessage(m.messageLines(pin.Message, w-1, true, true, false), w, h)
 	}
 	return m.renderPane(spec, w, h)
 }

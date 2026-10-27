@@ -145,12 +145,20 @@ func TestCustomEmojiImage(t *testing.T) {
 	if st == nil {
 		t.Fatal("alias :pp: did not request partyparrot's image")
 	}
-	if v := ansi.Strip(m.View()); !strings.Contains(v, "ship it :pp:") {
-		t.Error("before loading, the chip should show")
+	// While it loads, its two cells are kept blank: nothing moves when it
+	// lands.
+	before := ansi.Strip(m.View())
+	if strings.Contains(before, ":pp:") || !strings.Contains(before, "ship it   ") {
+		t.Errorf("a loading custom emoji should keep its 2 cells:\n%s", before)
 	}
 	m.update(emojiImgMsg{name: "partyparrot", png: []byte("x")})
 	if n := strings.Count(m.View(), "\U0010EEEE"); n != 2 {
 		t.Errorf("custom emoji drawn with %d cells, want 2", n)
+	}
+	// A failed one falls back to :name:.
+	m.emojiImgs["partyparrot"].status = imgFailed
+	if v := ansi.Strip(m.View()); !strings.Contains(v, "ship it :pp:") {
+		t.Error("a failed custom emoji should show :pp:")
 	}
 }
 

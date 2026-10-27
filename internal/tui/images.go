@@ -21,6 +21,7 @@ import (
 	_ "golang.org/x/image/webp"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
 	"golang.org/x/image/draw"
 	"golang.org/x/sys/unix"
 
@@ -141,13 +142,20 @@ func (m *Model) scanImages() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
+// fetchImage loads an inline image into exactly the box imageBox kept
+// for it, so the layout doesn't move when it arrives.
 func (m *Model) fetchImage(f backend.File, id uint32) tea.Cmd {
-	return m.fetchImageSized(f.ID, f, id, m.cfg.ImageMaxCols, m.cfg.ImageMaxRows)
+	if f.W <= 0 || f.H <= 0 {
+		return m.fetchImageSized(f.ID, f, id, m.cfg.ImageMaxCols, m.cfg.ImageMaxRows, false)
+	}
+	cols, rows := m.imageBox(f)
+	return m.fetchImageSized(f.ID, f, id, cols, rows, true)
 }
 
 // fetchImageSized fetches an image into m.images[key], fitted to at most
-// maxCols×maxRows cells.
-func (m *Model) fetchImageSized(key string, f backend.File, id uint32, maxCols, maxRows int) tea.Cmd {
+// maxCols×maxRows cells; exact fills that box whatever the thumbnail's
+// rounding, because the layout already holds it.
+func (m *Model) fetchImageSized(key string, f backend.File, id uint32, maxCols, maxRows int, exact bool) tea.Cmd {
 	cw, ch := m.cellW, m.cellH
 	return func() tea.Msg {
 		m.imgSem <- struct{}{} // a few downloads at a time
@@ -156,6 +164,9 @@ func (m *Model) fetchImageSized(key string, f backend.File, id uint32, maxCols, 
 		if f.Anim != "" {
 			if data, err := m.client.Download(m.ctx, f.Anim, maxThumbBytes); err == nil {
 				if a, cols, rows, err := scaleAnim(data, cw, ch, maxCols, maxRows); err == nil {
+					if exact {
+						cols, rows = maxCols, maxRows
+					}
 					if err := m.gfx.Show(id, a.frames[0], cols, rows); err != nil {
 						return imageMsg{fileID: key, err: err}
 					}
@@ -172,9 +183,12 @@ func (m *Model) fetchImageSized(key string, f backend.File, id uint32, maxCols, 
 		if err != nil {
 			return imageMsg{fileID: key, err: err}
 		}
-		pngData, cols, rows, err := fitImage(data, cw, ch, maxCols, maxRows)
+		pngData, cols, rows, err := scaleImage(data, cw, ch, maxCols, maxRows, exact)
 		if err != nil {
 			return imageMsg{fileID: key, err: err}
+		}
+		if exact {
+			cols, rows = maxCols, maxRows
 		}
 		if err := m.gfx.Show(id, pngData, cols, rows); err != nil {
 			return imageMsg{fileID: key, err: err}
@@ -276,26 +290,105 @@ func (m *Model) resendImages() tea.Cmd {
 	}
 }
 
-// imageLines renders a file attachment: the picture when it's ready,
-// otherwise a one-line label.
-func (m *Model) imageLines(f backend.File, width int) []string {
-	name := f.Title
-	if name == "" {
-		name = f.Name
-	}
+// imageLines renders an attachment (DESIGN.md §10): its file line, and
+// for an image the picture in a frame below it, accent while the message
+// is selected. While it loads, a dashed frame holds its final size, so
+// nothing moves when it arrives; a failure is one red line.
+func (m *Model) imageLines(f backend.File, width int, sel bool) []string {
 	st := m.images[f.ID]
 	if m.gfx == nil || !f.IsImage() || st == nil {
-		return wrap(sty.Muted.Render(name), width)
+		return wrap(fileLine(f, f.Size), width)
 	}
+	name := fileLabel(f)
 	switch st.status {
 	case imgLoading:
-		return wrap(sty.Muted.Render(name+" · loading…"), width)
+		cols, rows := m.imageBox(f)
+		head := sty.Faint.Render(ico.Image) + " " + sty.Normal.Render(name) + "  " + sty.Faint.Render("loading…")
+		return append([]string{ansi.Truncate(head, width, "…")}, dashedBox(cols, rows)...)
 	case imgFailed:
-		return wrap(sty.Muted.Render(name+" · ")+sty.Err.Render(st.err), width)
+		line := sty.Err.Render(ico.Image) + " " + sty.Normal.Render(name) + "  " + sty.Err.Render("couldn't load · "+st.err)
+		return []string{ansi.Truncate(line, width, "…")}
 	}
 	st.seen = m.viewSeq
-	lines := []string{sty.Muted.Render(name)}
-	return append(lines, kitty.Placeholder(st.shownID(), st.cols, st.rows)...)
+	head := fileLine(f, f.Size)
+	if st.anim != nil {
+		state := "❚❚"
+		if st.animReady {
+			state = "▶ playing"
+		}
+		head += sty.Faint.Render(" · " + state)
+	}
+	border := sty.Rule
+	if sel {
+		border = sty.Bar
+	}
+	lines := []string{ansi.Truncate(head, width, "…"), border.Render("╭" + strings.Repeat("─", st.cols) + "╮")}
+	side := border.Render("│")
+	for _, row := range kitty.Placeholder(st.shownID(), st.cols, st.rows) {
+		lines = append(lines, side+row+side)
+	}
+	return append(lines, border.Render("╰"+strings.Repeat("─", st.cols)+"╯"))
+}
+
+// focusedMsg is the selected message of the list that has focus.
+func (m *Model) focusedMsg() (backend.Message, bool) {
+	l := m.lists[m.current]
+	switch {
+	case m.focus == fThread && m.thread != nil:
+		l = &m.thread.list
+	case m.focus != fMessages:
+		return backend.Message{}, false
+	}
+	if l == nil || len(l.msgs) == 0 {
+		return backend.Message{}, false
+	}
+	sel := l.sel
+	if sel < 0 || sel >= len(l.msgs) {
+		sel = len(l.msgs) - 1
+	}
+	return l.msgs[sel], true
+}
+
+// failedImages are the selected message's images that couldn't load.
+func (m *Model) failedImages() []string {
+	msg, ok := m.focusedMsg()
+	if !ok {
+		return nil
+	}
+	var ids []string
+	for _, f := range msg.Files {
+		if st := m.images[f.ID]; st != nil && st.status == imgFailed {
+			ids = append(ids, f.ID)
+		}
+	}
+	return ids
+}
+
+// retryImages is r on a message whose images failed: load them again.
+func (m *Model) retryImages(ids []string) tea.Cmd {
+	for _, id := range ids {
+		delete(m.images, id) // scanImages fetches them anew
+	}
+	return m.setStatus("loading the image again…", false)
+}
+
+// imageBox is the cells an inline image takes, from the file's own size,
+// so its place is kept before it loads. Without a size it guesses 4:3.
+func (m *Model) imageBox(f backend.File) (int, int) {
+	w, h := f.W, f.H
+	if w <= 0 || h <= 0 {
+		w, h = 4*m.cellW*m.cfg.ImageMaxCols, 3*m.cellW*m.cfg.ImageMaxCols
+	}
+	return fitCells(w, h, max(m.cellW, 1), max(m.cellH, 1), m.cfg.ImageMaxCols, m.cfg.ImageMaxRows)
+}
+
+// dashedBox is the frame an image loads into.
+func dashedBox(cols, rows int) []string {
+	out := []string{sty.Faint.Render("╭" + strings.Repeat("┄", cols) + "╮")}
+	for range rows {
+		out = append(out, sty.Faint.Render("┆"+strings.Repeat(" ", cols)+"┆"))
+	}
+	return append(out, sty.Faint.Render("╰"+strings.Repeat("┄", cols)+"╯"))
 }
 
 // --- opening files --------------------------------------------------------

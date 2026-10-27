@@ -107,6 +107,9 @@ func (m *Model) handleKey(k tea.KeyMsg) tea.Cmd {
 	case "u":
 		return m.nextUnread()
 	case "r":
+		if ids := m.failedImages(); len(ids) > 0 {
+			return m.retryImages(ids)
+		}
 		return m.markSelectedRead()
 	}
 

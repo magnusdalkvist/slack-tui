@@ -25,14 +25,24 @@ type emojiImgMsg struct {
 	err  error
 }
 
-// EmojiImage implements render.Resolver.
+// EmojiImage implements render.Resolver: a custom emoji as its 2-cell
+// picture. While the picture is on its way the same two cells are kept
+// (blank on raised), so nothing moves when it lands; only when no picture
+// will come does the caller fall back to :name:.
 func (m *Model) EmojiImage(name string) (string, bool) {
 	if m.gfx == nil {
 		return "", false
 	}
-	if st := m.emojiImgs[name]; st != nil && st.status == imgReady {
+	st := m.emojiImgs[name]
+	switch {
+	case st != nil && st.status == imgReady:
 		st.seen = m.viewSeq
 		return kitty.Inline(st.shownID(), 2), true
+	case st != nil && st.status == imgFailed:
+		return "", false
+	}
+	if _, known := m.emoji[name]; known || st != nil {
+		return paintBg("", 2, sty.RaisedBgOn()), true
 	}
 	return "", false
 }
@@ -206,5 +216,5 @@ func (m *Model) emojiChip(name string) string {
 	if img, ok := m.EmojiImage(render.CustomTarget(name, m)); ok {
 		return img
 	}
-	return ":" + name + ":"
+	return sty.Md.CustomEmoji.Render(":" + name + ":")
 }

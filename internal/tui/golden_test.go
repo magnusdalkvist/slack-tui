@@ -18,6 +18,7 @@ import (
 	"github.com/magnusdalkvist/slack-tui/internal/auth"
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/config"
+	"github.com/magnusdalkvist/slack-tui/internal/kitty"
 )
 
 // Golden snapshots of whole screens, for every theme and a few widths.
@@ -83,6 +84,20 @@ func sceneModel(t *testing.T, w, h int) *Model {
 		}},
 	}})
 	return m
+}
+
+// withGraphics turns inline images on, drawing into a scratch file.
+func withGraphics(m *Model) {
+	tty, _ := os.CreateTemp(os.Getenv("XDG_CACHE_HOME"), "tty")
+	m.SetGraphics(kitty.NewWriter(tty, false), "")
+	m.cellW, m.cellH = 8, 16
+	m.imgIDBase = 0x100000 // image ids are random otherwise, and colour the placeholders
+}
+
+// lastFile is the scene's image: diagram.png on the last message.
+func lastFile(m *Model) backend.File {
+	l := m.lists["C1"]
+	return l.msgs[len(l.msgs)-1].Files[1]
 }
 
 type scene struct {
@@ -219,6 +234,27 @@ var scenes = []scene{
 	{"help", 30, func(m *Model) {
 		m.Update(key("?"))
 		typeText(m, "pin")
+	}},
+	{"image-loading", 34, func(m *Model) { withGraphics(m); m.scanImages() }},
+	{"image-loaded", 34, func(m *Model) {
+		withGraphics(m)
+		m.scanImages()
+		f := lastFile(m)
+		cols, rows := m.imageBox(f)
+		m.Update(imageMsg{fileID: f.ID, cols: cols, rows: rows, png: []byte("x")})
+	}},
+	{"image-failed", 34, func(m *Model) {
+		withGraphics(m)
+		m.scanImages()
+		m.Update(imageMsg{fileID: lastFile(m).ID, err: fmt.Errorf("403")})
+	}},
+	{"viewer", 30, func(m *Model) {
+		withGraphics(m)
+		l := m.lists["C1"]
+		f := lastFile(m)
+		m.viewer = &viewer{items: []viewItem{{file: f, ts: l.msgs[len(l.msgs)-1].TS}}, list: l, id: 7,
+			cache: map[string]*viewImg{f.ID: {cols: 40, rows: 10}}, shown: f.ID, details: true}
+		m.viewer.w, m.viewer.h = m.viewBox()
 	}},
 	{"switcher", 30, func(m *Model) {
 		m.Update(key("ctrl+k"))

@@ -299,7 +299,7 @@ func (m *Model) renderUnreads(w, h int) string {
 			}
 			for j, msg := range msgs {
 				header := j == 0 || senderKey(msgs[j-1]) != senderKey(msg)
-				lines := m.messageLines(msg, lw-2, header, false)
+				lines := m.messageLines(msg, lw-2, header, false, false)
 				if limit := 3 + map[bool]int{true: 1, false: 0}[header]; len(lines) > limit {
 					lines = append(lines[:limit-1:limit-1], strings.Repeat(" ", m.gutterW())+sty.Faint.Render("…"))
 				}

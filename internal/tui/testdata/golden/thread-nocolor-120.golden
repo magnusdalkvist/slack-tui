@@ -20,8 +20,8 @@
 │                               │ │       build #812 passed                     │ │▌[7m10:30 [1mmada[0m[7m                         [27;49m│
 │                               │ │ 10:40 [1mSimon Konstantyner[0m siko               │ │▌[7m      bumped it to 30s 👍          [27;49m│
 │                               │ │       plan attached                         │ │▌[7m      [7m ctx, cancel :=[0m[7m              [27;49m│
-│                               │ │       plan.pdf                              │ │▌[7m      [7mcontext.WithTimeout(ctx,[0m[7m     [27;49m│
-│                               │ │       diagram.png                           │ │▌[7m      [7m30*time.Second) [0m[7m             [27;49m│
+│                               │ │        plan.pdf  PDF                       │ │▌[7m      [7mcontext.WithTimeout(ctx,[0m[7m     [27;49m│
+│                               │ │        diagram.png  PNG                    │ │▌[7m      [7m30*time.Second) [0m[7m             [27;49m│
 │                               │ ╰─────────────────────────────────────────────╯ ╰────────────────────────────────────╯
 │                               │                                                                                       
 │                               │ ╭─────────────────────────────────────────────╮ ╭─────── □ also send to #development ╮

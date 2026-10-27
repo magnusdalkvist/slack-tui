@@ -434,3 +434,8 @@ Gaps found while building this spec, and how they were filled.
 - **Files & links** puts image thumbnails in the Preview. Without room for one, they stay in the list.
 - **File sizes** needed one field on `backend.File` (`Size`, from Slack's `size`), the only data-layer change in this redesign.
 - **Profile local time** reads `11:45  GMT  +1h vs you`.
+- **Loading custom emoji** keep their 2 cells blank on `raised` until the picture lands, so nothing moves. §3.1 says the `:name:` fallback shows while loading, but that is wider than 2 cells and would shift the line when the image arrives, against §1.5. `:name:` (faint on raised) shows only when no picture will come: no graphics, images off, or the download failed.
+- **Inline images load into the box they reserve.** The box comes from the file's pixel size (`imageBox`), and the thumbnail is scaled to fill exactly that many cells. An image whose size Slack didn't send reserves `image_max_cols × image_max_rows`'s 4:3 guess, and may still resize once.
+- **GIF meta** reads `▶ playing` once every frame is in the terminal, and `❚❚` until then. Only GIFs on screen tick, so ones scrolled away are paused by construction.
+- **Image viewer:** the header's place is `in <conversation> · Mon 2 Jan 15:04`, and the Details panel adds the file's kind, size and pixel size under File. `s` saves the image from the viewer too.
+- **Kind tags** (`[PDF]`) have one cell of padding. In the Open chooser they sit in a column 4 letters wide, so the names line up.

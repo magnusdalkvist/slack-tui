@@ -94,12 +94,12 @@ func (m *Model) renderOpener() string {
 			if name == "" {
 				name = f.Name
 			}
-			row = kindTag(fileKind(f.Name, f.Mimetype)) + " " + sty.Normal.Render(name)
+			row = kindCol(fileKind(f.Name, f.Mimetype)) + " " + sty.Normal.Render(name)
 			if f.Size > 0 {
 				meta = sty.Faint.Render(fmtSize(f.Size))
 			}
 		} else {
-			row = kindTag("URL") + " "
+			row = kindCol("URL") + " "
 			if it.link.Label != "" && it.link.Label != it.link.URL {
 				row += sty.Normal.Render(it.link.Label) + " "
 			}
@@ -112,7 +112,10 @@ func (m *Model) renderOpener() string {
 }
 
 // kindTag is a file's kind as a small tag: [PDF].
-func kindTag(kind string) string { return sty.KindTag.Render(fmt.Sprintf("%-4s", kind)) }
+func kindTag(kind string) string { return sty.KindTag.Render(kind) }
+
+// kindCol is kindTag in a column four letters wide, so names line up.
+func kindCol(kind string) string { return kindTag(kind) + strings.Repeat(" ", max(0, 4-len(kind))) }
 
 // fileKind is the extension in caps (PDF, PNG), or from the MIME type.
 func fileKind(name, mimetype string) string {

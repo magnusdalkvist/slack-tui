@@ -8,6 +8,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
 	"github.com/magnusdalkvist/slack-tui/internal/kitty"
@@ -23,6 +24,9 @@ type viewer struct {
 	shown string // file id the terminal holds under id
 	cache map[string]*viewImg
 	w, h  int // the box everything in cache was fitted to
+
+	details  bool // the Details panel (i)
+	inThread bool // opened from a thread: "in this thread"
 }
 
 type viewItem struct {
@@ -84,13 +88,24 @@ func (m *Model) openViewer(l *msgList, sel int) tea.Cmd {
 		f := items[start].file
 		return tea.Batch(m.openFile(f), m.setStatus("no inline images ("+m.gfxReason+"), opening "+f.Name+"…", false))
 	}
-	m.viewer = &viewer{items: items, idx: start, list: l, id: m.newImageID(), cache: map[string]*viewImg{}}
+	m.viewer = &viewer{items: items, idx: start, list: l, id: m.newImageID(), cache: map[string]*viewImg{},
+		inThread: m.thread != nil && l == &m.thread.list}
 	return m.loadViewer()
 }
 
-// viewBox is the picture's area: the whole window but the caption line
-// and the status bar.
-func (m *Model) viewBox() (int, int) { return max(m.width, 1), max(m.height-2, 1) }
+// viewerDetailsW is the Details panel's width, its left rule included.
+const viewerDetailsW = 41
+
+// viewBox is the picture's area: the window but for the header row and
+// its rule, the gap and caption under the picture, the status bar and the
+// Details panel when open.
+func (m *Model) viewBox() (int, int) {
+	w := m.width
+	if m.viewer != nil && m.viewer.details && w-viewerDetailsW >= 20 {
+		w -= viewerDetailsW
+	}
+	return max(w, 1), max(m.height-5, 1)
+}
 
 // loadViewer fetches the current image and its neighbours, so stepping is
 // instant, and forgets the ones further away.
@@ -243,6 +258,11 @@ func (m *Model) viewerKey(k tea.KeyMsg) tea.Cmd {
 	case "o":
 		f := v.items[v.idx].file
 		return tea.Batch(m.openFile(f), m.setStatus("opening "+f.Name+"…", false))
+	case "s":
+		return m.saveFiles([]backend.File{v.items[v.idx].file})
+	case "i":
+		v.details = !v.details
+		return m.loadViewer() // the picture's box changed
 	}
 	return nil
 }
@@ -269,26 +289,93 @@ func (m *Model) closeViewer() {
 	}
 }
 
+// renderViewer is the full window (DESIGN.md §9): a header row, the
+// picture centred and fitted, the Details panel on the right with i. The
+// status bar stays below.
 func (m *Model) renderViewer() string {
 	v := m.viewer
 	w, h := m.viewBox()
-	f := v.items[v.idx].file
-	name := f.Title
-	if name == "" {
-		name = f.Name
+	it := v.items[v.idx]
+	f := it.file
+	msg := m.viewerMsg(it.ts)
+
+	where := "in this conversation"
+	if v.inThread {
+		where = "in this thread"
 	}
+	left := sty.FrameTitleFocus.Render(fileLabel(f)) + "  " + sty.Sender(senderKey(msg)).Render(m.senderName(msg))
+	if c := m.convs[m.current]; c != nil {
+		left += "  " + sty.Faint.Render("in "+m.convLabel(c)+" · "+msg.Time().Format("Mon 2 Jan "+m.cfg.TimeFormat))
+	}
+	right := sty.Faint.Render("← ") + sty.Normal.Render(fmt.Sprintf("%d / %d", v.idx+1, len(v.items))) + sty.Faint.Render(" →  "+where)
+	header := rightAlign(" "+left, right, m.width)
+	rule := sty.Bar.Render(strings.Repeat("─", m.width))
+
 	var body string
 	switch st := v.cache[f.ID]; {
-	case st == nil || st.loading:
-		body = sty.Muted.Render("loading " + name + "…")
+	case st == nil || st.loading || (st.err == "" && v.shown != f.ID):
+		body = sty.Faint.Render("loading " + fileLabel(f) + "…")
 	case st.err != "":
-		body = sty.Err.Render(name + ": " + st.err)
-	case v.shown != f.ID:
-		body = sty.Muted.Render("loading " + name + "…")
+		body = sty.Err.Render("couldn't load · " + st.err)
 	default:
-		body = strings.Join(kitty.Placeholder(v.shownID(st), st.cols, st.rows), "\n")
+		body = strings.Join(kitty.Placeholder(v.shownID(st), st.cols, st.rows), "\n") + "\n\n" +
+			center(sty.Faint.Render("fit · kitty graphics"), st.cols)
 	}
-	pic := lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, body)
-	caption := sty.Muted.Render(fmt.Sprintf("  %s · %d/%d", name, v.idx+1, len(v.items)))
-	return fit(pic, w, h) + "\n" + fit(caption, w, 1)
+	area := h + 2 // the picture, a gap and the caption
+	pic := fit(lipgloss.Place(w, area, lipgloss.Center, lipgloss.Center, body), w, area)
+	if v.details && w < m.width {
+		side := strings.TrimSuffix(strings.Repeat(sty.Rule.Render("│")+"\n", area), "\n")
+		pic = lipgloss.JoinHorizontal(lipgloss.Top, pic, side, fit(m.viewerDetails(it, msg, viewerDetailsW-2), viewerDetailsW-1, area))
+	}
+	return fit(header, m.width, 1) + "\n" + rule + "\n" + pic
+}
+
+// viewerMsg is the message an image in the viewer came from.
+func (m *Model) viewerMsg(ts string) backend.Message {
+	for _, msg := range m.viewer.list.msgs {
+		if msg.TS == ts {
+			return msg
+		}
+	}
+	return backend.Message{TS: ts}
+}
+
+// viewerDetails is the Details panel: where the image is from, the file,
+// the zoom, and what was said next.
+func (m *Model) viewerDetails(it viewItem, msg backend.Message, w int) string {
+	f := it.file
+	out := []string{" " + sty.Header.Render("DETAILS"), ""}
+	field := func(label, value string) {
+		out = append(out, " "+sty.Faint.Render(fmt.Sprintf("%-8s", label))+value)
+	}
+	field("From", sty.Sender(senderKey(msg)).Render(m.senderName(msg)))
+	if c := m.convs[m.current]; c != nil {
+		field("In", m.convTitle(c))
+	}
+	field("Posted", msg.Time().Format("Mon 2 Jan "+m.cfg.TimeFormat))
+	meta := fileKind(f.Name, f.Mimetype)
+	if f.Size > 0 {
+		meta += " · " + fmtSize(f.Size)
+	}
+	if f.W > 0 && f.H > 0 {
+		meta += fmt.Sprintf(" · %d×%d", f.W, f.H)
+	}
+	field("File", sty.Normal.Render(fileLabel(f)))
+	field("", sty.Faint.Render(meta))
+	field("Zoom", "fit")
+	// The message after this one, for context.
+	l := m.viewer.list.msgs
+	for i, mm := range l {
+		if mm.TS == msg.TS && i+1 < len(l) {
+			out = append(out, "", " "+sty.Header.Render("NEXT IN THE CHAT"))
+			for _, line := range m.messageLines(l[i+1], w-1, true, true, false) {
+				out = append(out, " "+line)
+			}
+			break
+		}
+	}
+	for i := range out {
+		out[i] = ansi.Truncate(out[i], w, "…")
+	}
+	return strings.Join(out, "\n")
 }

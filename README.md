@@ -126,7 +126,8 @@ expires = "until tomorrow"
 | `F` | files and links shared in the conversation, on two tabs (`tab` switches): `enter` goes to the message that shared it, `o` opens it, `s` saves it to Downloads, `c` copies its link; images get a preview, `v` views them full-window. Newest first, reaching back through all history (also `:files`) |
 | `o` | open the selected message's file (images in `image_viewer`) or link (browser); with several, a chooser: `1`-`9` or `enter` opens |
 | `s` | save the message's files to your Downloads folder (or `download_dir` in config.toml); never overwrites — `plan (1).pdf` |
-| `v` | full-window image viewer from the selected message: `←` `→` step through every image in the conversation or thread, `o` opens externally, `esc` closes |
+| `v` | full-window image viewer from the selected message: `←` `→` step through every image in the conversation or thread, `o` opens externally, `s` saves, `i` shows details (who, where, the file, the next message), `esc` closes |
+| `r` on a failed image | load it again (elsewhere `r` marks the conversation read) |
 | `x` | close thread |
 | `?` | help: every key and command, filtered as you type — a key (`P`) finds what it does, words (`pin`, `thread`) find keys; `enter` on a command starts it |
 

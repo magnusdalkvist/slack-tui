@@ -61,8 +61,8 @@ func TestImageViewer(t *testing.T) {
 	if v == nil || v.items[v.idx].file.ID != "C1" {
 		t.Fatalf("viewer should open on the newest image, got %+v", v)
 	}
-	if out := dump(t, m); !strings.Contains(out, "C1.png · 3/3") {
-		t.Errorf("caption missing")
+	if out := dump(t, m); !strings.Contains(out, "C1.png") || !strings.Contains(out, "← 3 / 3 →  in this conversation") || !strings.Contains(out, "VIEW") {
+		t.Errorf("header or VIEW pill missing")
 	}
 	if v.shown != "C1" {
 		t.Errorf("C1 not sent to the terminal (shown=%q)", v.shown)
@@ -78,9 +78,19 @@ func TestImageViewer(t *testing.T) {
 	if v.items[v.idx].file.ID != "A2" || v.shown != "A2" {
 		t.Errorf("left should step to A2, at %s shown %s", v.items[v.idx].file.ID, v.shown)
 	}
-	if !strings.Contains(ansi.Strip(m.View()), "A2.png · 2/3") {
-		t.Error("caption did not follow")
+	if !strings.Contains(ansi.Strip(m.View()), "← 2 / 3 →") {
+		t.Error("position did not follow")
 	}
+	// i opens the Details panel, and the picture refits beside it.
+	_, cmd = m.Update(key("i"))
+	run(m, cmd)
+	if out := dump(t, m); !strings.Contains(out, "DETAILS") || !strings.Contains(out, "Zoom") {
+		t.Error("i should show the Details panel")
+	}
+	if w, _ := m.viewBox(); w != m.width-viewerDetailsW {
+		t.Errorf("picture box %d wide beside the panel, want %d", w, m.width-viewerDetailsW)
+	}
+	m.Update(key("i"))
 	m.Update(tea.KeyMsg{Type: tea.KeyRight})
 	m.Update(tea.KeyMsg{Type: tea.KeyRight}) // past the end stays put
 	if v.items[v.idx].file.ID != "C1" {

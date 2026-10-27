@@ -545,7 +545,7 @@ func (m *Model) renderSearch(w, h int) string {
 	p.preview = func(w, h int) string {
 		msg := hit.Message
 		msg.Text = unmarkEntities(msg.Text)
-		lines := m.messageLines(msg, w-1, true, true)
+		lines := m.messageLines(msg, w-1, true, true, false)
 		marks := strings.NewReplacer(backend.HitStart, sty.HitOn(), backend.HitEnd, HitOff)
 		for i, l := range lines {
 			lines[i] = marks.Replace(l)
