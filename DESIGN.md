@@ -200,7 +200,7 @@ All columns are fixed width:
 - Custom sections show their Slack emoji in the header icon slot.
 - Nicknames go after the name in `faint` (`Kim Kyhlensø kiky`).
 - **Section headers** are `faint` and bold in caps, with `▾`/`▸`. They show no count unless folded (below).
-- A **folded** section still surfaces what's inside it: its unread conversations stay as rows, and the header sums them up. With mentions it shows a red `▌` and a red count. With plain unreads it shows a faint `▏` and "3 new" in `muted`.
+- A **folded** section still surfaces what's inside it: its unread conversations stay as rows, and the header sums them up. With mentions it shows a red `▌` and a red count. With plain unreads it shows a faint `▏` only.
 - The sidebar frame title is the team name (`muted`) and the right label is your handle (`faint`).
 - The first row is `≡ Unreads` with its total.
 
@@ -447,6 +447,6 @@ Gaps found while building this spec, and how they were filled.
 - **The cache's age** is the cache file's last write (the database or its write-ahead log). The status bar shows it as a time today, or a date before today.
 - **`e` on the error screen** opens `config.toml` in `$VISUAL`, `$EDITOR` or `vi`, then asks Slack again. Settings themselves are read at start, so the status bar says to restart for config changes. The error screen's bar shows only the `ERROR` pill and `e`/`q`, since nothing else works there.
 - **Hint keys are words** (`enter`, `alt+enter`, `esc`, `tab`). `⏎` drew badly in some fonts.
-- **The count column** is sized by the conversation rows only. A folded header's `2 new` may run into the status column, so it doesn't shorten every name.
+- **The count column** is sized by the conversation rows only. A folded header's mention count may run into the status column, so it doesn't shorten every name.
 - **A presence circle** (`nf-md-circle` / `nf-md-circle_outline`, `●`/`○` in unicode), not a user glyph, marks people everywhere: sidebar, DM header, switcher, completion, members and profile. Group DMs get `nf-md-circle_multiple_outline`.
 - **Your own presence** is the app's away setting (`:away` / `:back`), because `users.getPresence` isn't asked about you. You show as active unless you set yourself away: in your own DM, the switcher, members and your profile, which also shows Presence and DND for you.

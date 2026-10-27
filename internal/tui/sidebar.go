@@ -385,7 +385,7 @@ func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 
 // headerCells is a section header: ▾/▸, the section's icon and its name
 // in caps. A folded one still says what is inside: mentions with a red
-// flag and count, unreads with a faint flag and "3 new".
+// flag and count, other unreads with a faint flag.
 func (m *Model) headerCells(name string, secs []section) sideCells {
 	arrow := ico.Unfolded
 	if m.folded[name] {
@@ -421,7 +421,7 @@ func (m *Model) headerCells(name string, secs []section) sideCells {
 		case mentions > 0:
 			r.flag, r.count = flagMention(), sty.Err.Render(fmt.Sprint(mentions))
 		case unread > 0:
-			r.flag, r.count = flagUnread(), sty.Muted.Render(fmt.Sprintf("%d new", unread))
+			r.flag = flagUnread()
 		}
 	}
 	return r
