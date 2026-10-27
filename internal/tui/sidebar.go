@@ -229,22 +229,11 @@ func (m *Model) renderSidebar(w, h int) string {
 	}
 	m.sideTop = max(0, min(m.sideTop, len(m.side)-bodyH))
 
-	// The count column is as wide as the widest count, so every name,
-	// status and count lines up.
-	rows := make([]sideCells, 0, bodyH)
-	countW := 0
 	secs := m.sections()
+	var lines []string
 	for i := m.sideTop; i < len(m.side) && i < m.sideTop+bodyH; i++ {
 		r := m.sideCells(m.side[i], secs)
-		if !r.header { // a folded header's "2 new" may run into the status column
-			countW = max(countW, ansi.StringWidth(r.count))
-		}
-		rows = append(rows, r)
-	}
-	var lines []string
-	for k, r := range rows {
-		i := m.sideTop + k
-		lines = append(lines, flagLine(r.flag, r.layout(inner-1, countW), inner, i == m.sideCur, focused))
+		lines = append(lines, flagLine(r.flag, r.layout(inner-1), inner, i == m.sideCur, focused))
 	}
 	handle := ""
 	if u, ok := m.users[m.client.SelfID]; ok && u.Name != "" {
@@ -264,40 +253,35 @@ type sideCells struct {
 	header, spacer bool
 }
 
-// layout lays the cells out in width cells, the count right-aligned in a
-// column countW wide.
-func (r sideCells) layout(width, countW int) string {
+// layout lays the cells out in width cells: the marker and count flush
+// right, the status emoji before them, and the name taking whatever is
+// left, all of the row when there is nothing else.
+func (r sideCells) layout(width int) string {
 	if r.spacer {
 		return ""
 	}
-	// The marker sits in its own column before the counts, so markers
-	// line up whether or not the row has a number.
-	dot := r.dot
-	if dot == "" {
-		dot = " "
+	var right []string
+	if r.status != "" && !r.header {
+		right = append(right, r.status)
 	}
-	right := " " + dot
-	if cw := max(countW, ansi.StringWidth(r.count)); r.header && r.count != "" {
-		right += " " + r.count
-	} else if cw > 0 {
-		right += " " + strings.Repeat(" ", cw-ansi.StringWidth(r.count)) + r.count
+	if r.dot != "" {
+		right = append(right, r.dot)
 	}
-	// The status emoji keeps a cell between itself and the name.
-	status := "   "
-	if r.status != "" {
-		status = " " + r.status
+	if r.count != "" {
+		right = append(right, r.count)
 	}
-	if r.header {
-		status = ""
+	tail := strings.Join(right, " ")
+	if tail != "" {
+		tail = " " + tail
 	}
-	room := width - 2 - ansi.StringWidth(status) - ansi.StringWidth(right)
+	room := width - 2 - ansi.StringWidth(tail)
 	name := r.name
 	if r.nick != "" {
 		name += " " + r.nick
 	}
 	name = ansi.Truncate(name, max(room, 0), "…")
 	pad := max(0, room-ansi.StringWidth(name))
-	return slot(r.icon) + name + strings.Repeat(" ", pad) + status + right
+	return slot(r.icon) + name + strings.Repeat(" ", pad) + tail
 }
 
 // Unread markers, at the right before the count: a red ● for mentions and

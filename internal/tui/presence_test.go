@@ -253,7 +253,7 @@ func TestStatusEmojiOnSelectedRow(t *testing.T) {
 	for _, it := range m.side {
 		if it.id == "D1" {
 			r := m.sideCells(it, m.sections())
-			row := flagLine(r.flag, r.layout(28, 0), 29, true, false)
+			row := flagLine(r.flag, r.layout(28), 29, true, false)
 			bg := sty.SelBgOn()
 			i := strings.Index(row, "🏠")
 			if i < 0 || !strings.HasPrefix(row, " "+bg) {

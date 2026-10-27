@@ -9,11 +9,11 @@
 │   CHANNELS                  │ │       anyone│──────────────────────────────────────────────────────────────│                                               │
 │  general                     │ │ 16:03 it's s│ Status      🏡 Working remotely                              │                                               │
 │  panda-v2                 ● 1│ │─────────────│ Presence    active                                           │───────────────────────────────────────────────│
-│  sjov-og-spass            •  │ │─────────────│ Local time  11:45  GMT  +1h vs you                           │───────────────────────────────────────────────│
+│  sjov-og-spass              •│ │─────────────│ Local time  11:45  GMT  +1h vs you                           │───────────────────────────────────────────────│
 │                               │ │▌09:12 Simon │ Email       siko@example.com                                 │                                               │
 │   DIRECT MESSAGES           │ │▌      deploy╰──────────────────────────────────────────────────────────────╯                                               │
 │ 󰝥 mada (you)                  │ │▌       🎉 2   👀 1                                                                                                         │
-│ 󰚕 Simon Konstantyner, …       │ │ 09:40 → @Anna Jensen has joined the channel                                                                                │
+│ 󰚕 Simon Konstantyner, Anna Je…│ │ 09:40 → @Anna Jensen has joined the channel                                                                                │
 │                               │ │▌10:02 Anna Jensen anna                                                                                                     │
 │                               │ │▌      @mada can you look at the failing test? see https://example.com/ci/123                                               │
 │                               │ │▌       4 replies · last 14m ago                                                                                           │

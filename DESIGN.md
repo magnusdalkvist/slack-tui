@@ -181,10 +181,10 @@ This applies to every list: sidebar, messages, threads, search results, modals, 
 
 ### Row anatomy
 
-All columns are fixed width:
+The name takes the row; what follows it sits flush right and takes room only when present:
 
 ```
-[bar 1][icon 2][name ………… flex, ellipsis][status 2][dot 1][count →]
+[bar 1][icon 2][name ………… flex, ellipsis] [status 2] [dot 1] [count]
 ```
 
 | Row state | Dot | Name | Count |
@@ -408,7 +408,6 @@ Gaps found while building this spec, and how they were filled.
 - **Folded sections** keep their unread conversations (and the open one) as rows, so nothing that needs you is hidden. Read ones fold away. The header still sums up the section with its flag and count.
 - **Muted channels** (the `faint` row state) aren't drawn, because the client doesn't load Slack's mute preferences. That would be a data-layer change, which is out of scope here.
 - **The open conversation** is drawn in `fg` rather than `muted` when it's read, so it stands out when the cursor is elsewhere. With the cursor on it, it's the selected row.
-- **The sidebar count column** is as wide as the widest count among the visible rows, so names, status emoji and counts line up.
 - **Section header arrows** (▾/▸) sit in the icon column. The section's own icon (Nerd Font, or the custom section's Slack emoji) goes before its name.
 - **The time gutter** is `max(6, width of time_format + 1)` cells, so a 12-hour `time_format` still fits.
 - **Mentions of you** include `@here`, `@channel` and `@everyone`, as Slack highlights those too. When a message both mentions you and is pinned, the mention tint wins. Selection wins over both.
@@ -447,7 +446,6 @@ Gaps found while building this spec, and how they were filled.
 - **The cache's age** is the cache file's last write (the database or its write-ahead log). The status bar shows it as a time today, or a date before today.
 - **`e` on the error screen** opens `config.toml` in `$VISUAL`, `$EDITOR` or `vi`, then asks Slack again. Settings themselves are read at start, so the status bar says to restart for config changes. The error screen's bar shows only the `ERROR` pill and `e`/`q`, since nothing else works there.
 - **Hint keys are words** (`enter`, `alt+enter`, `esc`, `tab`). `⏎` drew badly in some fonts.
-- **The count column** is sized by the conversation rows only. A folded header's mention count may run into the status column, so it doesn't shorten every name.
 - **A presence circle** (`nf-md-circle` / `nf-md-circle_outline`, `●`/`○` in unicode), not a user glyph, marks people everywhere: sidebar, DM header, switcher, completion, members and profile. Group DMs get `nf-md-circle_multiple_outline`.
 - **Your own presence** is the app's away setting (`:away` / `:back`), because `users.getPresence` isn't asked about you. You show as active unless you set yourself away: in your own DM, the switcher, members and your profile, which also shows Presence and DND for you.
-- **Unread markers are dots on the right** (`●` red for mentions and DM unreads, a small faint `•` for other unreads), in their own column before the count, so every unread row is marked and not only bold. The bar column on the left is left to the selection. `NO_COLOR` tells them apart by shape.
+- **Unread markers are dots on the right** (`●` red for mentions and DM unreads, a small faint `•` for other unreads), flush right with the count after the dot, so every unread row is marked and not only bold. A row with no marker or status emoji gives its name the whole width. The bar column on the left is left to the selection. `NO_COLOR` tells them apart by shape.
