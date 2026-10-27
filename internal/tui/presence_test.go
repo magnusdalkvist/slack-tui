@@ -329,3 +329,25 @@ func TestStatusTemplates(t *testing.T) {
 		t.Error("list should close after the template")
 	}
 }
+
+// TestSelfPresence: we are here, so our own DM and profile show us active
+// until :away.
+func TestSelfPresence(t *testing.T) {
+	m := sceneModel(t, 120, 30)
+	if !m.isActive("ME") {
+		t.Error("we should show as active")
+	}
+	r := m.sideCells(sideItem{id: "D3"}, m.sections())
+	if !strings.Contains(r.icon, ico.UserActive) {
+		t.Errorf("own DM icon %q, want active", r.icon)
+	}
+	m.openProfile("ME")
+	if v := ansi.Strip(m.View()); !strings.Contains(v, "Presence    active") {
+		t.Errorf("own profile lacks presence:\n%s", v)
+	}
+	m.profile = nil
+	m.away = true
+	if r := m.sideCells(sideItem{id: "D3"}, m.sections()); !strings.Contains(r.icon, ico.UserAway) {
+		t.Error(":away should show our own DM as away")
+	}
+}

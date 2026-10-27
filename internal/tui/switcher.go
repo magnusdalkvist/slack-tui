@@ -154,7 +154,7 @@ func (m *Model) switchRow(id string) (icon string, name switchName, meta string,
 		switch {
 		case c.UserID == m.client.SelfID:
 			name.label, meta = strings.TrimSuffix(name.label, " (you)"), "you"
-		case m.presence[c.UserID]:
+		case m.isActive(c.UserID):
 			meta = "DM · active"
 		default:
 			meta = "DM · away"
@@ -177,7 +177,7 @@ func (m *Model) switchRow(id string) (icon string, name switchName, meta string,
 // personIcon is a person's icon, showing presence: solid in ok when
 // active, outline in faint when away.
 func (m *Model) personIcon(uid string) string {
-	if m.presence[uid] && uid != m.client.SelfID {
+	if m.isActive(uid) {
 		return sty.OK.Render(ico.UserActive)
 	}
 	return sty.Faint.Render(ico.UserAway)

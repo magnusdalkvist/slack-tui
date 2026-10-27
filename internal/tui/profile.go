@@ -122,7 +122,7 @@ func (m *Model) renderProfile() string {
 		name = p.id
 	}
 	dot := sty.Faint.Render("○")
-	if m.presence[p.id] {
+	if m.isActive(p.id) {
 		dot = sty.OK.Render(onlineDot)
 	}
 	head := " " + dot + " " + sty.Title.Render(name)
@@ -156,11 +156,15 @@ func (m *Model) renderProfile() string {
 		}
 		field("Status", line)
 	}
-	switch active, ok := m.presence[p.id]; {
+	_, known := m.presence[p.id]
+	switch self := p.id == m.client.SelfID; {
 	case u.Deleted:
 		rows = append(rows, " "+sty.Err.Render("This account is deactivated"))
-	case ok && p.id != m.client.SelfID:
-		field("Presence", map[bool]string{true: sty.OK.Render("active"), false: sty.Muted.Render("away")}[active])
+	case known || self:
+		field("Presence", map[bool]string{true: sty.OK.Render("active"), false: sty.Muted.Render("away")}[m.isActive(p.id)])
+	}
+	if until, on := m.dnd.Until(clockNow()); on && p.id == m.client.SelfID {
+		field("DND", sty.Muted.Render(ico.DND+" until "+clock(until, m.cfg.TimeFormat)))
 	}
 	field("Local time", localTime(u, clockNow(), m.cfg.TimeFormat))
 	field("Email", u.Email)

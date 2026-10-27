@@ -117,8 +117,8 @@ func (m *Model) renderConvPane(w, h int) string {
 	}
 	focused := m.focus == fMessages
 	var ctx []string
-	if c.Kind == backend.KindDM && c.UserID != m.client.SelfID {
-		if m.presence[c.UserID] {
+	if c.Kind == backend.KindDM {
+		if m.isActive(c.UserID) {
 			ctx = append(ctx, sty.OK.Render(onlineDot))
 		}
 		if line := m.statusLine(c.UserID); line != "" {

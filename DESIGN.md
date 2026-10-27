@@ -216,8 +216,8 @@ All columns are fixed width:
 
 - The **time gutter** is 6 cells and `faint`. It appears on the first line of every message, including follow-ups.
 - The **sender line** is the name in its hashed colour, bold, then the handle in `faint`. Messages from the same sender within 5 minutes skip the sender line.
-- **Date separator:** `──── Thursday 22 October ────` in `faint`, starting after the gutter.
-- **New messages:** `──── new ────`, a `mention`-coloured rule across the body column (starting after the gutter, like the date separator), with a bold `new` label in its centre.
+- **Date separator:** `──── Thursday 22 October ────` in `faint`, across the whole list, gutter included.
+- **New messages:** `──── new ────`, a `mention`-coloured rule across the whole list (like the date separator), with a bold `new` label in its centre.
 - **Links** are `accent` and underlined.
 - **Inline code** uses the `raised` background with `self` text. Code blocks use the `raised` background with full-width padding.
 - **Reactions** are chips (`raised` bg, `♥ 1`) with 1 cell between them. Reactions you added use the `selFocus` bg with `accent` bold text. Custom emoji are 2-cell images that fall back to `:name:` in `faint` on a `raised` chip.
@@ -449,3 +449,4 @@ Gaps found while building this spec, and how they were filled.
 - **Hint keys are words** (`enter`, `alt+enter`, `esc`, `tab`). `⏎` drew badly in some fonts.
 - **The count column** is sized by the conversation rows only. A folded header's `2 new` may run into the status column, so it doesn't shorten every name.
 - **A presence circle**, not a user glyph, marks people everywhere (sidebar, switcher, completion, members). Group DMs get `nf-md-circle_multiple_outline`.
+- **Your own presence** is the app's away setting (`:away` / `:back`), because `users.getPresence` isn't asked about you. You show as `●` active unless you set yourself away: in your own DM, the switcher, members and your profile, which also shows Presence and DND for you.

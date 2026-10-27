@@ -300,7 +300,7 @@ func (m *Model) renderCompItems(c *completion, w int) []string {
 		case strings.HasPrefix(it.token, "<@"):
 			uid := strings.TrimSuffix(strings.TrimPrefix(it.token, "<@"), ">")
 			icon := sty.Faint.Render(ico.UserAway)
-			if m.presence[uid] {
+			if m.isActive(uid) {
 				icon = sty.OK.Render(ico.UserActive)
 			}
 			left = slot(icon) + markMatch(strings.TrimPrefix(it.label, "@"), c.query, sty.Normal)

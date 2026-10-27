@@ -198,6 +198,16 @@ func (m *Model) statusEmoji(userID string) string {
 	return ""
 }
 
+// isActive is whether someone shows as active: for others what
+// users.getPresence last said; for us, our own away setting (:away,
+// :back), since we are here.
+func (m *Model) isActive(uid string) bool {
+	if uid == m.client.SelfID {
+		return !m.away
+	}
+	return m.presence[uid]
+}
+
 // statusLine is "<emoji> text" for a person's status, "" without one.
 func (m *Model) statusLine(userID string) string {
 	emoji, text := m.users[userID].Status(clockNow())

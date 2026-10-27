@@ -371,7 +371,7 @@ func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 	case backend.KindDM:
 		// Presence is the icon itself: solid in ok when active, outline
 		// in faint when away.
-		if m.presence[c.UserID] && !self {
+		if m.isActive(c.UserID) {
 			r.icon = sty.OK.Render(ico.UserActive)
 		} else {
 			r.icon = sty.Faint.Render(ico.UserAway)

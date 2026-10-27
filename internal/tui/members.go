@@ -153,7 +153,7 @@ func (m *Model) renderMembers(w, h int) string {
 		id := s.ids[idx]
 		u := m.users[id]
 		dot := sty.Faint.Render("○")
-		if m.presence[id] {
+		if m.isActive(id) {
 			dot = sty.OK.Render(onlineDot)
 		}
 		row := dot + " " + markMatch(m.memberName(id), q, sty.Normal)

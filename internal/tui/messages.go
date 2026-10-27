@@ -50,7 +50,6 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 	var all []string
 	blocks := make([]block, len(l.msgs))
 	gw := m.gutterW()
-	bodyW := width - 1 - gw // after the bar column and the time gutter
 	if l.hasMore && !inThread {
 		hint := "older messages above"
 		if l.loading {
@@ -63,11 +62,11 @@ func (m *Model) renderList(l *msgList, width, height int, active, inThread bool)
 		msg := &l.msgs[i]
 		var pre []string
 		if prev == nil || !sameDay(prev.Time(), msg.Time()) {
-			pre = append(pre, " "+strings.Repeat(" ", gw)+dateRule(dayLabel(msg.Time()), bodyW))
+			pre = append(pre, dateRule(dayLabel(msg.Time()), width))
 		}
 		isNew := l.newSince != "" && backend.TSLess(l.newSince, msg.TS) && (prev == nil || !backend.TSLess(l.newSince, prev.TS))
 		if isNew {
-			pre = append(pre, " "+strings.Repeat(" ", gw)+newRule(bodyW))
+			pre = append(pre, newRule(width))
 		}
 		grouped := prev != nil && len(pre) == 0 && !(inThread && i == 1) &&
 			senderKey(*prev) == senderKey(*msg) &&
@@ -164,15 +163,15 @@ func (m *Model) gutter(msg backend.Message) string {
 	return sty.Time.Render(t) + strings.Repeat(" ", max(0, m.gutterW()-ansi.StringWidth(t)))
 }
 
-// dateRule is "──── Thursday 22 October ────" across the body column.
+// dateRule is "──── Thursday 22 October ────" across the whole list.
 func dateRule(label string, width int) string {
 	label = " " + label + " "
 	side := max(0, width-ansi.StringWidth(label))
 	return sty.Faint.Render(strings.Repeat("─", side/2)) + sty.Date.Render(label) + sty.Faint.Render(strings.Repeat("─", side-side/2))
 }
 
-// newRule is "──── new ────" in mention across the body column: where the
-// unread messages start.
+// newRule is "──── new ────" in mention across the whole list: where
+// the unread messages start.
 func newRule(width int) string {
 	label := " new "
 	side := max(0, width-ansi.StringWidth(label))
