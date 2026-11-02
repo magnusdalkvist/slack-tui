@@ -333,9 +333,10 @@ func (m *Model) renderInfo() string {
 	if rs := mergeSkinTones(msg.Reactions); len(rs) > 0 {
 		rows = append(rows, "", modalHeader("Reactions"))
 		for _, r := range rs {
-			style := sty.Reaction
+			// No chip background: it would sit as a box on the selection.
+			style := sty.Reaction.UnsetBackground()
 			if slices.Contains(r.Users, m.client.SelfID) {
-				style = sty.ReactSelf
+				style = sty.ReactSelf.UnsetBackground()
 			}
 			chip := style.Render(fmt.Sprintf("%s %d", m.emojiChip(r.Name), r.Count))
 			lead := chip + " " + sty.Faint.Render(":"+r.Name+":")
