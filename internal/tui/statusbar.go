@@ -74,6 +74,8 @@ func (m *Model) pill() string {
 		return sty.ModeNormal.Render("REACT")
 	case m.profile != nil:
 		return sty.ModeNormal.Render("PROFILE")
+	case m.info != nil:
+		return sty.ModeNormal.Render("INFO")
 	case m.opener != nil:
 		return sty.ModeNormal.Render("OPEN")
 	case m.search != nil && (m.search.open || m.search.typing):
@@ -260,6 +262,8 @@ func (m *Model) hints() []Hint {
 		return append(hs, m.picker.Hints()...)
 	case m.profile != nil:
 		return append(hs, m.profile.Hints(m)...)
+	case m.info != nil:
+		return append(hs, m.info.Hints(m)...)
 	case m.opener != nil:
 		return append(hs, m.opener.Hints()...)
 	case m.help != nil:
@@ -330,6 +334,24 @@ func (*switcher) Hints() []Hint {
 
 func (*picker) Hints() []Hint {
 	return []Hint{{"enter", "react / un-react"}, {"↑↓", "move"}, {"esc", "close"}}
+}
+
+func (i *infoState) Hints(m *Model) []Hint {
+	msg := m.infoMsg()
+	items := m.infoItems(msg)
+	var hs []Hint
+	if len(items) > 0 {
+		switch items[min(i.sel, len(items)-1)].kind {
+		case infoThread:
+			hs = append(hs, Hint{"enter", "open thread"})
+		case infoReaction:
+			hs = append(hs, Hint{"enter", "react / unreact"})
+		case infoFile:
+			hs = append(hs, Hint{"enter", "open"}, Hint{"s", "save"})
+		}
+		hs = append(hs, Hint{"↑↓", "move"})
+	}
+	return append(hs, Hint{"+", "react"}, Hint{"c", "copy link"}, Hint{"o", "in Slack"}, Hint{"esc", "close"})
 }
 
 func (p *profileState) Hints(m *Model) []Hint {

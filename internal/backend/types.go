@@ -118,8 +118,10 @@ type Message struct {
 	SubType     string
 	ReplyCount  int
 	LatestReply string
+	ReplyUsers  []string // who replied in its thread, as far as Slack says
 	Edited      bool
-	Pinned      bool // pinned in its conversation
+	EditedTS    string // when it was last edited, when Slack says
+	Pinned      bool   // pinned in its conversation
 	Reactions   []Reaction
 	Files       []File
 	// Attachments are what bots send besides the text, and Slack's
@@ -176,6 +178,7 @@ func fromMsg(m slack.Msg) Message {
 		SubType:     m.SubType,
 		ReplyCount:  m.ReplyCount,
 		LatestReply: m.LatestReply,
+		ReplyUsers:  m.ReplyUsers,
 		Edited:      m.Edited != nil,
 		Pinned:      len(m.PinnedTo) > 0,
 	}
@@ -201,6 +204,9 @@ func fromMsg(m slack.Msg) Message {
 			Fallback: a.Fallback, Footer: a.Footer, TS: string(a.Ts),
 			Fields: fromFields(a.Fields),
 		})
+	}
+	if m.Edited != nil {
+		out.EditedTS = m.Edited.Timestamp
 	}
 	for _, r := range m.Reactions {
 		out.Reactions = append(out.Reactions, Reaction{Name: r.Name, Count: r.Count, Users: r.Users})

@@ -284,6 +284,24 @@ func (c *Client) React(ctx context.Context, id, ts, name string, add bool) error
 	})
 }
 
+// Reactions is every reaction on a message with everyone who added it:
+// history cuts the list of people short on popular reactions.
+func (c *Client) Reactions(ctx context.Context, id, ts string) ([]Reaction, error) {
+	var item slack.ReactedItem
+	err := retry(ctx, func() (err error) {
+		item, err = c.api.GetReactionsContext(ctx, slack.NewRefToMessage(id, ts), slack.GetReactionsParameters{Full: true})
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	var out []Reaction
+	for _, r := range item.Reactions {
+		out = append(out, Reaction{Name: r.Name, Count: r.Count, Users: r.Users})
+	}
+	return out, nil
+}
+
 // Edit replaces the text of one of the user's own messages.
 func (c *Client) Edit(ctx context.Context, id, ts, text string) error {
 	err := retry(ctx, func() error {

@@ -52,6 +52,9 @@ func (m *Model) handleKey(k tea.KeyMsg) tea.Cmd {
 	if m.profile != nil {
 		return m.profileKey(k)
 	}
+	if m.info != nil {
+		return m.infoKey(k)
+	}
 	if m.members != nil {
 		return m.membersKey(k)
 	}
@@ -289,6 +292,8 @@ func (m *Model) listKey(k tea.KeyMsg, l *msgList, inThread bool) tea.Cmd {
 		return m.saveFiles(l.msgs[sel].Files)
 	case "I":
 		return m.profileOfMessage(l.msgs[sel])
+	case "K":
+		return m.openInfo(m.listConv(inThread), l.msgs[sel])
 	case "U":
 		if inThread {
 			return m.setStatus("Slack's API can't mark thread replies unread", false)

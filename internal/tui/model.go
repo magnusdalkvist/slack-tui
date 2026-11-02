@@ -120,6 +120,7 @@ type Model struct {
 	jump     *jumpState    // search result being loaded into view
 	help     *helpState    // `?`, while open
 	profile  *profileState // `I`: a person's profile card, while open
+	info     *infoState    // `K`: a message's details, while open
 	members  *membersState // `:members`, while open
 
 	booted       bool

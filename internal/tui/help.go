@@ -53,6 +53,7 @@ var helpKeys = [][2]string{
 	{"o", "open the message's file or link (a chooser when there are several)"},
 	{"s", "save the message's files to Downloads"},
 	{"I", "profile of the message's sender (or the DM's person)"},
+	{"K", "message details: who reacted, thread, files, link"},
 	{"x  (thread)", "close thread"},
 	{"q", "quit"},
 }

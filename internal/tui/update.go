@@ -124,6 +124,9 @@ func (m *Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case profileMsg:
 		return m, m.profileResult(msg)
 
+	case infoReactionsMsg:
+		return m, m.infoReactionsResult(msg)
+
 	case dmOpenedMsg:
 		return m, m.dmOpenedResult(msg)
 

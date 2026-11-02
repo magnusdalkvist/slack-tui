@@ -121,6 +121,7 @@ expires = "until tomorrow"
 | `r` | mark conversation read |
 | `U` | mark unread from the selected message: the read marker moves to just before it, in Slack too, until you read to the bottom or open it again (not for thread replies: the API can't) |
 | `I` | profile of the message's sender, or of the DM's person in the sidebar: name, title, pronouns, status, local time and how far ahead or behind, email, phone; `enter` writes to them, `c` copies the email (also `:profile @person`) |
+| `K` | message details: when it was sent and edited, pinned, thread with who replied, every reaction with the people behind it (popular ones fetched in full), files with type and size, the link; `enter` reacts/unreacts, opens the thread or a file, `s` saves, `c` copies the link, `+` reacts (also `:info`) |
 | `c` | copy the selected message's text (OSC 52, so it works through tmux and ssh) |
 | `+` | react: emoji picker (enter adds, or removes a reaction you already have) |
 | `e` / `↑` in an empty input | edit your message / your last message (enter saves, esc cancels) |

@@ -177,6 +177,12 @@ var scenes = []scene{
 		m.openProfile("U1")
 		m.profile.loading = false
 	}},
+	{"info", 30, func(m *Model) {
+		msg := m.lists["C1"].msgs[2]
+		msg.Edited, msg.EditedTS = true, ts(22, 9, 15)
+		m.lists["C1"].msgs[2] = msg
+		m.openInfo("C1", msg)
+	}},
 	{"open", 30, func(m *Model) {
 		msg := m.lists["C1"].msgs[len(m.lists["C1"].msgs)-1]
 		msg.Files[0].Size, msg.Files[1].Size = 1258291, 219136

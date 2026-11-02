@@ -37,6 +37,8 @@ var commands = []command{
 		func(m *Model, a string) tea.Cmd { return m.cmdDM(a) }},
 	{"profile", "[@person]", "a person's profile: title, local time, email (I)",
 		func(m *Model, a string) tea.Cmd { return m.cmdProfile(a) }},
+	{"info", "", "the selected message's details: who reacted, thread, files, link (K)",
+		func(m *Model, _ string) tea.Cmd { return m.cmdInfo() }},
 	{"members", "", "who is in this conversation; enter shows a profile",
 		func(m *Model, _ string) tea.Cmd { return m.openMembers() }},
 	{"join", "[#channel]", "join a public channel; alone browses them all",

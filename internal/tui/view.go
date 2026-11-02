@@ -64,6 +64,8 @@ func (m *Model) renderModal() string {
 		return m.renderOpener()
 	case m.profile != nil:
 		return m.renderProfile()
+	case m.info != nil:
+		return m.renderInfo()
 	}
 	return ""
 }
