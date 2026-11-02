@@ -47,3 +47,25 @@ func TestOpenChooser(t *testing.T) {
 		t.Errorf("a lone link should open without a chooser: status=%q", m.status)
 	}
 }
+
+// TestOpenLinkWithPreview: a link and Slack's preview of it are one page;
+// o opens it straight away instead of asking between the two. A link only
+// in an attachment (a bot's) is still offered.
+func TestOpenLinkWithPreview(t *testing.T) {
+	m := chanWithMessages(t)
+	m.update(historyMsg{id: "C2", msgs: []backend.Message{
+		{TS: "100.000003", User: "U1", Text: "read <https://news.dk/a?id=1>", Attachments: []backend.Attachment{{
+			FromURL: "https://news.dk/a?id=1", Title: "A story", TitleLink: "https://www.news.dk/a?id=1/", Text: "about things",
+		}}},
+	}})
+	m.focus = fMessages
+	m.Update(key("o"))
+	if m.opener != nil || !strings.Contains(m.status, "opening https://news.dk/a?id=1") {
+		t.Errorf("want the link opened at once: opener=%v status=%q", m.opener, m.status)
+	}
+
+	bot := backend.Message{Text: "deploy done", Attachments: []backend.Attachment{{Title: "build 12", TitleLink: "https://ci.dk/12"}}}
+	if ls := messageLinks(bot); len(ls) != 1 || ls[0].URL != "https://ci.dk/12" {
+		t.Errorf("a bot's attachment link: %+v", ls)
+	}
+}

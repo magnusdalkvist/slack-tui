@@ -91,7 +91,7 @@ func (m *Model) dmOpenedResult(msg dmOpenedMsg) tea.Cmd {
 		return m.setStatus("couldn't open a conversation with "+msg.names+": "+slackReason(msg.err), true)
 	}
 	m.addConv(msg.conv)
-	return tea.Batch(m.open(msg.conv.ID), m.presenceFor(msg.conv.ID), m.setStatus("", false))
+	return tea.Batch(m.open(msg.conv.ID), m.presenceFor(msg.conv.ID), m.setStatus("", false), m.forwardOpened(msg.conv.ID))
 }
 
 // switcherPeople adds everyone we have no DM with to the ctrl+k

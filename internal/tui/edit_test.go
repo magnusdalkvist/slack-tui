@@ -3,6 +3,7 @@ package tui
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -260,5 +261,37 @@ func TestMergeFreshGap(t *testing.T) {
 	// No more history behind the page: older local ones were deleted.
 	if out, more := mergeFresh(cached, fresh, true, false); strings.Join(ts(out), ",") != "50.0,51.0" || more {
 		t.Errorf("deleted kept: %v more=%v", ts(out), more)
+	}
+}
+
+// TestInputShrinksWithoutGap: deleting the last line of a message taller
+// than the box scrolls the text down to fill it, no blank rows below.
+func TestInputShrinksWithoutGap(t *testing.T) {
+	m := chanWithMessages(t)
+	m.handleKey(key("i"))
+	for i := 1; i <= 10; i++ {
+		if i > 1 {
+			m.handleKey(tea.KeyMsg{Type: tea.KeyCtrlJ})
+		}
+		for _, r := range fmt.Sprintf("line%d", i) {
+			m.handleKey(key(string(r)))
+		}
+	}
+	m.View()
+	for range len("line10") + 1 { // the line and its newline
+		m.handleKey(tea.KeyMsg{Type: tea.KeyBackspace})
+		m.View()
+	}
+	lines := strings.Split(ansi.Strip(m.View()), "\n")
+	var box []string
+	for i := len(lines) - 1; i >= 0; i-- {
+		if strings.Contains(lines[i], "╭") {
+			break
+		}
+		box = append([]string{lines[i]}, box...)
+	}
+	// box: the text rows, the bottom border, the status bar.
+	if last := box[len(box)-3]; !strings.Contains(last, "line9") {
+		t.Errorf("last row of the box %q; want line9:\n%s", last, strings.Join(box, "\n"))
 	}
 }

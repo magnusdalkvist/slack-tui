@@ -21,7 +21,7 @@ func (m *Model) SetClipboard(w io.Writer) { m.clip = w }
 // terminal, which sets the system clipboard. Works over ssh too.
 func (m *Model) copyMessage(msg backend.Message) tea.Cmd {
 	// Links as plain URLs, then @Name and #channel instead of <@U…>.
-	text, _ := render.Editable(render.PlainLinks(msg.Text), m)
+	text, _ := render.Editable(render.PlainLinks(ownText(msg)), m)
 	text = strings.TrimSpace(text)
 	if text == "" && len(msg.Files) > 0 {
 		text = msg.Files[0].Permalink // a file-only message: copy its link

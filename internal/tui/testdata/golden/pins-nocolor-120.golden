@@ -3,16 +3,16 @@
 │                               │ │▌[7m  Runbook                                                                         [27;49m│
 │ [1m[0m [1mTEAM[0m                        │ │▌[7m   [4;4mh[0m[7m[4;4mt[0m[7m[4;4mt[0m[7m[4;4mp[0m[7m[4;4ms[0m[7m[4;4m:[0m[7m[4;4m/[0m[7m[4;4m/[0m[7m[4;4me[0m[7m[4;4mx[0m[7m[4;4ma[0m[7m[4;4mm[0m[7m[4;4mp[0m[7m[4;4ml[0m[7m[4;4me[0m[7m[4;4m.[0m[7m[4;4mc[0m[7m[4;4mo[0m[7m[4;4mm[0m[7m[4;4m/[0m[7m[4;4mr[0m[7m[4;4mu[0m[7m[4;4mn[0m[7m[4;4mb[0m[7m[4;4mo[0m[7m[4;4mo[0m[7m[4;4mk[0m[7m                                                     [27;49m│
 │ [7m development                 [27;49m│ │                                                                                    │
-│ 󰝥 [1mSimon Konstantyner[0m   🏡 ● 2 │ │ [1mPINNED[0m  1                                                                          │
-│ 󰝦 Kim Kyhlensø kiky           │ │   [1mSimon Konstantyner[0m 09:12                                                        │
+│ ● [1mSimon Konstantyner[0m     🏡 ⦁ │ │ [1mPINNED[0m  1                                                                          │
+│ ○ Kim Kyhlensø kiky           │ │   [1mSimon Konstantyner[0m 09:12                                                        │
 │                               │ │    deployed [7mpanda-v2[0m to staging 🚀                                                 │
 │ [1m[0m [1m[0m [1mCHANNELS[0m                  │ │                                                                                    │
 │  general                     │ │                                                                                    │
-│ [1m[0m [1mpanda-v2[0m                ● 1 │ │                                                                                    │
-│ [1m[0m [1msjov-og-spass[0m             • │ │                                                                                    │
+│ [1m[0m [1mpanda-v2[0m                  ⦁ │ │                                                                                    │
+│ [1m[0m [1msjov-og-spass[0m             ⦁ │ │                                                                                    │
 │                               │ │                                                                                    │
 │ [1m[0m [1m[0m [1mDIRECT MESSAGES[0m           │ │                                                                                    │
-│ 󰝥 mada (you)                  │ │                                                                                    │
+│ ● mada (you)                  │ │                                                                                    │
 │ 󰚕 Simon Konstantyner, Anna J… │ │                                                                                    │
 │                               │ │                                                                                    │
 │                               │ │                                                                                    │

@@ -36,9 +36,16 @@ func listBlocks(text string) []slack.Block {
 
 	var out []slack.RichTextElement
 	var plain, quote []string
+	// A plain part keeps its blank lines: one next to a list or quote is a
+	// newline at that end of the section, and a part of only blank lines
+	// (between two lists) is a section of one newline per line.
 	flushPlain := func() {
 		if len(plain) > 0 {
-			out = append(out, slack.NewRichTextSection(inline(strings.Join(plain, "\n"), nil)...))
+			text := strings.Join(plain, "\n")
+			if strings.TrimSpace(text) == "" {
+				text = strings.Repeat("\n", len(plain))
+			}
+			out = append(out, slack.NewRichTextSection(inline(text, nil)...))
 			plain = nil
 		}
 	}
@@ -111,12 +118,6 @@ func listBlocks(text string) []slack.Block {
 	}
 	flushPlain()
 	flushQuote()
-	// A blank line kept at either end of a plain part would show as one.
-	for _, e := range out {
-		if s, ok := e.(*slack.RichTextSection); ok {
-			trimSection(s)
-		}
-	}
 	return []slack.Block{slack.NewRichTextBlock("", out...)}
 }
 
@@ -130,18 +131,6 @@ func listFallback(text string) string {
 		}
 	}
 	return strings.Join(lines, "\n")
-}
-
-func trimSection(s *slack.RichTextSection) {
-	if len(s.Elements) == 0 {
-		return
-	}
-	if t, ok := s.Elements[0].(*slack.RichTextSectionTextElement); ok {
-		t.Text = strings.TrimLeft(t.Text, "\n")
-	}
-	if t, ok := s.Elements[len(s.Elements)-1].(*slack.RichTextSectionTextElement); ok {
-		t.Text = strings.TrimRight(t.Text, "\n")
-	}
 }
 
 // inline turns one stretch of message text into rich text elements:
@@ -288,7 +277,13 @@ func blocksText(blocks slack.Blocks) (text string, ok bool) {
 		for _, e := range r.Elements {
 			switch e := e.(type) {
 			case *slack.RichTextSection:
-				parts = append(parts, strings.TrimRight(sectionText(e.Elements), "\n"))
+				// A newline at either end is a blank line next to a list;
+				// a section of only newlines is that many blank lines.
+				s := sectionText(e.Elements)
+				if strings.Trim(s, "\n") == "" {
+					s = strings.Repeat("\n", max(len(s)-1, 0))
+				}
+				parts = append(parts, s)
 			case *slack.RichTextList:
 				for i, item := range e.Elements {
 					s, isSection := item.(*slack.RichTextSection)
@@ -310,7 +305,8 @@ func blocksText(blocks slack.Blocks) (text string, ok bool) {
 			}
 		}
 	}
-	return strings.Join(parts, "\n"), true
+	// Slack's clients end the last section with a newline that isn't one.
+	return strings.TrimRight(strings.Join(parts, "\n"), "\n"), true
 }
 
 // sectionText writes rich text elements as message text.

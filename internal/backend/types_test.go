@@ -52,11 +52,14 @@ func TestBotNameOverride(t *testing.T) {
 func TestAttachmentText(t *testing.T) {
 	m := fromMsg(slack.Msg{Text: "deploy", Attachments: []slack.Attachment{
 		{Pretext: "Build <https://ci.example.com/1|#1>", Title: "api | prod", TitleLink: "https://example.com/api", Text: "passed", Fallback: "fb"},
-		{Title: "plain title", Fallback: "fb2"},
+		{Title: "plain title", Fallback: "fb2", Fields: []slack.AttachmentField{{Title: "Status", Value: "Failed", Short: true}, {Value: "untitled"}}},
 		{Fallback: "only fallback"},
 	}})
-	want := "deploy\nBuild <https://ci.example.com/1|#1>\n<https://example.com/api|api ¦ prod>\npassed\nplain title\nonly fallback"
-	if m.Text != want {
-		t.Errorf("got\n%s\nwant\n%s", m.Text, want)
+	want := "deploy\nBuild <https://ci.example.com/1|#1>\n<https://example.com/api|api ¦ prod>\npassed\nplain title\nStatus: Failed\nuntitled\nonly fallback"
+	if m.Text != "deploy" || len(m.Attachments) != 3 {
+		t.Errorf("text %q and %d attachments; want them apart", m.Text, len(m.Attachments))
+	}
+	if got := m.AllText(); got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
 	}
 }

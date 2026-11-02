@@ -21,6 +21,7 @@ type switcher struct {
 	// convCount: ids past it are people we have no DM with
 	// (personPrefix+user ID), offered only once something is typed.
 	convCount int
+	forward   *forwardState // "Forward to": the message going to the pick
 }
 
 func (m *Model) newSwitcher() *switcher {
@@ -69,6 +70,9 @@ func (m *Model) switcherKey(k tea.KeyMsg) tea.Cmd {
 		return nil
 	case "enter":
 		m.switcher = nil
+		if len(s.matches) > 0 && s.forward != nil {
+			return m.forwardTo(s.forward, s.matches[s.sel])
+		}
 		if len(s.matches) > 0 {
 			if uid, ok := strings.CutPrefix(s.matches[s.sel], personPrefix); ok {
 				return m.openDMWith([]string{uid})
@@ -119,7 +123,11 @@ func (m *Model) renderSwitcher() string {
 		rows = append(rows, " "+sty.Muted.Render("no matches"))
 	}
 	right := fmt.Sprintf("%d of %d", len(s.matches), len(s.ids))
-	return modalBox(w, "Jump to", right, rows)
+	title := "Jump to"
+	if s.forward != nil {
+		title = "Forward to"
+	}
+	return modalBox(w, title, right, rows)
 }
 
 type switchName struct{ label, extra string }
@@ -167,7 +175,7 @@ func (m *Model) switchRow(id string) (icon string, name switchName, meta string,
 		icon, meta = style.Render(ico.Channel), "channel"
 	}
 	if c.Mentions > 0 {
-		meta = sty.Err.Render(fmt.Sprintf("%d %s", c.Mentions, plural(c.Mentions, "mention", "mentions"))) + sty.Faint.Render(" · "+meta)
+		meta = sty.Err.Render("mentioned you") + sty.Faint.Render(" · "+meta)
 	} else if c.Unread() {
 		meta = "new · " + meta
 	}

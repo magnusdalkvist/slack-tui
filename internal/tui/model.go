@@ -95,8 +95,10 @@ type Model struct {
 	focus   focus
 	insert  bool
 	input   textarea.Model
-	viewer  *viewer           // full-window image viewer, when open
-	bots    map[string]string // bot ID → name, looked up with bots.info ("" while pending)
+	// inputRowsWas is the input's wrapped rows at the last fitInput.
+	inputRowsWas int
+	viewer       *viewer           // full-window image viewer, when open
+	bots         map[string]string // bot ID → name, looked up with bots.info ("" while pending)
 	// userLookups: people not in users.list already asked for with users.info.
 	userLookups map[string]bool
 	extUsers    map[string]bool // people from other organisations
@@ -104,6 +106,7 @@ type Model struct {
 	attach      []*attachment   // clipboard images going out with the next send
 	attachSel   int             // the chip ctrl+←/→ selected, ctrl+x drops
 	broadcast   bool            // thread replies also go to the channel (ctrl+o)
+	forward     *forwardState   // a message `f` is forwarding, waiting in a composer
 
 	switcher *switcher
 	search   *searchState  // `/`; nil until first used

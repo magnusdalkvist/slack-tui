@@ -37,7 +37,7 @@ func TestListBlocks(t *testing.T) {
 		`{"type":"rich_text_list","elements":[{"type":"rich_text_section","elements":[{"type":"text","text":":join","style":{"code":true}},{"type":"text","text":" and "},{"type":"text","text":"bold ","style":{"bold":true}},{"type":"text","text":"both","style":{"bold":true,"italic":true}}]}`,
 		`{"type":"link","url":"https://x.dk/a?b=1\u0026c=2","text":"the docs"},{"type":"text","text":" "},{"type":"emoji","name":"tada"}`,
 		`"style":"bullet","indent":1`,
-		`{"type":"rich_text_section","elements":[{"type":"text","text":"Bye \u003c3"}]}`,
+		`{"type":"rich_text_section","elements":[{"type":"text","text":"\nBye \u003c3"}]}`, // the blank line before it kept
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %s\nin %s", want, got)
@@ -117,5 +117,28 @@ func TestListRoundTrip(t *testing.T) {
 	got, ok := blocksText(blocks)
 	if want := "Hej!\n• `:join` og *fed*\n• <https://x.dk|link> :tada:\n  1. under\nslut"; !ok || got != want {
 		t.Errorf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+// TestListBlankLines: blank lines around and between lists survive the
+// trip to Slack's rich text and back.
+func TestListBlankLines(t *testing.T) {
+	for _, text := range []string{
+		"Test setup:\n\n1. one\n2. two\n\nThanks",
+		"- a\n\n- b",
+		"- a\n\n\n- b",
+		"intro\n- a\n\n&gt; quoted",
+		"one\n\ntwo\n- a",
+	} {
+		b, _ := json.Marshal(listBlocks(text))
+		var blocks slack.Blocks
+		if err := json.Unmarshal(b, &blocks); err != nil {
+			t.Fatal(err)
+		}
+		got, _ := blocksText(blocks)
+		want := strings.NewReplacer("- ", "• ").Replace(text)
+		if got != want {
+			t.Errorf("%q came back as %q\nblocks %s", text, got, b)
+		}
 	}
 }

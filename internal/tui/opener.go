@@ -31,7 +31,7 @@ func (m *Model) openFrom(msg backend.Message) tea.Cmd {
 	for i := range msg.Files {
 		items = append(items, openItem{file: &msg.Files[i]})
 	}
-	for _, l := range render.Links(msg.Text) {
+	for _, l := range messageLinks(msg) {
 		items = append(items, openItem{link: l})
 	}
 	switch len(items) {
@@ -42,6 +42,39 @@ func (m *Model) openFrom(msg backend.Message) tea.Cmd {
 	}
 	m.opener = &opener{items: items, msg: msg}
 	return nil
+}
+
+// messageLinks are the links in a message's text, then those in its
+// attachments that aren't the same page again: a link's preview has the
+// page as its title, often as a slightly different URL (canonical, a
+// trailing slash), and `o` should open it once.
+func messageLinks(msg backend.Message) []render.Link {
+	out := render.Links(msg.Text)
+	seen := map[string]bool{}
+	for _, l := range out {
+		seen[samePage(l.URL)] = true
+	}
+	for _, a := range msg.Attachments {
+		if seen[samePage(a.FromURL)] {
+			continue // the preview of a link already listed
+		}
+		for _, l := range render.Links(strings.Join(a.Lines(), "\n")) {
+			if key := samePage(l.URL); !seen[key] {
+				seen[key] = true
+				out = append(out, l)
+			}
+		}
+	}
+	return out
+}
+
+// samePage is a URL with what doesn't change the page left out: the
+// scheme, www., a trailing slash and the #fragment.
+func samePage(u string) string {
+	u, _, _ = strings.Cut(u, "#")
+	u = strings.TrimPrefix(strings.TrimPrefix(u, "https://"), "http://")
+	u = strings.TrimPrefix(u, "www.")
+	return strings.ToLower(strings.TrimSuffix(u, "/"))
 }
 
 func (m *Model) openItem(it openItem) tea.Cmd {

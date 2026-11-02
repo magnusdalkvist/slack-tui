@@ -283,8 +283,8 @@ func (m *Model) renderPins(w, h int) string {
 				line += "  " + sty.Thread.Render("in thread")
 			}
 			block = append(block, sty.Warn.Render(ico.Pinned)+" "+line)
-			text := strings.ReplaceAll(render.Mrkdwn(pin.Text, m, sty.Md), "\n", " ")
-			if strings.TrimSpace(pin.Text) == "" && len(pin.Files) > 0 {
+			text := strings.ReplaceAll(render.Mrkdwn(pin.AllText(), m, sty.Md), "\n", " ")
+			if strings.TrimSpace(pin.AllText()) == "" && len(pin.Files) > 0 {
 				text = fileLine(pin.Files[0], pin.Files[0].Size)
 			}
 			wrapped := wrap(text, lw-4)

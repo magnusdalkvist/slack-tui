@@ -7,7 +7,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/magnusdalkvist/slack-tui/internal/backend"
-	"github.com/magnusdalkvist/slack-tui/internal/render"
 )
 
 func (m *Model) handleKey(k tea.KeyMsg) tea.Cmd {
@@ -272,6 +271,10 @@ func (m *Model) listKey(k tea.KeyMsg, l *msgList, inThread bool) tea.Cmd {
 		return m.openPicker(m.listConv(inThread), l.msgs[sel])
 	case "c":
 		return m.copyMessage(l.msgs[sel])
+	case ">":
+		return m.quoteReply(m.listConv(inThread), l.msgs[sel], inThread)
+	case "f":
+		return m.startForward(m.listConv(inThread), l.msgs[sel])
 	case "e":
 		return m.startEdit(m.listConv(inThread), l.msgs[sel], inThread)
 	case "D":
@@ -503,6 +506,16 @@ func (m *Model) insertKey(k tea.KeyMsg) tea.Cmd {
 		}
 	}
 	switch {
+	case k.Type == tea.KeyCtrlK:
+		// Jump to, as from normal mode; the draft stays in the composer.
+		if m.editing != nil {
+			m.cancelEdit()
+		}
+		m.insert = false
+		m.input.Blur()
+		m.complete = nil
+		m.switcher = m.newSwitcher()
+		return nil
 	case k.Paste && m.editing == nil:
 		return m.paste(string(k.Runes), false)
 	case k.Type == tea.KeyCtrlV && m.editing == nil:
@@ -523,6 +536,9 @@ func (m *Model) insertKey(k tea.KeyMsg) tea.Cmd {
 		return nil
 	case k.Type == tea.KeyCtrlX && len(m.attach) > 0:
 		return m.dropAttachment()
+	case k.Type == tea.KeyCtrlX && m.editing == nil && m.forwardHere() != nil:
+		m.forward = nil
+		return m.setStatus("not forwarding", false)
 	case (k.Type == tea.KeyCtrlLeft || k.Type == tea.KeyCtrlRight) && len(m.attach) > 0:
 		d := map[bool]int{true: -1, false: 1}[k.Type == tea.KeyCtrlLeft]
 		m.attachSel = min(max(m.attachSel+d, 0), len(m.attach)-1)
@@ -544,11 +560,8 @@ func (m *Model) insertKey(k tea.KeyMsg) tea.Cmd {
 		return nil
 	case k.Type == tea.KeyEnter:
 		text := strings.TrimSpace(m.input.Value())
-		if text == "" && len(m.attach) == 0 {
-			return nil
-		}
 		conv, thread := m.inputTarget()
-		if conv == "" {
+		if conv == "" || (text == "" && len(m.attach) == 0 && m.forwardFor(conv) == nil) {
 			return nil
 		}
 		m.input.Reset()
@@ -565,9 +578,9 @@ func (m *Model) insertKey(k tea.KeyMsg) tea.Cmd {
 			if broadcast {
 				status += " (only in the thread: Slack can't send files to the channel too)"
 			}
-			return tea.Batch(m.upload(conv, thread, atts, render.Encode(text, m.composeTokens)), m.setStatus(status, false))
+			return tea.Batch(m.upload(conv, thread, atts, m.outgoing(conv, text)), m.setStatus(status, false))
 		}
-		return m.post(conv, thread, render.Encode(text, m.composeTokens), broadcast)
+		return m.post(conv, thread, m.outgoing(conv, text), broadcast)
 	}
 	// Type into a box at full height, then shrink it to fit: a box still at
 	// its old height would scroll when the text wraps onto a new row, and
@@ -584,7 +597,28 @@ func (m *Model) insertKey(k tea.KeyMsg) tea.Cmd {
 // up to 8 rows or a third of the window, whichever is less; past that the
 // box scrolls.
 func (m *Model) fitInput() {
-	m.input.SetHeight(min(max(m.inputRows(), 1), m.inputLimit()))
+	rows := m.inputRows()
+	m.input.SetHeight(min(max(rows, 1), m.inputLimit()))
+	if rows < m.inputRowsWas && m.inputRowsWas > m.inputLimit() {
+		m.reanchorInput()
+	}
+	m.inputRowsWas = rows
+}
+
+// reanchorInput scrolls a box whose text just shrank so the text fills it
+// again. The textarea only scrolls to keep the cursor in view, so after a
+// deleted line it would keep its offset and show blank rows at the bottom.
+// Its offset isn't exported: set the text again (back to the top, cursor at
+// the end), walk the cursor back, and let it scroll just far enough.
+func (m *Model) reanchorInput() {
+	row, li := m.input.Line(), m.input.LineInfo()
+	col := li.StartColumn + li.ColumnOffset
+	m.input.SetValue(m.input.Value())
+	for m.input.Line() > row {
+		m.input.CursorUp()
+	}
+	m.input.SetCursor(col)
+	m.input, _ = m.input.Update(nil)
 }
 
 // inputLimit is the most rows the input box grows to.

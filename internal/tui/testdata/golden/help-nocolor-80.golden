@@ -1,4 +1,4 @@
-╭ [1;7mHelp[0m ──────────────────────────────────────────────────────────────── 1 of 5 ╮
+╭ [1;7mHelp[0m ──────────────────────────────────────────────────────────────── 1 of 6 ╮
 │ [1mKEYS[0m                                                                         │
 │▌[7m[1mp[0m[7m                        [1mpin[0m[7m / unpin the message                             [27;49m│
 │ [1mP[0m                        [1mpin[0mned messages and bookmarks; a e d add / edit / re│
@@ -6,8 +6,8 @@
 │ [1mCOMMANDS[0m                                                                     │
 │ [1m:pins[0m                    [1mpin[0mned messages and bookmarks of this conversation (│
 │ [1mctrl+← ctrl+→  (insert)[0m  [1mpi[0mck a[1mn[0m attached image                              │
+│ [1mf[0m                        forward the message: [1mpi[0mck where, add a [1mn[0mote, enter s│
 │ [1m↑  (empty input)[0m         edit your last message                              │
-│                                                                              │
 │                                                                              │
 │                                                                              │
 │                                                                              │

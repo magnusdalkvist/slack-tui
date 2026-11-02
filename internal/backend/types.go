@@ -122,6 +122,41 @@ type Message struct {
 	Pinned      bool // pinned in its conversation
 	Reactions   []Reaction
 	Files       []File
+	// Attachments are what bots send besides the text, and Slack's
+	// previews of links in it: a shared message, a page.
+	Attachments []Attachment
+}
+
+// Attachment is a legacy message attachment.
+type Attachment struct {
+	Color, Pretext, Author string
+	AuthorID, FromURL      string // a shared message's: who wrote it, its link
+	Service                string // a link preview's site: "GitHub"
+	Title, TitleLink, Text string
+	Fallback, Footer, TS   string // TS: a shared message's time
+	Fields                 []Field
+}
+
+// Field is one of an attachment's labelled values: Runscope's "Status:
+// Failed". Short ones sit two to a row.
+type Field struct {
+	Title, Value string
+	Short        bool
+}
+
+// AllText is the text with each attachment's after it, as Slack shows
+// them: for previews, links, emoji and the cache.
+func (m Message) AllText() string {
+	out := m.Text
+	for _, a := range m.Attachments {
+		for _, l := range append(a.Lines(), a.FieldLines()...) {
+			if out != "" {
+				out += "\n"
+			}
+			out += l
+		}
+	}
+	return out
 }
 
 // IsReply is true for thread replies that are not also broadcast to the channel.
@@ -156,16 +191,16 @@ func fromMsg(m slack.Msg) Message {
 	if t, ok := blocksText(m.Blocks); ok {
 		out.Text = t
 	}
-	// Bot messages often carry everything in attachments.
-	var extra []string
+	// Bot messages often carry everything in attachments; Slack puts a
+	// link's preview there too, in a change event after the message.
 	for _, a := range m.Attachments {
-		extra = append(extra, attachmentText(a)...)
-	}
-	if len(extra) > 0 {
-		if out.Text != "" {
-			out.Text += "\n"
-		}
-		out.Text += strings.Join(extra, "\n")
+		out.Attachments = append(out.Attachments, Attachment{
+			Color: a.Color, Pretext: a.Pretext, Author: a.AuthorName,
+			AuthorID: a.AuthorID, FromURL: a.FromURL, Service: a.ServiceName,
+			Title: a.Title, TitleLink: a.TitleLink, Text: a.Text,
+			Fallback: a.Fallback, Footer: a.Footer, TS: string(a.Ts),
+			Fields: fromFields(a.Fields),
+		})
 	}
 	for _, r := range m.Reactions {
 		out.Reactions = append(out.Reactions, Reaction{Name: r.Name, Count: r.Count, Users: r.Users})
@@ -176,10 +211,10 @@ func fromMsg(m slack.Msg) Message {
 	return out
 }
 
-// attachmentText is what Slack shows of an attachment: the pretext, the
+// Lines is what Slack shows of an attachment's text: the pretext, the
 // title (a link when it has one) and the text, or the fallback when there is
 // neither title nor text.
-func attachmentText(a slack.Attachment) []string {
+func (a Attachment) Lines() []string {
 	var out []string
 	if a.Pretext != "" {
 		out = append(out, a.Pretext)
@@ -195,6 +230,23 @@ func attachmentText(a slack.Attachment) []string {
 		out = append(out, a.Text)
 	} else if a.Title == "" && a.Fallback != "" {
 		out = append(out, a.Fallback)
+	}
+	return out
+}
+
+// FieldLines is the fields as text: "Status: Failed".
+func (a Attachment) FieldLines() []string {
+	var out []string
+	for _, f := range a.Fields {
+		out = append(out, strings.TrimPrefix(f.Title+": "+f.Value, ": "))
+	}
+	return out
+}
+
+func fromFields(fs []slack.AttachmentField) []Field {
+	var out []Field
+	for _, f := range fs {
+		out = append(out, Field{Title: f.Title, Value: f.Value, Short: f.Short})
 	}
 	return out
 }

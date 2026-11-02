@@ -249,7 +249,7 @@ type sideCells struct {
 	flag, icon     string // flag is the bar column (blank), icon one glyph (slot adds the space)
 	name, nick     string // already styled; nick follows the name in faint
 	status         string // a 2-cell emoji, or ""
-	dot            string // the unread marker: red ● for mentions, faint • otherwise
+	dot            string // the unread marker, a faint dot
 	count          string // styled, right-aligned
 	header, spacer bool
 }
@@ -285,11 +285,9 @@ func (r sideCells) layout(width int) string {
 	return slot(r.icon) + name + strings.Repeat(" ", pad) + tail
 }
 
-// Unread markers, at the right before the count: a red ● for mentions and
-// DM unreads, a small faint • for other unread conversations.
-func dotMention() string { return sty.Err.Render("●") }
-
-func dotUnread() string { return sty.Faint.Render("•") }
+// dotUnread is the unread marker, flush right: one faint dot for every
+// unread conversation, mentions too. Only the Unreads row has a count.
+func dotUnread() string { return sty.Faint.Render(ico.UnreadDot) }
 
 func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 	if it.spacer {
@@ -333,12 +331,7 @@ func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 	}
 	var r sideCells
 	switch {
-	case c.Mentions > 0 || (c.IsDM() && c.Unread()):
-		style, r.flag, r.dot = sty.Unread, " ", dotMention()
-		if c.Mentions > 0 {
-			r.count = sty.Err.Render(fmt.Sprint(c.Mentions))
-		}
-	case c.Unread():
+	case c.Mentions > 0 || c.Unread():
 		style, r.flag, r.dot = sty.Unread, " ", dotUnread()
 	default:
 		r.flag = " "
@@ -371,8 +364,7 @@ func (m *Model) sideCells(it sideItem, secs []section) sideCells {
 }
 
 // headerCells is a section header: ▾/▸, the section's icon and its name
-// in caps. A folded one still says what is inside: mentions with a red
-// dot and count, other unreads with a faint dot.
+// in caps. A folded one with anything unread inside has the faint dot.
 func (m *Model) headerCells(name string, secs []section) sideCells {
 	arrow := ico.Unfolded
 	if m.folded[name] {
@@ -385,31 +377,19 @@ func (m *Model) headerCells(name string, secs []section) sideCells {
 		title = icon + " " + title
 	}
 	r := sideCells{header: true, flag: " ", icon: sty.Header.Render(arrow), name: title}
-	mentions, unread := 0, 0
+	unread := false
 	for _, sec := range secs {
 		if sec.name != name {
 			continue
 		}
 		for _, id := range sec.ids {
-			c := m.convs[id]
-			if c == nil {
-				continue
-			}
-			switch {
-			case c.Mentions > 0 || (c.IsDM() && c.Unread()):
-				mentions += max(c.Mentions, 1)
-			case c.Unread():
-				unread++
+			if c := m.convs[id]; c != nil && (c.Mentions > 0 || c.Unread()) {
+				unread = true
 			}
 		}
 	}
-	if m.folded[name] {
-		switch {
-		case mentions > 0:
-			r.dot, r.count = dotMention(), sty.Err.Render(fmt.Sprint(mentions))
-		case unread > 0:
-			r.dot = dotUnread()
-		}
+	if m.folded[name] && unread {
+		r.dot = dotUnread()
 	}
 	return r
 }

@@ -264,6 +264,10 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread, s
 	for _, f := range msg.Files {
 		lines = append(lines, m.imageLines(f, bw, sel)...)
 	}
+	// Previews and a bot's attachments come last, after the images.
+	for _, a := range msg.Attachments {
+		lines = append(lines, m.attachmentLines(a, bw, sel)...)
+	}
 	if len(msg.Reactions) > 0 {
 		var chips []string
 		for _, r := range mergeSkinTones(msg.Reactions) {
@@ -290,6 +294,175 @@ func (m *Model) messageLines(msg backend.Message, width int, header, inThread, s
 		lines[i] = pick(i == 0, m.gutter(msg), blank) + lines[i]
 	}
 	return lines
+}
+
+// attachmentLines is an attachment boxed like an inline image, apart from
+// the message's own text: a bot's, or Slack's preview of a link. The frame
+// is in rule, bar while the message is selected; an attachment with a
+// colour has its left side a heavy bar in it, as Slack's (Styles.Edge).
+func (m *Model) attachmentLines(a backend.Attachment, width int, sel bool) []string {
+	inner := max(width-4, 4) // "│ " and " │"
+	var body []string
+	if conv, ok := sharedFrom(a.FromURL); ok {
+		body = m.sharedBody(a, conv, inner)
+	} else {
+		body = m.attachmentBody(a, inner)
+	}
+	border := sty.Rule
+	if sel {
+		border = sty.Bar
+	}
+	edge, side := border, "│"
+	if st, ok := sty.Edge(a.Color); ok {
+		edge, side = st, "┃"
+	}
+	w := min(inner, 40) // short previews still read as a card
+	for _, l := range body {
+		w = max(w, ansi.StringWidth(l))
+	}
+	lines := []string{border.Render("╭" + strings.Repeat("─", w+2) + "╮")}
+	for _, l := range body {
+		lines = append(lines, edge.Render(side)+" "+padRight(l, w)+" "+border.Render("│"))
+	}
+	return append(lines, border.Render("╰"+strings.Repeat("─", w+2)+"╯"))
+}
+
+// attachmentBody is a bot's attachment or a page's preview: where it is
+// from (GitHub, a bot's author), the title and text, and a faint footer:
+// "Posted in #dev · 14:02".
+func (m *Model) attachmentBody(a backend.Attachment, width int) []string {
+	var body []string
+	if a.Service != "" {
+		body = append(body, sty.Faint.Render(a.Service))
+	}
+	if a.Author != "" {
+		body = append(body, sty.Unread.Render(a.Author))
+	}
+	if text := strings.Join(a.Lines(), "\n"); text != "" {
+		body = append(body, wrap(render.Mrkdwn(text, m, sty.Md), width)...)
+	}
+	body = append(body, m.fieldLines(a.Fields, width)...)
+	var foot []string
+	if a.Footer != "" {
+		foot = append(foot, ansi.Strip(render.Mrkdwn(a.Footer, m, sty.Md)))
+	}
+	if a.TS != "" {
+		foot = append(foot, relTime(backend.TSTime(a.TS), m.cfg.TimeFormat))
+	}
+	if len(foot) > 0 {
+		body = append(body, wrap(sty.Faint.Render(strings.Join(foot, " · ")), width)...)
+	}
+	if len(body) == 0 {
+		body = append(body, sty.Faint.Render("(empty preview)"))
+	}
+	return body
+}
+
+// fieldLines is an attachment's fields as Slack lays them out: each
+// title in bold over its value, short fields two to a row when there is
+// room.
+//
+//	Status            Requests Executed
+//	Failed            4
+func (m *Model) fieldLines(fs []backend.Field, width int) []string {
+	col := (min(width, 60) - 2) / 2
+	field := func(f backend.Field, w int) []string {
+		var out []string
+		if f.Title != "" {
+			out = append(out, sty.Unread.Render(ansi.Truncate(f.Title, w, "…")))
+		}
+		if f.Value != "" {
+			out = append(out, wrap(render.Mrkdwn(f.Value, m, sty.Md), w)...)
+		}
+		return out
+	}
+	var out []string
+	for i := 0; i < len(fs); i++ {
+		if !fs[i].Short || col < 12 || i+1 == len(fs) || !fs[i+1].Short {
+			out = append(out, field(fs[i], width)...)
+			continue
+		}
+		l, r := field(fs[i], col), field(fs[i+1], col)
+		for j := range max(len(l), len(r)) {
+			var a, b string
+			if j < len(l) {
+				a = l[j]
+			}
+			if j < len(r) {
+				b = r[j]
+			}
+			out = append(out, strings.TrimRight(padRight(a, col)+"  "+b, " "))
+		}
+		i++
+	}
+	return out
+}
+
+// reArchives is a message's link: its conversation, and the thread it is
+// in, if any.
+var reArchives = regexp.MustCompile(`/archives/([A-Z0-9]+)/p\d+(?:\?thread_ts=)?([\d.]*)`)
+
+// sharedFrom is the conversation of a shared message's link, when the
+// attachment is one.
+func sharedFrom(url string) (string, bool) {
+	g := reArchives.FindStringSubmatch(url)
+	if g == nil {
+		return "", false
+	}
+	return g[1], true
+}
+
+// reFallbackName is the username in a shared message's fallback:
+// "[October 27th, 2026 7:35 AM] magnus.dalkvist: …".
+var reFallbackName = regexp.MustCompile(`^\[[^\]]*\] ([^:\s]+): `)
+
+// sharedBody is a shared message (a forward) as Slack shows it:
+//
+//	Magnus Dalkvist 15:35
+//	Direct Message
+//	what it says
+//
+// Its author is the person: Slack's author_name is the app's name when
+// it was sent through one, slack-tui's included.
+func (m *Model) sharedBody(a backend.Attachment, conv string, width int) []string {
+	author := a.Author
+	if a.AuthorID != "" {
+		author = m.UserName(a.AuthorID)
+	} else if g := reFallbackName.FindStringSubmatch(a.Fallback); g != nil {
+		author = m.labelForUsername(g[1])
+	}
+	head := sty.Unread.Render(author)
+	if a.TS != "" {
+		head += " " + sty.Faint.Render(relTime(backend.TSTime(a.TS), m.cfg.TimeFormat))
+	}
+	where := "a conversation you're not in"
+	if c := m.convs[conv]; c != nil {
+		switch c.Kind {
+		case backend.KindDM:
+			where = "Direct Message"
+		case backend.KindGroup:
+			where = "Group message"
+		default:
+			where = "#" + c.Name
+		}
+	}
+	if g := reArchives.FindStringSubmatch(a.FromURL); g != nil && g[2] != "" {
+		where = "Thread in " + where
+	}
+	body := []string{ansi.Truncate(head, width, "…"), sty.Faint.Render(ansi.Truncate(where, width, "…"))}
+	if text := strings.Join(a.Lines(), "\n"); text != "" {
+		body = append(body, wrap(render.Mrkdwn(text, m, sty.Md), width)...)
+	}
+	return body
+}
+
+// ownText is what a person wrote in a message, or for one that is only
+// attachments (a bot's), what those say.
+func ownText(msg backend.Message) string {
+	if strings.TrimSpace(msg.Text) != "" {
+		return msg.Text
+	}
+	return msg.AllText()
 }
 
 func pick(c bool, a, b string) string {

@@ -22,6 +22,7 @@ type Icons struct {
 	Slides, Archive, Code    string
 	Audio, Video, File       string
 	CheckOn, CheckOff        string // a checkbox, ticked and not
+	UnreadDot                string // the sidebar's marker for an unread conversation
 	Unicode                  bool   // the fallback set: file kinds become tags
 }
 
@@ -29,7 +30,8 @@ var nerdIcons = Icons{
 	// The Octicons hashtag (thinner than Font Awesome's, which fills its
 	// cell and runs into the name) and presence circles for people.
 	Channel: "\uf4df", Private: "",
-	UserActive: "\U000f0765", UserAway: "\U000f0766", // nf-md-circle, nf-md-circle_outline
+	// Presence is plain ● and ○, a little smaller than nf-md-circle.
+	UserActive: "●", UserAway: "○",
 	Group: "\U000f0695", Unreads: "", // nf-md-circle_multiple_outline: a group, not a person
 	// nf-oct-hash, nf-cod-comment_discussion
 	SecChannels: "\uf4df", SecDMs: "\ueac7", SecExternal: "",
@@ -39,13 +41,15 @@ var nerdIcons = Icons{
 	DND: "", Offline: "\U000f05aa", Link: "",
 	Image: "", PDF: "", Doc: "", Sheet: "",
 	Slides: "", Archive: "", Code: "",
-	CheckOn: "\U000f14fb", CheckOff: "\U000f14fc", // rounded boxes, filled and empty
+	// Rounded boxes, filled and empty; the unread dot is ⦁ (Z notation
+	// spot), twice the size of •.
+	CheckOn: "\U000f14fb", CheckOff: "\U000f14fc", UnreadDot: "⦁",
 	Audio: "", Video: "", File: "",
 }
 
 var unicodeIcons = Icons{
 	Channel: "#", Private: "◇",
-	UserActive: "●", UserAway: "○",
+	UserActive: "●", UserAway: "○", UnreadDot: "•",
 	Group: "◎", Unreads: "≡",
 	Folded: "▸", Unfolded: "▾",
 	Thread: "↳", Pinned: "⚑", Bookmark: "⚑",

@@ -211,8 +211,8 @@ func TestStatusAndPresenceShown(t *testing.T) {
 
 	m.open("D1")
 	v = dump(t, m)
-	if !strings.Contains(v, "Anna Jensen "+ico.UserActive+" ── 🏠 WFH") {
-		t.Errorf("DM header lacks presence and status")
+	if !strings.Contains(v, "Anna Jensen  🏠 WFH") {
+		t.Errorf("DM header lacks status")
 	}
 
 	// When the snooze ends, Slack's dnd_updated clears it.
@@ -352,21 +352,20 @@ func TestSelfPresence(t *testing.T) {
 	}
 }
 
-// TestDMHeaderPresenceAndStatus: "Peter T ○ ── 🤒 Out sick · until 23:59":
-// the circle by the name, the status set apart by the border.
-func TestDMHeaderPresenceAndStatus(t *testing.T) {
+// TestDMHeaderStatus: "Peter T  🤒 Out sick · until 23:59": the status
+// on the same line as the name, no presence circle and no border between.
+func TestDMHeaderStatus(t *testing.T) {
 	m := sceneModel(t, 120, 24)
 	u := m.users["U2"]
 	u.StatusEmoji, u.StatusText, u.StatusExpires = ":face_with_thermometer:", "Out sick", clockNow().Add(13*time.Hour).Unix()
 	m.users["U2"] = u
+	m.presence["U2"] = true
 	m.open("D2")
 	top := strings.Split(ansi.Strip(m.View()), "\n")[0]
-	if !strings.Contains(top, "kiky "+ico.UserAway+" ── 🤒 Out sick · until ") {
-		t.Errorf("away DM header: %q", top)
+	if !strings.Contains(top, "kiky  🤒 Out sick · until ") {
+		t.Errorf("DM header: %q", top)
 	}
-	m.presence["U2"] = true
-	top = strings.Split(ansi.Strip(m.View()), "\n")[0]
-	if !strings.Contains(top, "kiky "+ico.UserActive+" ── 🤒 Out sick") {
-		t.Errorf("active DM header: %q", top)
+	if strings.Contains(top, ico.UserActive) || strings.Contains(top, ico.UserAway) {
+		t.Errorf("DM header shows presence: %q", top)
 	}
 }

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"hash/fnv"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -146,6 +147,58 @@ func (s Styles) PinBar() string        { return fgStyle(s.theme.Warn).Render("â–
 func (s Styles) MentionTintOn() string { return bgOn(s.theme.MentionTint) }
 func (s Styles) PinTintOn() string     { return bgOn(s.theme.PinTint) }
 func (s Styles) RaisedBgOn() string    { return bgOn(s.theme.Raised) }
+
+// Edge is the style of an attachment's coloured side. Slack's names and
+// hex colours that read as red, amber or green (Runscope's "ff0000" and
+// "2ecc71") take the theme's Err, Warn and OK; any other hex is shown as
+// it is. ok is false when the attachment has no colour to show.
+func (s Styles) Edge(color string) (st lipgloss.Style, ok bool) {
+	switch color {
+	case "good":
+		return s.OK, true
+	case "warning":
+		return s.Warn, true
+	case "danger":
+		return s.Err, true
+	}
+	hex := strings.TrimPrefix(color, "#")
+	if len(hex) == 3 {
+		hex = string([]byte{hex[0], hex[0], hex[1], hex[1], hex[2], hex[2]})
+	}
+	v, err := strconv.ParseUint(hex, 16, 32)
+	if len(hex) != 6 || err != nil {
+		return lipgloss.Style{}, false
+	}
+	r, g, b := float64(v>>16&0xff)/255, float64(v>>8&0xff)/255, float64(v&0xff)/255
+	hi, lo := max(r, g, b), min(r, g, b)
+	if hi-lo < 0.15 { // grey: no colour to speak of
+		return lipgloss.Style{}, false
+	}
+	var hue float64
+	switch hi {
+	case r:
+		hue = 60 * (g - b) / (hi - lo)
+	case g:
+		hue = 60 * ((b-r)/(hi-lo) + 2)
+	default:
+		hue = 60 * ((r-g)/(hi-lo) + 4)
+	}
+	if hue < 0 {
+		hue += 360
+	}
+	switch {
+	case hue < 20 || hue >= 330:
+		return s.Err, true
+	case hue < 70:
+		return s.Warn, true
+	case hue < 170:
+		return s.OK, true
+	}
+	if s.theme.NoColor {
+		return lipgloss.Style{}, false
+	}
+	return fgStyle(lipgloss.Color("#" + hex)), true
+}
 
 func bgOn(c lipgloss.TerminalColor) string {
 	if _, none := c.(lipgloss.NoColor); none {

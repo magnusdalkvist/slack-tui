@@ -117,14 +117,9 @@ func (m *Model) renderConvPane(w, h int) string {
 	}
 	focused := m.focus == fMessages
 	var ctx []string
-	// A DM's person: their presence circle one space after the name, their
-	// status set apart by a stretch of the border: "Peter T ○ ── 🤒 Out sick".
-	person := ""
+	// A DM's person: their status right after the name on the same line,
+	// "Peter T  🤒 Out sick · until 23:59".
 	if c.Kind == backend.KindDM {
-		person = " " + sty.Faint.Render(ico.UserAway)
-		if m.isActive(c.UserID) {
-			person = " " + sty.OK.Render(ico.UserActive)
-		}
 		if line := m.statusLine(c.UserID); line != "" {
 			if exp := m.users[c.UserID].StatusExpires; exp > 0 {
 				line += sty.Faint.Render(" · until " + clock(time.Unix(exp, 0), m.cfg.TimeFormat))
@@ -151,16 +146,16 @@ func (m *Model) renderConvPane(w, h int) string {
 	input := m.renderInput(w, isTarget, false, "Message "+m.convTitle(c))
 	paneH := max(3, h-lineCount(input))
 	list := m.renderList(m.lists[m.current], w-2, paneH-2, focused, false)
-	pane := RenderFrame(list, w, paneH, frameTitle(title, focused)+person+borderJoin(ctx, focused), right, focused)
+	pane := RenderFrame(list, w, paneH, frameTitle(title, focused, ctx...), right, focused)
 	return m.withCompletion(pane, input, w, isTarget)
 }
 
 func (m *Model) renderThreadPane(w, h int) string {
 	t := m.thread
 	focused := m.focus == fThread
-	where := ""
+	where := "" // one space after the title: "Thread in # dev"
 	if c := m.convs[t.conv]; c != nil {
-		where = sty.Muted.Render("in " + m.convTitle(c))
+		where = " " + sty.Muted.Render("in "+m.convTitle(c))
 	}
 	input := m.renderInput(w, focused, true, "Reply in thread")
 	paneH := max(3, h-lineCount(input))
@@ -169,7 +164,7 @@ func (m *Model) renderThreadPane(w, h int) string {
 	if c := m.convs[t.conv]; c != nil && m.layout() != layoutWide {
 		title, right = "‹ Thread", sty.Faint.Render(m.convLabel(c)+" › Thread")
 	}
-	pane := RenderFrame(list, w, paneH, frameTitle(title, focused, where), right, focused)
+	pane := RenderFrame(list, w, paneH, frameTitle(title, focused)+where, right, focused)
 	return m.withCompletion(pane, input, w, focused)
 }
 
@@ -216,7 +211,14 @@ func (m *Model) renderInput(w int, isTarget, inThread bool, placeholder string) 
 	if label := m.attachLabel(); label != "" {
 		labels = append(labels, label)
 	}
+	fwd := m.forwardHere()
+	if fwd != nil && m.editing == nil {
+		labels = append(labels, "forwarding")
+	}
 	box := indent(m.input.View(), " ")
+	if fwd != nil && m.editing == nil {
+		box = " " + m.forwardChip(fwd, w-4) + "\n" + box
+	}
 	if len(m.attach) > 0 {
 		box = " " + m.attachChips(w-4) + "\n" + box
 	}
@@ -275,8 +277,8 @@ func (m *Model) renderUnreads(w, h int) string {
 		r := m.sideCells(sideItem{id: c.ID}, nil)
 		head := r.flag + slot(r.icon) + sty.Unread.Render(m.convLabel(c))
 		meta := sty.Faint.Render(relTime(backend.TSTime(c.Latest), m.cfg.TimeFormat))
-		if r.count != "" {
-			meta = r.count + "  " + meta
+		if c.Mentions > 0 { // counts show here, in Unreads, and nowhere else
+			meta = sty.Err.Render(fmt.Sprint(c.Mentions)) + "  " + meta
 		}
 		if r.dot != "" {
 			meta = r.dot + " " + meta

@@ -189,7 +189,7 @@ func (c *Cache) SaveList(key string, msgs []backend.Message, hasMore bool) {
 		if err != nil {
 			continue
 		}
-		rows = append(rows, row{m.TS, m.User, m.Text, b})
+		rows = append(rows, row{m.TS, m.User, m.AllText(), b})
 	}
 	now := time.Now().Unix()
 	c.queue(func(db *sql.DB) error {

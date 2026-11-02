@@ -80,7 +80,7 @@ func (m *Model) scanUsers() tea.Cmd {
 	scan := func(msgs []backend.Message) {
 		for _, msg := range msgs {
 			want(msg.User)
-			for _, ref := range reUserRef.FindAllStringSubmatch(msg.Text, -1) {
+			for _, ref := range reUserRef.FindAllStringSubmatch(msg.AllText(), -1) {
 				want(ref[1])
 			}
 		}

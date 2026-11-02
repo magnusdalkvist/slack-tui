@@ -704,6 +704,11 @@ func (m *Model) editMessage(convID string, msg backend.Message) {
 				if !msg.Pinned { // pins change through their own events too
 					msg.Pinned = msgs[i].Pinned
 				}
+				// Slack marks a message edited when it adds a link's
+				// preview; as in Slack, only a changed text is an edit.
+				if msg.Text == msgs[i].Text {
+					msg.Edited = msgs[i].Edited
+				}
 				msgs[i] = msg
 				return
 			}

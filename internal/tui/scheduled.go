@@ -160,14 +160,14 @@ func (m *Model) cmdLater(args string) tea.Cmd {
 		return m.setStatus("images can't be scheduled — send them now, or ctrl+x to drop them", true)
 	}
 	text := strings.TrimSpace(m.input.Value())
-	if text == "" {
+	if text == "" && m.forwardFor(conv) == nil {
 		return m.setStatus("write the message first, then :later 9:00 (or ctrl+s while writing)", false)
 	}
 	at, err := parseLater(args, clockNow())
 	if err != nil {
 		return m.setStatus(err.Error(), true)
 	}
-	encoded := render.Encode(text, m.composeTokens)
+	encoded := m.outgoing(conv, text)
 	m.input.Reset()
 	m.fitInput()
 	m.complete = nil

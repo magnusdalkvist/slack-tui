@@ -64,7 +64,7 @@ func (m *Model) scanEmoji() tea.Cmd {
 	}
 	scanMsgs := func(msgs []backend.Message) {
 		for _, msg := range msgs {
-			for _, n := range render.EmojiShortcodes(msg.Text) {
+			for _, n := range render.EmojiShortcodes(msg.AllText()) {
 				want(n)
 			}
 			for _, r := range msg.Reactions {
